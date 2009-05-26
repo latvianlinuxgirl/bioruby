@@ -2,7 +2,7 @@
 # = bio/io/phyloxml.rb - PhyloXML tree parser 
 #
 # Copyright::   Copyright (C) 2009
-#               Diana Jaunzeikare <rozziite@gmail.com>
+#               Diana Jaunzeikare <latvianlinuxgirl@gmail.com>
 # License::     The Ruby License
 #
 # $Id:$
@@ -18,6 +18,8 @@
 require 'bio/tree'
 require 'xml'
 
+$debug = false
+
 module Bio
 
   #---
@@ -29,12 +31,26 @@ module Bio
   # This is alpha version. Incompatible changes may be made frequently.
 
   class PhyloXML
-
-    def initialize(filename) 
+  
+    
+    def initialize(str) 
+      #@note there might be a better way how to do this
+      #check if parameter is a valid file name
+      if File.exists?(str) 
+        @reader = XML::Reader.file(str)
+      else 
+        #assume it is string input
+        @reader = XML::Reader.string(str)
+      end
+    end
+    
+    def file(filename)
       @reader = XML::Reader.file(filename)
     end
     
     def next_tree()
+
+    
       tree = Bio::Tree.new()
 
       #current_node variable is a pointer to the current node parsed
@@ -43,6 +59,7 @@ module Bio
       #skip until have reached clade element   
       while not((@reader.node_type==XML::Reader::TYPE_ELEMENT) and @reader.name == "clade") do 
         @reader.read
+        puts @reader.name if $debug
       end
            
       while not((@reader.node_type==XML::Reader::TYPE_END_ELEMENT) and (@reader.name == "phylogeny")) do       
@@ -84,7 +101,9 @@ module Bio
           end
         end
          
-        @reader.read        
+        @reader.read    
+        puts @reader.name if $debug and @reader.name != nil
+            
       end #end while not </phylogeny>   
       return tree
     end  
