@@ -32,17 +32,23 @@ end #end module TestPhyloXMLData
 module Bio
 
   class TestPhyloXML < Test::Unit::TestCase
+  
+    def setup
+      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+    end
     
     def test_init
-      phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
-      assert_equal(phyloxml.class, Bio::PhyloXML)
+      assert_equal(@phyloxml.class, Bio::PhyloXML)
     end 
       
-    def test_get_first_tree
-    
-      phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
-      tree = phyloxml.next_tree()      
-      assert_equal(tree.number_of_nodes, 5)       
+    def test_next_tree
+      tree = @phyloxml.next_tree
+      tree_arr = []
+      while tree != nil do
+        tree_arr[tree_arr.length] = tree.name
+        tree = @phyloxml.next_tree
+      end      
+      puts tree_arr.length
     end
      
   end #class TestPhyloXML

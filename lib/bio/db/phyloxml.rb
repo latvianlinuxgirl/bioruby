@@ -29,6 +29,16 @@ module Bio
   # PhyloXML standard phylogenetic tree parser class.
   #
   # This is alpha version. Incompatible changes may be made frequently.
+  class PhyloXMLTree < Bio::Tree
+  
+    attr_reader :name
+  
+    def name=(str)
+      @name = str
+    end
+  
+  end
+  
 
   class PhyloXML
   
@@ -49,17 +59,29 @@ module Bio
     end
     
     def next_tree()
-
     
-      tree = Bio::Tree.new()
+      puts @reader.name if ($debug and @reader.name != nil)
+        
+      tree = Bio::PhyloXMLTree.new()
 
       #current_node variable is a pointer to the current node parsed
       current_node = tree
       
       #skip until have reached clade element   
       while not((@reader.node_type==XML::Reader::TYPE_ELEMENT) and @reader.name == "clade") do 
+        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'name'
+          @reader.read
+          tree.name = @reader.value
+        end
+        
+        #if for some reason have reached the end of file, return nil
+        #@todo take care of other stuff after phylogeny, like align:alignment
+        if (@reader.node_type==XML::Reader::TYPE_END_ELEMENT and @reader.name == "phyloxml")
+          return nil
+        end
+        
         @reader.read
-        puts @reader.name if $debug
+        puts @reader.name if ($debug and @reader.name != nil)
       end
            
       while not((@reader.node_type==XML::Reader::TYPE_END_ELEMENT) and (@reader.name == "phylogeny")) do       
@@ -102,7 +124,9 @@ module Bio
         end
          
         @reader.read    
-        puts @reader.name if $debug and @reader.name != nil
+        if $debug and @reader.name != nil 
+          print "main loop :", @reader.name, "\n"
+        end
             
       end #end while not </phylogeny>   
       return tree
