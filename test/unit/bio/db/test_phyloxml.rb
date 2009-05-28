@@ -48,11 +48,39 @@ module Bio
         tree_arr[tree_arr.length] = tree.name
         tree = @phyloxml.next_tree
       end      
-      puts tree_arr.length
+      assert_equal(tree_arr.length, 13)
     end
      
   end #class TestPhyloXML
 
+  class TestPhyloXML2 < Test::Unit::TestCase
+  
+    def setup
+      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      @tree = @phyloxml.next_tree
+    end
+    
+    def test_tree_name
+      assert_equal(@tree.name, "example from Prof. Joe Felsenstein's book \"Inferring Phylogenies\"")
+    end
+    
+    def test_tree_description
+      assert_equal(@tree.description, "phyloXML allows to use either a \"branch_length\" attribute or element to indicate branch lengths.")
+    end
+    
+    def test_branch_length_attribute
+      assert_equal(@tree.total_distance, 0.792)
+    end
+    
+    #All tests before this point are using the first tree in the datafile
+    
+    def test_branch_length_tag
+      @tree = @phyloxml.next_tree
+      assert_equal(@tree.total_distance, 0.792)
+    end
+    
+    
+  end #class TestPhyloXML2
   
   class TestPhyloXML3 < Test::Unit::TestCase
   

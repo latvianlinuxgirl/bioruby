@@ -36,6 +36,12 @@ module Bio
     def name=(str)
       @name = str
     end
+    
+    attr_reader :description
+    
+    def description=(str)
+      @description = str
+    end
   
   end
   
@@ -67,12 +73,24 @@ module Bio
       #current_node variable is a pointer to the current node parsed
       current_node = tree
       
-      #skip until have reached clade element   
+      #keep track of current edge to be able to parse branch_length tag
+      current_edge = nil
+      
+      #skip until have reached clade element, processing what pertains to the whole Tree info
       while not((@reader.node_type==XML::Reader::TYPE_ELEMENT) and @reader.name == "clade") do 
         if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'name'
           @reader.read
           tree.name = @reader.value
+          #@todo next should be end tag.
         end
+        
+        #@todo looks like code repetition, put in a function / macro
+        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'description'
+          @reader.read
+          tree.description = @reader.value
+          #@todo next should be end tag
+        end
+        
         
         #if for some reason have reached the end of file, return nil
         #@todo take care of other stuff after phylogeny, like align:alignment
@@ -88,6 +106,8 @@ module Bio
       
         #clade element
         if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'clade'
+          
+          #parse attributes of the clade
           #read the branch length if any
           branch_length = nil
           if not @reader['branch_length']==nil 
@@ -98,20 +118,17 @@ module Bio
           node= Bio::Tree::Node.new
                   
           # if tree is rooted, first node is root
+          #@todo parse phylogeny rooted attribute
           if tree.root == nil   
             tree.root = node
           else                    
             tree.add_node(node)
-            tree.add_edge(current_node, node, Bio::Tree::Edge.new(branch_length))
+            current_edge = tree.add_edge(current_node, node, Bio::Tree::Edge.new(branch_length))
           end
           current_node = node          
         end #end if clade           
         
-        #end clade element, go one parent up
-        if @reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'clade'
-          current_node = tree.parent(current_node)
-        end   
-        
+
         #processing name element of the clade
         if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'name' 
           #read in the name tag value
@@ -122,7 +139,21 @@ module Bio
             puts "Warning: Should have reached </name> element here"
           end
         end
-         
+        
+        #parse branch_length tag
+        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'branch_length' 
+          #read in the name tag value
+          @reader.read
+          branch_length = @reader.value
+          current_edge.distance = branch_length.to_f
+        end 
+ 
+        #end clade element, go one parent up
+        if @reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'clade'
+          current_node = tree.parent(current_node)
+        end          
+        
+        # go to next element        
         @reader.read    
         if $debug and @reader.name != nil 
           print "main loop :", @reader.name, "\n"
