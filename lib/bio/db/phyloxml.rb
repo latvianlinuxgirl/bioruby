@@ -31,18 +31,9 @@ module Bio
   # This is alpha version. Incompatible changes may be made frequently.
   class PhyloXMLTree < Bio::Tree
   
-    attr_reader :name
+    attr_accessor :name, :description
   
-    def name=(str)
-      @name = str
-    end
-    
-    attr_reader :description
-    
-    def description=(str)
-      @description = str
-    end
-  
+ 
   end
   
 
@@ -129,7 +120,7 @@ module Bio
         end #end if clade           
         
 
-        #processing name element of the clade
+        #parse name element of the clade
         if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'name' 
           #read in the name tag value
           @reader.read
@@ -147,6 +138,21 @@ module Bio
           branch_length = @reader.value
           current_edge.distance = branch_length.to_f
         end 
+        
+        #parse confidence tag
+        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'confidence' 
+          if @reader["type"]=="bootstrap"
+            #read in the tag value
+            @reader.read
+            node.bootstrap = @reader.value.to_f
+            @reader.read
+            if not(@reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'confidence')
+              puts "Warning: Should have reached </confidence> element here"
+            end
+          end          
+        end 
+        
+        
  
         #end clade element, go one parent up
         if @reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'clade'
