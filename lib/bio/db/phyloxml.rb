@@ -38,8 +38,30 @@ module Bio
   
 
   class PhyloXML
-  
-    
+
+    class Confidence
+      attr_accessor :type, :value
+
+      def initialize(type, value)
+        @type = type
+        @value = value
+      end
+
+    end
+
+
+    class Events 
+      attr_accessor :type, :duplications, :speciations, :losses
+      
+      attr_reader :confidence
+      
+      def confidence=(type, value)
+        @confidence = Confidence.new(type, value)
+      end
+      
+    end
+
+
     def initialize(str) 
       #@note there might be a better way how to do this
       #check if parameter is a valid file name
