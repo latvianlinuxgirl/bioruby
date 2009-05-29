@@ -35,6 +35,12 @@ module Bio
   
  
   end
+
+  class PhyloXMLNode < Bio::Tree::Node
+    
+    attr_accessor :events
+
+  end
   
 
   class PhyloXML
@@ -58,7 +64,7 @@ module Bio
       def confidence=(type, value)
         @confidence = Confidence.new(type, value)
       end
-      
+
     end
 
 
@@ -76,6 +82,8 @@ module Bio
     def file(filename)
       @reader = XML::Reader.file(filename)
     end
+
+
     
     def next_tree()
     
@@ -91,6 +99,7 @@ module Bio
       
       #skip until have reached clade element, processing what pertains to the whole Tree info
       while not((@reader.node_type==XML::Reader::TYPE_ELEMENT) and @reader.name == "clade") do
+        #parse attribute "rooted"
         if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'phylogeny'
           @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
         end
@@ -125,8 +134,12 @@ module Bio
         
         @reader.read
         puts @reader.name if ($debug and @reader.name != nil)
-      end
-           
+      end #while
+
+      ############
+      # => Now parsing clade element
+      ############
+
       while not((@reader.node_type==XML::Reader::TYPE_END_ELEMENT) and (@reader.name == "phylogeny")) do       
       
         #clade element
@@ -140,7 +153,7 @@ module Bio
           end
           
           #add new node to the tree
-          node= Bio::Tree::Node.new
+          node= Bio::PhyloXMLNode.new
                   
           # The first clade will always be root since by xsd schema phyloxml can have 0..1 clades in it.
           if tree.root == nil
@@ -186,7 +199,18 @@ module Bio
             end
           end          
         end        
-        
+
+
+        #parse events element
+        if is_element?('events')
+          current_node.events = Events.new
+
+          #read while have reached end of events
+          while not(is_end_element?('events')) do
+            @reader.read
+          end
+
+        end
  
         #end clade element, go one parent up
         if @reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'clade'
@@ -202,7 +226,18 @@ module Bio
       end #end while not </phylogeny>   
       return tree
     end  
-  
+
+    private
+
+    def is_element?(str)
+      @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == str ? true : false
+    end
+
+    def is_end_element?(str)
+      @reader.node_type==XML::Reader::TYPE_END_ELEMENT and @reader.name == str ? true : false
+    end
+
+
   end #class phyloxml
   
 end #module Bio
