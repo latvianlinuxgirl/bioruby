@@ -83,14 +83,20 @@ module Bio
       assert_equal(@tree.total_distance, 0.792)
     end
     
-    #After this follow tests using third tree
-    
     def test_bootstrap
       #iterate throuch first 2 trees to get to the third
       @tree = @phyloxml.next_tree
       @tree = @phyloxml.next_tree
       node = @tree.get_node_by_name("AB")
       assert_equal(node.bootstrap, 89)
+    end
+
+    def test_duplications
+      4.times do
+        @tree = @phyloxml.next_tree
+      end
+      node = @tree.root
+      assert_equal(node.events.speciations, 1)
     end
     
   end #class TestPhyloXML2

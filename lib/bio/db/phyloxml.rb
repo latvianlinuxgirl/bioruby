@@ -41,7 +41,17 @@ module Bio
     attr_accessor :events
 
   end
-  
+
+  class Events
+    attr_accessor :type, :duplications, :speciations, :losses
+
+    attr_reader :confidence
+
+    def confidence=(type, value)
+      @confidence = Confidence.new(type, value)
+    end
+
+  end
 
   class PhyloXML
 
@@ -51,18 +61,6 @@ module Bio
       def initialize(type, value)
         @type = type
         @value = value
-      end
-
-    end
-
-
-    class Events 
-      attr_accessor :type, :duplications, :speciations, :losses
-      
-      attr_reader :confidence
-      
-      def confidence=(type, value)
-        @confidence = Confidence.new(type, value)
       end
 
     end
@@ -100,35 +98,31 @@ module Bio
       #skip until have reached clade element, processing what pertains to the whole Tree info
       while not((@reader.node_type==XML::Reader::TYPE_ELEMENT) and @reader.name == "clade") do
         #parse attribute "rooted"
-        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'phylogeny'
+        if is_element?('phylogeny')
           @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
         end
 
-        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'name'
+        if is_element?('name')
           @reader.read
           tree.name = @reader.value
           @reader.read
-          if not(@reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'name')
-            puts "Warning: Should have reached </name> element here"
-          end
+          has_reached_end_tag?('name')
         end
         
         #parse_tag(description, tree) parse the tag description and add to tree object
         
         #@todo looks like code repetition, put in a function / macro
-        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'description'
+        if is_element?('description')
           @reader.read
           tree.description = @reader.value
           @reader.read
-          if not(@reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'description')
-            puts "Warning: Should have reached </description> element here"
-          end
+          has_reached_end_tag?('description')
         end
         
         
         #if for some reason have reached the end of file, return nil
         #@todo take care of other stuff after phylogeny, like align:alignment
-        if (@reader.node_type==XML::Reader::TYPE_END_ELEMENT and @reader.name == "phyloxml")
+        if is_end_element?('phyloxml')
           return nil
         end
         
@@ -143,7 +137,7 @@ module Bio
       while not((@reader.node_type==XML::Reader::TYPE_END_ELEMENT) and (@reader.name == "phylogeny")) do       
       
         #clade element
-        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'clade'
+        if is_element?('clade')
           
           #parse attributes of the clade
           #read the branch length if any
@@ -168,19 +162,17 @@ module Bio
         
 
         #parse name element of the clade
-        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'name' 
+        if is_element?('name')
           #read in the name tag value
           @reader.read
           current_node.name = @reader.value
           @reader.read
-          if not(@reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'name')
-            puts "Warning: Should have reached </name> element here"
-          end
+          has_reached_end_tag?('name')
         end
         
         
         #parse branch_length tag
-        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'branch_length' 
+        if is_element?('branch_length')
           #read in the name tag value
           @reader.read
           branch_length = @reader.value
@@ -188,32 +180,24 @@ module Bio
         end 
         
         #parse confidence tag
-        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'confidence' 
+        if is_element?('confidence')
           if @reader["type"]=="bootstrap"
             #read in the tag value
             @reader.read
             node.bootstrap = @reader.value.to_f
             @reader.read
-            if not(@reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'confidence')
-              puts "Warning: Should have reached </confidence> element here"
-            end
+            has_reached_end_tag?('confidence')
           end          
         end        
 
 
         #parse events element
         if is_element?('events')
-          current_node.events = Events.new
-
-          #read while have reached end of events
-          while not(is_end_element?('events')) do
-            @reader.read
-          end
-
+          current_node.events = parse_events
         end
  
         #end clade element, go one parent up
-        if @reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'clade'
+        if is_end_element?('clade') 
           current_node = tree.parent(current_node)
         end          
         
@@ -237,6 +221,49 @@ module Bio
       @reader.node_type==XML::Reader::TYPE_END_ELEMENT and @reader.name == str ? true : false
     end
 
+    def has_reached_end_tag?(str)
+      if not(is_end_element?(str))
+        puts "Warning: Should have reached </#{str}> element here"
+      end
+    end
+
+    def parse_events()
+      events = Events.new
+
+      @reader.read #go to next element
+      #read while have reached end of events
+      while not(is_end_element?('events')) do
+        if is_element?('type')
+          #@todo check if value is from allowed list
+          @reader.read
+          events.type = @reader.value
+          @reader.read
+          has_reached_end_tag?('type')
+        end
+        if is_element?('duplications')
+          @reader.read
+          events.duplications = @reader.value.to_i
+          @reader.read
+          has_reached_end_tag?('duplications')
+        end
+        if is_element?('speciations')
+          @reader.read
+          events.speciations = @reader.value.to_i
+          @reader.read
+          has_reached_end_tag?('speciations')
+        end
+        if is_element?('losses')
+          @reader.read
+          events.losses = @reader.value.to_i
+          @reader.read
+          has_reached_end_tag?('losses')
+        end
+        #@todo parse confidence tag
+
+        @reader.read
+      end
+      return events
+    end
 
   end #class phyloxml
   
