@@ -31,7 +31,7 @@ module Bio
   # This is alpha version. Incompatible changes may be made frequently.
   class PhyloXMLTree < Bio::Tree
   
-    attr_accessor :name, :description
+    attr_accessor :name, :description, :rooted
   
  
   end
@@ -68,18 +68,30 @@ module Bio
       current_edge = nil
       
       #skip until have reached clade element, processing what pertains to the whole Tree info
-      while not((@reader.node_type==XML::Reader::TYPE_ELEMENT) and @reader.name == "clade") do 
+      while not((@reader.node_type==XML::Reader::TYPE_ELEMENT) and @reader.name == "clade") do
+        if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'phylogeny'
+          @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
+        end
+
         if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'name'
           @reader.read
           tree.name = @reader.value
-          #@todo next should be end tag.
+          @reader.read
+          if not(@reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'name')
+            puts "Warning: Should have reached </name> element here"
+          end
         end
+        
+        #parse_tag(description, tree) parse the tag description and add to tree object
         
         #@todo looks like code repetition, put in a function / macro
         if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'description'
           @reader.read
           tree.description = @reader.value
-          #@todo next should be end tag
+          @reader.read
+          if not(@reader.node_type == XML::Reader::TYPE_END_ELEMENT and @reader.name == 'description')
+            puts "Warning: Should have reached </description> element here"
+          end
         end
         
         
@@ -108,15 +120,15 @@ module Bio
           #add new node to the tree
           node= Bio::Tree::Node.new
                   
-          # if tree is rooted, first node is root
-          #@todo parse phylogeny rooted attribute
-          if tree.root == nil   
+          # The first clade will always be root since by xsd schema phyloxml can have 0..1 clades in it.
+          if tree.root == nil
             tree.root = node
           else                    
             tree.add_node(node)
             current_edge = tree.add_edge(current_node, node, Bio::Tree::Edge.new(branch_length))
           end
-          current_node = node          
+          current_node = node
+          
         end #end if clade           
         
 
@@ -130,6 +142,7 @@ module Bio
             puts "Warning: Should have reached </name> element here"
           end
         end
+        
         
         #parse branch_length tag
         if @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == 'branch_length' 
@@ -150,8 +163,7 @@ module Bio
               puts "Warning: Should have reached </confidence> element here"
             end
           end          
-        end 
-        
+        end        
         
  
         #end clade element, go one parent up

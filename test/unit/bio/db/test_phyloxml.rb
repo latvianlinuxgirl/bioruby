@@ -72,9 +72,12 @@ module Bio
     def test_branch_length_attribute
       assert_equal(@tree.total_distance, 0.792)
     end
+
+    def test_rooted_atr
+       assert_equal(@tree.rooted, true)
+    end
     
-    #All tests before this point are using the first tree in the datafile
-    
+   
     def test_branch_length_tag
       @tree = @phyloxml.next_tree
       assert_equal(@tree.total_distance, 0.792)
