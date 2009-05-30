@@ -88,7 +88,8 @@ module Bio
       @tree = @phyloxml.next_tree
       @tree = @phyloxml.next_tree
       node = @tree.get_node_by_name("AB")
-      assert_equal(node.bootstrap, 89)
+      assert_equal(node.confidence[0].type, 'bootstrap')
+      assert_equal(node.confidence[0].value, 89)
     end
 
     def test_duplications
@@ -98,6 +99,39 @@ module Bio
       node = @tree.root
       assert_equal(node.events.speciations, 1)
     end
+
+    #@todo should this be in a separate file?
+    def test_taxonomy_scientific_name
+      3.times do
+        @tree = @phyloxml.next_tree
+      end
+      t = @tree.get_node_by_name('A').taxonomy[0]
+      assert_equal(t.scientific_name, 'E. coli')
+      t = @tree.get_node_by_name('C').taxonomy[0]
+      assert_equal(t.scientific_name, 'C. elegans')
+    end
+
+    def test_taxonomy_id
+      5.times do
+        @tree = @phyloxml.next_tree
+      end
+      leaves = @tree.leaves
+      codes = []
+      ids = []
+      #id_types = []
+      leaves.each { |node|
+        codes[codes.length] = node.taxonomy[0].code
+        ids[ids.length] = node.taxonomy[0].id
+        #id_types[id_types.length] = node.taxonomy.id_type
+      }
+      assert_equal(codes.sort, ["CLOAB",  "DICDI", "OCTVU"])
+     #@todo assert ids, id_types. or create new class for id.
+    end
+
+    def test_taxonomy_rank
+
+    end
+
     
   end #class TestPhyloXML2
   
@@ -139,6 +173,7 @@ module Bio
       node_names.sort!
       assert_equal(node_names, ["A", "B"])
     end
+
   
   end # class
 

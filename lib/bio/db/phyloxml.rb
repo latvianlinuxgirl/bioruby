@@ -38,12 +38,69 @@ module Bio
 
   class PhyloXMLNode < Bio::Tree::Node
     
+    #Events at the root node of a clade (e.g. one gene duplication).
     attr_accessor :events
+
+    attr_accessor :id_source, :width
+
+    attr_accessor :taxonomy
+
+    #A general purpose confidence element. For example this can be used to express the bootstrap support value of a clade (in which case the 'type' attribute is 'bootstrap').
+    attr_accessor :confidence
+
+    attr_accessor :color #@todo create alias colour?
+
+    attr_accessor :node_id #@todo create ID class with type and value
+
+    #Element Sequence is used to represent a molecular sequence (Protein, DNA,
+    # RNA) associated with a node. 'symbol' is a short (maximal ten characters)
+    # symbol of the sequence (e.g. 'ACTM') whereas 'name' is used for the full
+    # name (e.g. 'muscle Actin'). 'location' is used for the location of a
+    # sequence on a genome/chromosome. The actual sequence can be stored with
+    # the 'mol_seq' element. Attribute 'type' is used to indicate the type
+    # of sequence ('dna', 'rna', or 'aa'). One intended use for 'id_ref' is
+    # to link a sequence to a taxonomy (via the taxonomy's 'id_source') in
+    # case of multiple sequences and taxonomies per node.
+    attr_accessor :sequence
+
+    attr_accessor :binary_characters #@todo design class for this
+
+    #The geographic distribution of the items of a clade (species, sequences),
+    #intended for phylogeographic applications. The location can be described
+    #either by free text in the 'desc' element and/or by the coordinates of one
+    #or more 'Points' (similar to the 'Point' element in Google's KML format)
+    #or by 'Polygons'.
+    attr_accessor :distribution
+
+    #A date associated with a clade/node. Its value can be numerical by using
+    #the 'value' element and/or free text with the 'desc' element'
+    #(e.g. 'Silurian'). If a numerical value is used, it is recommended to
+    #employ the 'unit' attribute to indicate the type of the numerical value
+    #(e.g. 'mya' for 'million years ago').
+    attr_accessor :date
+    
+    #Array of references
+    attr_accessor :reference
+
+    #An array of properties, for example depth for sea animals.
+    attr_accessor :property
+
+    def initialize      
+      @confidence = []
+      @sequence = []
+      @taxonomy = []
+      @distribution = []
+      @reference = []
+      @property = []
+    end
 
   end
 
   class Events
-    attr_accessor :type, :duplications, :speciations, :losses
+    attr_accessor :type
+    attr_accessor :duplications
+    attr_accessor :speciations
+    attr_accessor :losses
 
     attr_reader :confidence
 
@@ -51,12 +108,47 @@ module Bio
       @confidence = Confidence.new(type, value)
     end
 
+
   end
+
+  #+++
+  # Taxonomy class
+  #+++
+
+  # This is general Taxonomy class.
+  class Taxonomy
+    #@todo sort out code
+    # A general purpose identifier element. Allows to indicate the type (or source) of an identifier.
+    #attr_accessor :id
+    #attr_accessor :id_type
+
+
+    #pattern = [a-zA-Z0-9_]{2,10} Swiss-prot secific
+    attr_accessor :code
+
+    attr_accessor :scientific_name
+    #An array of strings
+    attr_accessor :common_name
+    # value comes from list: {'domain'|'kingdom'|'subkingdom'|'branch'|'infrakingdom'|'superphylum'|'phylum'|'subphylum'|'infraphylum'|'microphylum'|'superdivision'|'division'|'subdivision'|'infradivision'|'superclass'|'class'|'subclass'|'infraclass'|'superlegion'|'legion'|'sublegion'|'infralegion'|'supercohort'|'cohort'|'subcohort'|'infracohort'|'superorder'|'order'|'suborder'|'superfamily'|'family'|'subfamily'|'supertribe'|'tribe'|'subtribe'|'infratribe'|'genus'|'subgenus'|'superspecies'|'species'|'subspecies'|'variety'|'subvariety'|'form'|'subform'|'cultivar'|'unknown'|'other'}
+    attr_accessor :rank
+
+    def inspect
+      print "Taxonomy. scientific_name: #{@scientific_name}\n"
+    end
+  end
+
+  class PhyloXMLTaxonomy < Taxonomy
+    attr_accessor :id
+    attr_accessor :id_type
+    attr_accessor :uri
+  end
+
 
   class PhyloXML
 
     class Confidence
-      attr_accessor :type, :value
+      attr_accessor :type
+      attr_accessor :value
 
       def initialize(type, value)
         @type = type
@@ -138,16 +230,14 @@ module Bio
       
         #clade element
         if is_element?('clade')
-          
-          #parse attributes of the clade
-          #read the branch length if any
-          branch_length = nil
-          if not @reader['branch_length']==nil 
-            branch_length =  @reader['branch_length']
-          end
-          
-          #add new node to the tree
+          #create a new node
           node= Bio::PhyloXMLNode.new
+          
+          #parse attributes of the clade element
+          branch_length = @reader['branch_length']
+          node.id_source = @reader['id_source']
+
+          #add new node to the tree
                   
           # The first clade will always be root since by xsd schema phyloxml can have 0..1 clades in it.
           if tree.root == nil
@@ -160,7 +250,7 @@ module Bio
           
         end #end if clade           
         
-
+        #@todo take the name only if its under clade, that means first have to process all the elements (like sequence, since it has name)
         #parse name element of the clade
         if is_element?('name')
           #read in the name tag value
@@ -178,16 +268,19 @@ module Bio
           branch_length = @reader.value
           current_edge.distance = branch_length.to_f
         end 
-        
+
+        #parse width tag
+        #@todo write unit test for this
+        if is_element?('width')
+          @reader.read
+          node.width = @reader.value.to_f
+          @reader.read
+          has_reached_end_tag?('width')
+        end
+
         #parse confidence tag
         if is_element?('confidence')
-          if @reader["type"]=="bootstrap"
-            #read in the tag value
-            @reader.read
-            node.bootstrap = @reader.value.to_f
-            @reader.read
-            has_reached_end_tag?('confidence')
-          end          
+          node.confidence[node.confidence.length] = parse_confidence
         end        
 
 
@@ -195,7 +288,16 @@ module Bio
         if is_element?('events')
           current_node.events = parse_events
         end
- 
+
+        if is_element?('taxonomy')          
+          taxonomy = parse_taxonomy
+          current_node.taxonomy[current_node.taxonomy.length] = taxonomy
+        end
+
+        if is_element?('sequence')
+          sequence = parse_sequence
+        end
+
         #end clade element, go one parent up
         if is_end_element?('clade') 
           current_node = tree.parent(current_node)
@@ -263,6 +365,48 @@ module Bio
         @reader.read
       end
       return events
+    end #parse_events
+
+    def parse_taxonomy
+      taxonomy = PhyloXMLTaxonomy.new
+      #@todo parse taxonomy attributes
+      @reader.read
+      while not(is_end_element?('taxonomy')) do
+
+        if is_element?('scientific_name')
+          @reader.read
+          taxonomy.scientific_name = @reader.value
+          @reader.read
+          has_reached_end_tag?('scientific_name')
+        end
+
+        if is_element?('code')
+          @reader.read
+          taxonomy.code = @reader.value
+          @reader.read
+          has_reached_end_tag?('code')
+        end
+
+        @reader.read      
+      end
+      return taxonomy
+    end #parse_taxonomy
+
+    def parse_sequence
+      @reader.read
+      while not(is_end_element?('sequence'))
+        @reader.read
+      end
+    end
+
+    def parse_confidence
+      #@todo does it matter if it is float or integer?
+      type = @reader["type"]
+      @reader.read
+      value = @reader.value.to_f
+      @reader.read
+      has_reached_end_tag?('confidence')
+      return Confidence.new(type, value)
     end
 
   end #class phyloxml
