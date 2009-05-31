@@ -37,7 +37,12 @@ module Bio
     #Events at the root node of a clade (e.g. one gene duplication).
     attr_accessor :events
 
-    attr_accessor :id_source, :width
+    attr_accessor :id_source 
+      
+    attr_reader :width
+    def width=(str)
+      @width = str.to_f
+    end
 
     attr_accessor :taxonomy
 
@@ -94,9 +99,9 @@ module Bio
 
   class Events
     attr_accessor :type
-    attr_accessor :duplications
-    attr_accessor :speciations
-    attr_accessor :losses
+    attr_reader :duplications
+    attr_reader :speciations
+    attr_reader :losses
 
     attr_reader :confidence
 
@@ -104,7 +109,17 @@ module Bio
       @confidence = Confidence.new(type, value)
     end
 
+    def duplications=(str)
+      @duplications = str.to_i
+    end
 
+    def losses=(str)
+      @losses = str.to_i
+    end
+
+    def speciations=(str)
+      @speciations=str.to_i
+    end
   end
 
   #+++
@@ -182,6 +197,15 @@ module Bio
     def initialize
       @alt = []
     end
+
+    def lat=(str)
+      @lat = str.to_f
+    end
+
+    def long=(str)
+      @long = str.to_f
+    end
+    
   end
 
   class Polygon
@@ -297,28 +321,15 @@ module Bio
           @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
         end
 
-        if is_element?('name')
-          @reader.read
-          tree.name = @reader.value
-          @reader.read
-          has_reached_end_tag?('name')
-        end
-        
-        #parse_tag(description, tree) parse the tag description and add to tree object
-        
-        #@todo looks like code repetition, put in a function / macro
-        if is_element?('description')
-          @reader.read
-          tree.description = @reader.value
-          @reader.read
-          has_reached_end_tag?('description')
-        end
+        parse_simple_element(tree, 'name')  if is_element?('name')
+
+        parse_simple_element(tree, 'description') if is_element?('description')
 
         if is_element?('confidence')
           tree.confidence << parse_confidence
           #@todo add unit test for this
         end
-        
+      
         
         #if for some reason have reached the end of file, return nil
         #@todo take care of other stuff after phylogeny, like align:alignment
@@ -358,16 +369,8 @@ module Bio
           
         end #end if clade           
         
-        #@todo take the name only if its under clade, that means first have to process all the elements (like sequence, since it has name)
         #parse name element of the clade
-        if is_element?('name')
-          #read in the name tag value
-          @reader.read
-          current_node.name = @reader.value
-          @reader.read
-          has_reached_end_tag?('name')
-        end
-        
+        parse_simple_element(current_node, 'name')  if is_element?('name')
         
         #parse branch_length tag
         if is_element?('branch_length')
@@ -380,18 +383,12 @@ module Bio
         #parse width tag
         #@todo write unit test for this
         #@todo put width into edge?
-        if is_element?('width')
-          @reader.read
-          current_node.width = @reader.value.to_f
-          @reader.read
-          has_reached_end_tag?('width')
-        end
+        parse_simple_element(current_node, 'width')  if is_element?('width')
 
         #parse confidence tag
         if is_element?('confidence')
-          current_node.confidence[node.confidence.length] = parse_confidence
+          current_node.confidence << parse_confidence
         end        
-
 
         #parse events element
         if is_element?('events')
@@ -399,20 +396,17 @@ module Bio
         end
 
         if is_element?('taxonomy')          
-          taxonomy = parse_taxonomy
-          current_node.taxonomy << taxonomy
+          current_node.taxonomy << parse_taxonomy
         end
 
         if is_element?('sequence')
-          sequence = parse_sequence
+          current_node.sequence << parse_sequence
         end
 
         if is_element?('distribution')
           current_node.distribution << parse_distribution
         end
-        #@todo is there shorter way to add to a array?
-
-
+        
         #end clade element, go one parent up
         if is_end_element?('clade') 
           current_node = tree.parent(current_node)
@@ -430,6 +424,10 @@ module Bio
 
     private
 
+    ####
+    # Utility methods
+    ###
+
     def is_element?(str)
       @reader.node_type == XML::Reader::TYPE_ELEMENT and @reader.name == str ? true : false
     end
@@ -444,46 +442,36 @@ module Bio
       end
     end
 
+    # Parses a simple XML element. for example <speciations>1</speciations>
+    # It reads in the value and assigns it to object.speciation = 1
+    # Also checks if have reached end tag (</speciations> and gives warning if not
+    def parse_simple_element(object, name)
+      @reader.read
+      object.send("#{name}=", @reader.value)
+      @reader.read
+      has_reached_end_tag?(name)
+    end
+
+
     def parse_events()
       events = Events.new
-
       @reader.read #go to next element
-      #read while have reached end of events
       while not(is_end_element?('events')) do
-        if is_element?('type')
-          #@todo check if value is from allowed list
-          @reader.read
-          events.type = @reader.value
-          @reader.read
-          has_reached_end_tag?('type')
-        end
-        if is_element?('duplications')
-          @reader.read
-          events.duplications = @reader.value.to_i
-          @reader.read
-          has_reached_end_tag?('duplications')
-        end
-        if is_element?('speciations')
-          @reader.read
-          events.speciations = @reader.value.to_i
-          @reader.read
-          has_reached_end_tag?('speciations')
-        end
-        if is_element?('losses')
-          @reader.read
-          events.losses = @reader.value.to_i
-          @reader.read
-          has_reached_end_tag?('losses')
-        end
+        #@todo check if value for type elemnt is is from allowed list
+        parse_simple_element(events, 'type')  if is_element?('type')
+
+        ['duplications', 'speciations', 'losses'].each { |elmt|
+          parse_simple_element(events, elmt)  if is_element?(elmt)
+        }
         if is_element?('confidence')
           events.confidence = parse_confidence
           #@todo add unit test for this
         end
-
         @reader.read
       end
       return events
     end #parse_events
+
 
     def parse_taxonomy
       taxonomy = PhyloXMLTaxonomy.new
@@ -491,19 +479,8 @@ module Bio
       @reader.read
       while not(is_end_element?('taxonomy')) do
 
-        if is_element?('scientific_name')
-          @reader.read
-          taxonomy.scientific_name = @reader.value
-          @reader.read
-          has_reached_end_tag?('scientific_name')
-        end
-
-        if is_element?('code')
-          @reader.read
-          taxonomy.code = @reader.value
-          @reader.read
-          has_reached_end_tag?('code')
-        end
+        parse_simple_element(taxonomy, 'scientific_name') if is_element?('scientific_name')
+        parse_simple_element(taxonomy, 'code') if is_element?('code')
 
         @reader.read      
       end
@@ -512,11 +489,19 @@ module Bio
 
     def parse_sequence
 
+      sequence = Sequence.new
 
+      #parse attributes
+      sequence.type = @reader['type']
+      sequence.id_source = @reader['id_source']
+      sequence.id_ref = @reader['id_ref']
 
-
+      #parse tags
       @reader.read
       while not(is_end_element?('sequence'))
+
+        parse_simple_element(sequence, 'symbol') if is_element?('symbol')
+
         @reader.read
       end
     end
@@ -538,13 +523,8 @@ module Bio
 
       while not(is_end_element?('distribution')) do
 
-        if is_element?('desc')
-          @reader.read
-          distribution.desc = @reader.value
-          @reader.read
-          has_reached_end_tag?('desc')
-        end
-
+        parse_simple_element(distribution, 'desc') if is_element?('desc')
+ 
         if is_element?('point')
           distribution.points << parse_point
         end
@@ -569,19 +549,10 @@ module Bio
       #parse tags
       @reader.read
       while not(is_end_element?('point')) do
-        if is_element?('lat')
-          @reader.read
-          point.lat = @reader.value.to_f
-          @reader.read
-          has_reached_end_tag?('lat')
-        end
 
-        if is_element?('long')
-          @reader.read
-          point.long = @reader.value.to_f
-          @reader.read
-          has_reached_end_tag?('long')
-        end
+        ['lat', 'long'].each { |elemnt|
+          parse_simple_element(point, elemnt) if is_element?(elemnt)
+        }
 
         if is_element?('alt')
           @reader.read
