@@ -188,6 +188,14 @@ module Bio
     end
   end
 
+  class Polygon
+    attr_accessor :points
+
+    def initialize
+      @points = []
+    end
+  end
+
   class PhyloXML
 
 
@@ -465,12 +473,12 @@ module Bio
         end
 
         if is_element?('point')
-          #@todo
           distribution.points[distribution.points.length] = parse_point
         end
 
         if is_element?('polygon')
-          #@todo
+          #@todo add unit test
+          distribution.polygons[distribution.polygons.length] = parse_polygon
         end
 
         @reader.read
@@ -512,7 +520,27 @@ module Bio
         @reader.read
       end
       return point
-    end
+    end #parse_point
+
+    def parse_polygon
+      polygon = Polygon.new
+
+      @reader.read
+      #@todo consider renaming is_end_element has_reached_end_tag? so that it is either element or tag
+      while not(is_end_element?('polygon')) do
+
+        if is_element?('point')
+          polygon.points[polygon.points.length] = parse_point
+        end
+
+        @reader.read
+      end
+
+      if polygon.points.length <3
+        puts "Warning: <polygon> should have at least 3 points"
+      end
+      return polygon
+    end #parse_polygon
 
   end #class phyloxml
   
