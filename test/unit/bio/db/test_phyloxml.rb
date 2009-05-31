@@ -157,6 +157,60 @@ module Bio
       assert_equal(point.alt[0],10)
     end
 
+    def test_sequence
+      3.times do
+        @tree = @phyloxml.next_tree
+      end
+      sequence_a = @tree.get_node_by_name('A').sequence[0]
+      assert_equal(sequence_a.annotation[0].desc, 'alcohol dehydrogenase')
+      assert_equal(sequence_a.annotation[0].confidence.type, "probability" )
+      assert_equal(sequence_a.annotation[0].confidence.value, 0.99 )
+      sequence_b = @tree.get_node_by_name('B').sequence[0]
+      assert_equal(sequence_b.annotation[0].desc, 'alcohol dehydrogenase')
+      assert_equal(sequence_b.annotation[0].confidence.type, "probability" )
+      assert_equal(sequence_b.annotation[0].confidence.value, 0.91 )
+      sequence_c = @tree.get_node_by_name('C').sequence[0]
+      assert_equal(sequence_a.annotation[0].desc, 'alcohol dehydrogenase')
+      assert_equal(sequence_a.annotation[0].confidence.type, "probability" )
+      assert_equal(sequence_a.annotation[0].confidence.value, 0.67 )
+
+    end
+
+     def test_sequence2
+       4.times do
+         @tree = @phyloxml.next_tree
+       end
+       leaves = @tree.leaves
+       leaves.each { |node|
+         #just test one node for now
+         if node.sequence[0].id_source == 'x'
+           assert_equal(node.sequence[0].symbol, 'adhB')
+           assert_equal(node.sequence[0].accession.source, "ncbi")
+           assert_equal(node.sequence[0].accession.value, 'AAB80874')
+           assert_equal(node.sequence[0].name, 'alcohol dehydrogenase')
+         end
+         if node.sequence[0].id_source == 'z'
+           assert_equal(node.sequence[0].accession.ref, "InterPro:IPR002085")
+         end
+       }
+     end
+
+     def test_sequence3
+       5.times do
+         @tree = @phyloxml.next_tree
+       end
+       @tree.leaves.each { |node|
+         if node.sequence[0].symbol == 'ADHX'
+          assert_equal(node.sequence[0].accession.source, 'UniProtKB')
+          assert_equal(node.sequence[0].accession.value, 'P81431')
+          assert_equal(node.sequence[0].name, 'Alcohol dehydrogenase class-3')
+          assert_equal(node.sequence[0].mol_seq, 'TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD')
+          assert_equal(node.sequence[0].annotation[0].ref, 'EC:1.1.1.1')
+          assert_equal(node.sequence[0].annotation[1].ref, 'GO:0004022')
+         end
+       }
+     end
+
     
   end #class TestPhyloXML2
   

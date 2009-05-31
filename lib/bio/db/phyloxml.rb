@@ -37,6 +37,8 @@ module Bio
   end
 
   class PhyloXMLNode < Bio::Tree::Node
+    #@todo not inherit from node
+
     
     #Events at the root node of a clade (e.g. one gene duplication).
     attr_accessor :events
@@ -253,6 +255,11 @@ module Bio
           @reader.read
           has_reached_end_tag?('description')
         end
+
+        if is_element?('confidence')
+          tree.confidence << parse_confidence
+          #@todo add unit test for this
+        end
         
         
         #if for some reason have reached the end of file, return nil
@@ -314,6 +321,7 @@ module Bio
 
         #parse width tag
         #@todo write unit test for this
+        #@todo put width into edge?
         if is_element?('width')
           @reader.read
           current_node.width = @reader.value.to_f
@@ -334,7 +342,7 @@ module Bio
 
         if is_element?('taxonomy')          
           taxonomy = parse_taxonomy
-          current_node.taxonomy[current_node.taxonomy.length] = taxonomy
+          current_node.taxonomy << taxonomy
         end
 
         if is_element?('sequence')
@@ -342,7 +350,7 @@ module Bio
         end
 
         if is_element?('distribution')
-          current_node.distribution[current_node.distribution.length] = parse_distribution
+          current_node.distribution << parse_distribution
         end
         #@todo is there shorter way to add to a array?
 
@@ -409,7 +417,10 @@ module Bio
           @reader.read
           has_reached_end_tag?('losses')
         end
-        #@todo parse confidence tag
+        if is_element?('confidence')
+          events.confidence = parse_confidence
+          #@todo add unit test for this
+        end
 
         @reader.read
       end
@@ -473,12 +484,12 @@ module Bio
         end
 
         if is_element?('point')
-          distribution.points[distribution.points.length] = parse_point
+          distribution.points << parse_point
         end
 
         if is_element?('polygon')
           #@todo add unit test
-          distribution.polygons[distribution.polygons.length] = parse_polygon
+          distribution.polygons << parse_polygon
         end
 
         @reader.read
@@ -512,7 +523,7 @@ module Bio
 
         if is_element?('alt')
           @reader.read
-          point.alt[point.alt.length] = @reader.value.to_f
+          point.alt << @reader.value.to_f
           @reader.read
           has_reached_end_tag?('alt')
         end
@@ -530,7 +541,7 @@ module Bio
       while not(is_end_element?('polygon')) do
 
         if is_element?('point')
-          polygon.points[polygon.points.length] = parse_point
+          polygon.points << parse_point
         end
 
         @reader.read
