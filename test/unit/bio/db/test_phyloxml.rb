@@ -128,8 +128,33 @@ module Bio
      #@todo assert ids, id_types. or create new class for id.
     end
 
-    def test_taxonomy_rank
+    def test_distribution_desc
+      9.times do
+        @tree = @phyloxml.next_tree
+      end
+      leaves = @tree.leaves
+      descrs = []
+      leaves.each { |node|
+        descrs[descrs.length] = node.distribution[0].desc
+      }
+      assert_equal(descrs.sort, ['Africa', 'Asia', 'Australia'])
+    end
 
+    def test_distribution_point
+      10.times do
+        @tree = @phyloxml.next_tree
+      end
+      point = @tree.get_node_by_name('A').distribution[0].points[0]
+      assert_equal(point.geodetic_datum, "WGS84")
+      assert_equal(point.lat, 47.481277)
+      assert_equal(point.long, 8.769303)
+      assert_equal(point.alt[0],472)
+
+      point = @tree.get_node_by_name('B').distribution[0].points[0]
+      assert_equal(point.geodetic_datum, "WGS84")
+      assert_equal(point.lat, 35.155904)
+      assert_equal(point.long, 136.915863)
+      assert_equal(point.alt[0],10)
     end
 
     

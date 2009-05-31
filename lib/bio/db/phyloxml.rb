@@ -143,19 +143,54 @@ module Bio
     attr_accessor :uri
   end
 
+  class Confidence
+    attr_accessor :type
+    attr_accessor :value
+
+    def initialize(type, value)
+      @type = type
+      @value = value
+    end
+
+  end
+#
+
+  #+++
+  # Distribution class
+  #+++
+
+  # The geographic distribution of the items of a clade (species, sequences), 
+  # intended for phylogeographic applications. The location can be described 
+  # either by free text in the 'desc' element and/or by the coordinates of 
+  # one or more 'Points' (similar to the 'Point' element in Google's KML 
+  # format) or by 'Polygons'.
+  class Distribution
+    #String
+    attr_accessor :desc
+    #Array of Point objects
+    attr_accessor :points #@todo Point class
+
+    attr_accessor :polygons #@todo polygon class
+
+    def initialize
+      @points = []
+      @pplygons = []
+    end
+
+  end
+
+
+  class Point
+    attr_accessor :lat, :long, :alt, :geodetic_datum
+
+    def initialize
+      @alt = []
+    end
+  end
 
   class PhyloXML
 
-    class Confidence
-      attr_accessor :type
-      attr_accessor :value
 
-      def initialize(type, value)
-        @type = type
-        @value = value
-      end
-
-    end
 
 
     def initialize(str) 
@@ -273,14 +308,14 @@ module Bio
         #@todo write unit test for this
         if is_element?('width')
           @reader.read
-          node.width = @reader.value.to_f
+          current_node.width = @reader.value.to_f
           @reader.read
           has_reached_end_tag?('width')
         end
 
         #parse confidence tag
         if is_element?('confidence')
-          node.confidence[node.confidence.length] = parse_confidence
+          current_node.confidence[node.confidence.length] = parse_confidence
         end        
 
 
@@ -297,6 +332,12 @@ module Bio
         if is_element?('sequence')
           sequence = parse_sequence
         end
+
+        if is_element?('distribution')
+          current_node.distribution[current_node.distribution.length] = parse_distribution
+        end
+        #@todo is there shorter way to add to a array?
+
 
         #end clade element, go one parent up
         if is_end_element?('clade') 
@@ -407,6 +448,70 @@ module Bio
       @reader.read
       has_reached_end_tag?('confidence')
       return Confidence.new(type, value)
+    end #parse_confidence
+
+    def parse_distribution
+      distribution = Distribution.new
+
+      @reader.read
+
+      while not(is_end_element?('distribution')) do
+
+        if is_element?('desc')
+          @reader.read
+          distribution.desc = @reader.value
+          @reader.read
+          has_reached_end_tag?('desc')
+        end
+
+        if is_element?('point')
+          #@todo
+          distribution.points[distribution.points.length] = parse_point
+        end
+
+        if is_element?('polygon')
+          #@todo
+        end
+
+        @reader.read
+      end
+
+      return distribution
+    end #parse_distribution
+
+    def parse_point
+      point = Point.new
+
+      #parse attribute
+      point.geodetic_datum = @reader["geodetic_datum"]
+
+      #parse tags
+      @reader.read
+      while not(is_end_element?('point')) do
+        if is_element?('lat')
+          @reader.read
+          point.lat = @reader.value.to_f
+          @reader.read
+          has_reached_end_tag?('lat')
+        end
+
+        if is_element?('long')
+          @reader.read
+          point.long = @reader.value.to_f
+          @reader.read
+          has_reached_end_tag?('long')
+        end
+
+        if is_element?('alt')
+          @reader.read
+          point.alt[point.alt.length] = @reader.value.to_f
+          @reader.read
+          has_reached_end_tag?('alt')
+        end
+        #advance reader
+        @reader.read
+      end
+      return point
     end
 
   end #class phyloxml
