@@ -22,13 +22,7 @@ $debug = false
 
 module Bio
 
-  #---
-  # PhyloXML parser
-  #+++
 
-  # PhyloXML standard phylogenetic tree parser class.
-  #
-  # This is alpha version. Incompatible changes may be made frequently.
   class PhyloXMLTree < Bio::Tree
   
     attr_accessor :name, :description, :rooted
@@ -197,11 +191,75 @@ module Bio
       @points = []
     end
   end
+  
+  class Sequence
+    #values from rna, dna, aa
+    attr_accessor :type    
+    attr_accessor :id_source
+    attr_accessor :id_ref
+    attr_accessor :symbol
+    attr_accessor :accession
+    attr_accessor :name
+    #location of a sequence on a genome/chromosome
+    attr_accessor :location
+    attr_accessor :mol_seq
+    attr_accessor :uri #@todo alias method url ?
+    attr_accessor :annotation
+    attr_accessor :domain_architecture
+    
+    def initialize
+      @annotation = []
+    end    
+   
+  end
 
+  class Accession
+    #Example: "UniProtKB"
+    attr_accessor :source
+    
+    #example: "P17304"
+    attr_accessor :value #@todo maybe call it id. 
+  end
+
+  #Uri class
+  #
+  #* desc
+  #* type
+  #* uri / url ?
+  #
+  #Annotation class
+  #
+  #* ref (string)
+  #* source  (string)
+  #* evidence (string)
+  #* type (string)
+  #* desc (string)
+  #* confidence (Confidence object)
+  #* property [] (Array of Property objects)
+  #* uri (Uri object
+  #
+  #DomainArchitecture class
+  #
+  #* length (string / int ?)
+  #* domain [] (Array of ProteinDomain objects)
+  #
+  #ProteinDomain class
+  #
+  #* from (int)
+  #* to (int)
+  #* confidence (double) (for example, to store E-values)
+  #* id (string)
+  #* value (string)
+  #
+
+  #---
+  # PhyloXML parser
+  #+++
+
+  # PhyloXML standard phylogenetic tree parser class.
+  #
+  # This is alpha version. Incompatible changes may be made frequently.
   class PhyloXML
-
-
-
 
     def initialize(str) 
       #@note there might be a better way how to do this
@@ -453,6 +511,10 @@ module Bio
     end #parse_taxonomy
 
     def parse_sequence
+
+
+
+
       @reader.read
       while not(is_end_element?('sequence'))
         @reader.read
