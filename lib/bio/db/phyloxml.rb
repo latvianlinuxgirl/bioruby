@@ -245,23 +245,27 @@ module Bio
     attr_accessor :value #@todo maybe call it id. 
   end
 
-  #Uri class
-  #
-  #* desc
-  #* type
-  #* uri / url ?
-  #
-  #Annotation class
-  #
-  #* ref (string)
-  #* source  (string)
-  #* evidence (string)
-  #* type (string)
-  #* desc (string)
-  #* confidence (Confidence object)
-  #* property [] (Array of Property objects)
-  #* uri (Uri object
-  #
+  class Uri
+    attr_accessor :desc
+    attr_accessor :type
+    attr_accessor :uri #@todo call it url?
+  end
+
+  class Annotation
+    attr_accessor :ref
+    attr_accessor :source
+    attr_accessor :evidence
+    attr_accessor :type
+    attr_accessor :desc
+    attr_accessor :confidence
+    attr_accessor :property
+    attr_accessor :uri
+
+    def initialize
+      @property = []
+    end
+  end
+
   #DomainArchitecture class
   #
   #* length (string / int ?)
@@ -500,10 +504,81 @@ module Bio
       @reader.read
       while not(is_end_element?('sequence'))
 
+        ['symbol', 'name', 'location', 'mol_seq'].each {|elem|
+          parse_simple_element(sequence, elem) if is_element?(elem)
+        }
+
         parse_simple_element(sequence, 'symbol') if is_element?('symbol')
+
+        if is_element?('accession')
+          sequence.accession = Accession.new
+          sequence.accession.source = @reader["source"]
+          @reader.read
+          sequence.accession.value = @reader.value
+          @reader.read
+          has_reached_end_tag?('accession')
+        end
+
+        if is_element?('uri')
+          sequence.uri = parse_uri
+        end
+
+        if is_element?('annotation')
+          sequence.annotation << parse_annotation
+        end
+
 
         @reader.read
       end
+      return sequence
+    end
+
+    def parse_uri
+      #@todo add unit test for this
+      uri = Uri.new
+      uri.desc = @reader["desc"]
+      uri.type = @reader["type"]
+      parse_simple_element(uri, 'uri')
+      return uri
+    end
+
+    def parse_annotation
+      annotation = Annotation.new
+
+      #parse attributes
+      annotation.ref = @reader["ref"]
+      annotation.source = @reader["source"]
+      annotation.evidence = @reader["evidence"]
+      annotation.type = @reader["type"]
+
+      if @reader.empty_element?
+        return annotation
+      else
+        while not(is_end_element?('annotation'))
+          parse_simple_element(annotation, 'desc') if is_element?('desc')
+
+          if is_element?('confidence')
+            annotation.confidence  = parse_confidence
+          end          
+
+          #@todo parse_property
+          if is_element?('property')
+            annotation.property << parse_property
+          end
+
+          if is_element?('uri')
+            annotation.uri = parse_uri
+            #@todo add unit test to this
+          end
+
+          @reader.read
+        end
+        return annotation
+      end      
+    end
+
+    def parse_property
+      return nil
     end
 
     def parse_confidence

@@ -170,9 +170,9 @@ module Bio
       assert_equal(sequence_b.annotation[0].confidence.type, "probability" )
       assert_equal(sequence_b.annotation[0].confidence.value, 0.91 )
       sequence_c = @tree.get_node_by_name('C').sequence[0]
-      assert_equal(sequence_a.annotation[0].desc, 'alcohol dehydrogenase')
-      assert_equal(sequence_a.annotation[0].confidence.type, "probability" )
-      assert_equal(sequence_a.annotation[0].confidence.value, 0.67 )
+      assert_equal(sequence_c.annotation[0].desc, 'alcohol dehydrogenase')
+      assert_equal(sequence_c.annotation[0].confidence.type, "probability" )
+      assert_equal(sequence_c.annotation[0].confidence.value, 0.67 )
 
     end
 
@@ -190,7 +190,7 @@ module Bio
            assert_equal(node.sequence[0].name, 'alcohol dehydrogenase')
          end
          if node.sequence[0].id_source == 'z'
-           assert_equal(node.sequence[0].accession.ref, "InterPro:IPR002085")
+           assert_equal(node.sequence[0].annotation[0].ref, "InterPro:IPR002085")
          end
        }
      end
