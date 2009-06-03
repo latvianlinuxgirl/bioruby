@@ -266,6 +266,22 @@ module Bio
     end
   end
 
+  class Id
+    attr_accessor :type, :value
+  end
+
+  class BranchColor
+    attr_accessor :red, :green, :blue
+  end
+
+  class Date
+    attr_accessor :unit, :range, :desc, :value
+
+    def to_s
+      return "#{value} #{unit}"
+    end
+  end
+
   #DomainArchitecture class
   #
   #* length (string / int ?)
@@ -410,6 +426,26 @@ module Bio
         if is_element?('distribution')
           current_node.distribution << parse_distribution
         end
+
+        if is_element?('node_id')
+          id = Id.new
+          id.type = @reader["type"]
+          @reader.read
+          id.value = @reader.value
+          has_reached_end_tag?('node_id')
+          #@todo write unit test for this. There is no example of this in the example files
+          current_node.id = id
+        end
+
+        if is_element?('color')
+          color = BranchColor.new
+          parse_simple_element(color, 'red')
+          parse_simple_element(color, 'green')
+          parse_simple_element(color, 'blue')
+          current_node.color = color
+          #@todo add unit test for this
+        end
+
         
         #end clade element, go one parent up
         if is_end_element?('clade') 
@@ -450,12 +486,13 @@ module Bio
     # It reads in the value and assigns it to object.speciation = 1
     # Also checks if have reached end tag (</speciations> and gives warning if not
     def parse_simple_element(object, name)
-      @reader.read
-      object.send("#{name}=", @reader.value)
-      @reader.read
-      has_reached_end_tag?(name)
+      if is_element?(name)
+        @reader.read
+        object.send("#{name}=", @reader.value)
+        @reader.read
+        has_reached_end_tag?(name)
+      end
     end
-
 
     def parse_events()
       events = Events.new
@@ -578,6 +615,7 @@ module Bio
     end
 
     def parse_property
+      #@todo
       return nil
     end
 
@@ -660,6 +698,8 @@ module Bio
       end
       return polygon
     end #parse_polygon
+
+
 
   end #class phyloxml
   
