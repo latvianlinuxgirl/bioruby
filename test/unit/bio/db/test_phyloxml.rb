@@ -128,6 +128,19 @@ module Bio
      #@todo assert ids, id_types. or create new class for id.
     end
 
+    def test_taxonomy2
+      9.times do
+        @tree = @phyloxml.next_tree
+      end
+      taxonomy = @tree.root.taxonomy[0]
+      assert_equal(taxonomy.id.type, "NCBI")
+      assert_equal(taxonomy.id.value, "8556")
+      assert_equal(taxonomy.scientific_name, "Varanus")
+      assert_equal(taxonomy.rank, "genus")
+      assert_equal(taxonomy.uri.desc, "EMBL REPTILE DATABASE")
+      assert_equal(taxonomy.uri.uri, "http://www.embl-heidelberg.de/~uetz/families/Varanidae.html")
+    end
+
     def test_distribution_desc
       9.times do
         @tree = @phyloxml.next_tree

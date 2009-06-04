@@ -134,7 +134,7 @@ module Bio
     #attr_accessor :id_type
 
 
-    #pattern = [a-zA-Z0-9_]{2,10} Swiss-prot secific
+    #pattern = [a-zA-Z0-9_]{2,10} Swiss-prot specific in phyloXML case
     attr_accessor :code
 
     attr_accessor :scientific_name
@@ -146,11 +146,20 @@ module Bio
     def inspect
       print "Taxonomy. scientific_name: #{@scientific_name}\n"
     end
+
+    def initialize
+      @common_name = []
+    end
   end
 
+  
+  # Element 'id' is used for a unique identifier of a taxon (for example '6500'
+  # with 'ncbi_taxonomy' as 'type' for the California sea hare). Attribute
+  # 'id_source' is used to link other elements to a taxonomy (on the xml-level).
   class PhyloXMLTaxonomy < Taxonomy
     attr_accessor :id
-    attr_accessor :id_type
+    attr_accessor :id_source
+    attr_accessor :type
     attr_accessor :uri
   end
 
@@ -442,6 +451,7 @@ module Bio
           id.type = @reader["type"]
           @reader.read
           id.value = @reader.value
+          @reader.read #@todo shouldn't there be another read?
           has_reached_end_tag?('node_id')
           #@todo write unit test for this. There is no example of this in the example files
           current_node.id = id
@@ -541,14 +551,33 @@ module Bio
 
     def parse_taxonomy
       taxonomy = PhyloXMLTaxonomy.new
-      #@todo parse taxonomy attributes
+      taxonomy.type = @reader["type"]
+      taxonomy.id_source = @reader["id_source"]
       @reader.read
       while not(is_end_element?('taxonomy')) do
 
-        parse_simple_element(taxonomy, 'scientific_name') if is_element?('scientific_name')
-        parse_simple_element(taxonomy, 'code') if is_element?('code')
+        #@todo unit scripts for id, rank, common_name
 
-        @reader.read      
+        ['code', 'scientific_name', 'rank'].each do |elem|
+          parse_simple_element(taxonomy, elem)
+        end
+
+        if is_element?('id')
+          taxonomy.id = parse_id('id')
+        end
+
+        if is_element?('common_name')
+          @reader.read
+          taxonomy.common_name << @reader.value
+          @reader.read
+          has_reached_end_tag?('common_name')
+        end
+
+        if is_element?('uri')
+          taxonomy.uri = parse_uri
+        end
+
+        @reader.read  #move to next tag in the loop
       end
       return taxonomy
     end #parse_taxonomy
@@ -724,7 +753,16 @@ module Bio
       return polygon
     end #parse_polygon
 
-
+    def parse_id(tag_name)
+      id = Id.new
+      id.type = @reader["type"]
+      @reader.read
+      id.value = @reader.value
+      @reader.read #@todo shouldn't there be another read?
+      has_reached_end_tag?(tag_name)
+          #@todo write unit test for this. There is no example of this in the example files
+      return id
+    end
 
   end #class phyloxml
   
