@@ -275,10 +275,20 @@ module Bio
   end
 
   class Date
-    attr_accessor :unit, :range, :desc, :value
+    attr_accessor :unit,  :desc
+
+    attr_reader :range, :value
 
     def to_s
       return "#{value} #{unit}"
+    end
+
+    def range=(str)
+      @range = str.to_i
+    end
+
+    def value= (str)
+      @value = str.to_i
     end
   end
 
@@ -446,6 +456,21 @@ module Bio
           #@todo add unit test for this
         end
 
+        if is_element?('date')
+          date = Date.new
+          #parse attributes
+          date.unit = @reader["unit"]
+          date.range = @reader["range"]
+          #parse tags
+          @reader.read #move to the next token, which is always empty, since date tag does not have text associated with it
+          @reader.read #now the token is the first tag under date tag
+          while not(is_end_element?('date'))
+            parse_simple_element(date, 'desc')
+            parse_simple_element(date, 'value')
+            @reader.read
+          end
+          current_node.date = date
+        end
         
         #end clade element, go one parent up
         if is_end_element?('clade') 

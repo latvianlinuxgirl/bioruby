@@ -211,6 +211,27 @@ module Bio
        }
      end
 
+     def test_date
+       11.times do
+         @tree = @phyloxml.next_tree
+       end
+       date_a = @tree.get_node_by_name('A').date
+       assert_equal(date_a.unit, 'mya')
+       assert_equal(date_a.range, 10)
+       assert_equal(date_a.desc, "Silurian")
+       assert_equal(date_a.value, 425)
+       date_b = @tree.get_node_by_name('B').date
+       assert_equal(date_b.unit, 'mya')
+       assert_equal(date_b.range, 20)
+       assert_equal(date_b.desc, "Devonian")
+       assert_equal(date_b.value, 320)
+       date_c = @tree.get_node_by_name('C').date
+       assert_equal(date_c.unit, 'mya')
+       assert_equal(date_c.range, 30)
+       assert_equal(date_c.desc, 'Ediacaran')
+       assert_equal(date_c.value, 600)
+     end
+
     
   end #class TestPhyloXML2
   
