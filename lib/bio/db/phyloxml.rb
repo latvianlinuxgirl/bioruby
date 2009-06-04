@@ -301,19 +301,35 @@ module Bio
     end
   end
 
-  #DomainArchitecture class
-  #
-  #* length (string / int ?)
-  #* domain [] (Array of ProteinDomain objects)
-  #
-  #ProteinDomain class
-  #
-  #* from (int)
-  #* to (int)
-  #* confidence (double) (for example, to store E-values)
-  #* id (string)
-  #* value (string)
-  #
+  class DomainArchitecture
+    attr_accessor :length
+    attr_reader :domain
+
+    def initialize
+      @domain = []
+    end
+  end
+
+  #To represent an individual domain in a domain architecture. The name/unique identifier is described via the 'id' attribute. 'confidence' can be used to store (i.e.) E-values.
+  class ProteinDomain
+    #simple string, for example to store E-values
+    attr_accessor :confidence
+    
+    #strings
+    attr_accessor :id, :value
+
+    attr_reader :from, :to
+
+    def from=(str)
+      @from = str.to_i
+    end
+
+    def to=(str)
+      @to = str.to_i
+    end
+
+  end
+
 
   #---
   # PhyloXML parser
@@ -618,6 +634,17 @@ module Bio
           sequence.annotation << parse_annotation
         end
 
+        if is_element?('domain_architecture')
+          #@todo write unit test for this
+          sequence.domain_architecture = DomainArchitecture.new
+          sequence.domain_architecture.length = @reader["length"]
+
+          @reader.read
+          while not(is_end_element?('domain_architecture'))
+            sequence.domain_architecture.domain << parse_domain
+            @reader.read
+          end
+        end
 
         @reader.read
       end
@@ -670,6 +697,8 @@ module Bio
 
     def parse_property
       #@todo
+
+
       return nil
     end
 
@@ -762,6 +791,19 @@ module Bio
       has_reached_end_tag?(tag_name)
           #@todo write unit test for this. There is no example of this in the example files
       return id
+    end
+
+    def parse_domain
+      domain = ProteinDomain.new
+      domain.from = @reader["from"]
+      domain.to = @reader["to"]
+      domain.confidence = @reader["confidence"]
+      domain.id = @reader["id"]
+      @reader.read
+      domain.value = @reader.value
+      @reader.read
+      has_reached_end_element?('domain')  
+      return domain
     end
 
   end #class phyloxml
