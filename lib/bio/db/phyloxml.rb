@@ -30,14 +30,12 @@ module Bio
  
   end
 
-  class PhyloXMLNode < Bio::Tree::Node
-    #@todo not inherit from node
-
+  class PhyloXMLNode 
     
     #Events at the root node of a clade (e.g. one gene duplication).
     attr_accessor :events
 
-    attr_accessor :id_source 
+    attr_accessor :id_source, :name
       
     attr_reader :width
     def width=(str)
@@ -49,9 +47,9 @@ module Bio
     #A general purpose confidence element. For example this can be used to express the bootstrap support value of a clade (in which case the 'type' attribute is 'bootstrap').
     attr_accessor :confidence
 
-    attr_accessor :color #@todo create alias colour?
+    attr_accessor :color 
 
-    attr_accessor :node_id #@todo create ID class with type and value
+    attr_accessor :node_id 
 
     #Element Sequence is used to represent a molecular sequence (Protein, DNA,
     # RNA) associated with a node. 'symbol' is a short (maximal ten characters)
@@ -98,6 +96,8 @@ module Bio
   end
 
   class Events
+    #@todo check if value for type elemnt is is from allowed list
+    #value comes from list: {'transfer'|'fusion'|'speciation_or_duplication'|'other'|'mixed'|'unassigned'}
     attr_accessor :type
     attr_reader :duplications
     attr_reader :speciations
@@ -120,6 +120,14 @@ module Bio
     def speciations=(str)
       @speciations=str.to_i
     end
+
+    def type=(str)
+      @type = str
+      #@todo add unit test for this
+      if not ['transfer','fusion','speciation_or_duplication','other','mixed','unassigned'].include?(str)
+        puts "Warning #{str} is not one of the allowed values"
+      end
+    end
   end
 
   #+++
@@ -128,12 +136,6 @@ module Bio
 
   # This is general Taxonomy class.
   class Taxonomy
-    #@todo sort out code
-    # A general purpose identifier element. Allows to indicate the type (or source) of an identifier.
-    #attr_accessor :id
-    #attr_accessor :id_type
-
-
     #pattern = [a-zA-Z0-9_]{2,10} Swiss-prot specific in phyloXML case
     attr_accessor :code
 
@@ -144,6 +146,7 @@ module Bio
     attr_accessor :rank
 
     def inspect
+      #@todo work on this
       print "Taxonomy. scientific_name: #{@scientific_name}\n"
     end
 
@@ -188,9 +191,9 @@ module Bio
     #String
     attr_accessor :desc
     #Array of Point objects
-    attr_accessor :points #@todo Point class
+    attr_accessor :points
 
-    attr_accessor :polygons #@todo polygon class
+    attr_accessor :polygons 
 
     def initialize
       @points = []
@@ -330,6 +333,45 @@ module Bio
 
   end
 
+  #Property allows for typed and referenced properties from external resources
+  #to be attached to 'Phylogeny', 'Clade', and 'Annotation'. The value of a
+  #property is its mixed (free text) content. Attribute 'datatype' indicates
+  #the type of a property and is limited to xsd-datatypes (e.g. 'xsd:string',
+  #'xsd:boolean', 'xsd:integer', 'xsd:decimal', 'xsd:float', 'xsd:double',
+  #'xsd:date', 'xsd:anyURI'). Attribute 'applies_to' indicates the item to
+  #which a property applies to (e.g. 'node' for the parent node of a clade,
+  #'parent_branch' for the parent branch of a clade). Attribute 'id_ref' allows
+  #to attached a property specifically to one element (on the xml-level).
+  #Optional attribute 'unit' is used to indicate the unit of the property.
+  #An example: <property datatype="xsd:integer" ref="NOAA:depth" applies_to="clade" unit="METRIC:m"> 200 </property>
+  class Property
+    attr_accessor :ref, :unit, :id_ref
+    
+    attr_reader :datatype, :applies_to
+
+    def datatype=(str)
+      unless ['xsd:string','xsd:boolean','xsd:decimal','xsd:float','xsd:double',
+          'xsd:duration','xsd:dateTime','xsd:time','xsd:date','xsd:gYearMonth',
+          'xsd:gYear','xsd:gMonthDay','xsd:gDay','xsd:gMonth','xsd:hexBinary',
+          'xsd:base64Binary','xsd:anyURI','xsd:normalizedString','xsd:token',
+          'xsd:integer','xsd:nonPositiveInteger','xsd:negativeInteger',
+          'xsd:long','xsd:int','xsd:short','xsd:byte','xsd:nonNegativeInteger',
+          'xsd:unsignedLong','xsd:unsignedInt','xsd:unsignedShort',
+          'xsd:unsignedByte','xsd:positiveInteger'].include?(str)
+        puts "Warning: #{str} is not in the list of allowed values."
+      end
+      #@todo add unit test
+      @datatype = str
+    end
+
+    def applies_to=(str)
+      unless ['phylogeny','clade','node','annotation','parent_branch','other'].include?(str)
+        puts "Warning: #{str} is not in the list of allowed values."
+      end
+      @applies_to = str
+    end
+  end
+
 
   #---
   # PhyloXML parser
@@ -425,7 +467,7 @@ module Bio
         end #end if clade           
         
         #parse name element of the clade
-        parse_simple_element(current_node, 'name')  if is_element?('name')
+        parse_simple_element(current_node, 'name')
         
         #parse branch_length tag
         if is_element?('branch_length')
@@ -438,7 +480,7 @@ module Bio
         #parse width tag
         #@todo write unit test for this
         #@todo put width into edge?
-        parse_simple_element(current_node, 'width')  if is_element?('width')
+        parse_simple_element(current_node, 'width')
 
         #parse confidence tag
         if is_element?('confidence')
@@ -467,7 +509,7 @@ module Bio
           id.type = @reader["type"]
           @reader.read
           id.value = @reader.value
-          @reader.read #@todo shouldn't there be another read?
+          @reader.read 
           has_reached_end_tag?('node_id')
           #@todo write unit test for this. There is no example of this in the example files
           current_node.id = id
@@ -549,15 +591,12 @@ module Bio
       events = Events.new
       @reader.read #go to next element
       while not(is_end_element?('events')) do
-        #@todo check if value for type elemnt is is from allowed list
-        parse_simple_element(events, 'type')  if is_element?('type')
-
-        ['duplications', 'speciations', 'losses'].each { |elmt|
-          parse_simple_element(events, elmt)  if is_element?(elmt)
+        ['type', 'duplications', 'speciations', 'losses'].each { |elmt|
+          parse_simple_element(events, elmt)
         }
         if is_element?('confidence')
           events.confidence = parse_confidence
-          #@todo add unit test for this
+          #@todo add unit test for this (example file does not have this case)
         end
         @reader.read
       end
@@ -571,8 +610,6 @@ module Bio
       taxonomy.id_source = @reader["id_source"]
       @reader.read
       while not(is_end_element?('taxonomy')) do
-
-        #@todo unit scripts for id, rank, common_name
 
         ['code', 'scientific_name', 'rank'].each do |elem|
           parse_simple_element(taxonomy, elem)
@@ -679,7 +716,6 @@ module Bio
             annotation.confidence  = parse_confidence
           end          
 
-          #@todo parse_property
           if is_element?('property')
             annotation.property << parse_property
           end
@@ -697,8 +733,17 @@ module Bio
 
     def parse_property
       #@todo
+      property = Property.new
+      property.ref = @reader["ref"]
+      property.unit = @reader["unit"]
+      property.datatype = @reader["datatype"]
+      property.applies_to = @reader["applies_to"]
+      property.id_ref = @reader["id_ref"]
 
-
+      @reader.read
+      property.value = @reader.value
+      property.read
+      has_reached_end_tag?('property')
       return nil
     end
 
