@@ -25,11 +25,15 @@ module Bio
 
   class PhyloXMLTree < Bio::Tree
   
-    attr_accessor :name, :description, :rooted
-  
+    attr_accessor :name, :description, :rooted 
  
   end
 
+  #+++
+  # PhyloXMLNode class
+  #+++
+
+  # Class to hold clade element of phyloXML.
   class PhyloXMLNode 
     
     #Events at the root node of a clade (e.g. one gene duplication).
@@ -38,6 +42,7 @@ module Bio
     attr_accessor :id_source, :name
       
     attr_reader :width
+
     def width=(str)
       @width = str.to_f
     end
@@ -95,18 +100,25 @@ module Bio
 
   end
 
+  #+++
+  # Events class
+  #+++
+
+  #Events at the root node of a clade (e.g. one gene duplication).
   class Events
-    #@todo check if value for type elemnt is is from allowed list
     #value comes from list: {'transfer'|'fusion'|'speciation_or_duplication'|'other'|'mixed'|'unassigned'}
     attr_accessor :type
     attr_reader :duplications
     attr_reader :speciations
     attr_reader :losses
-
     attr_reader :confidence
 
     def confidence=(type, value)
       @confidence = Confidence.new(type, value)
+    end
+
+    def confidence=(conf)
+      @confidence = conf
     end
 
     def duplications=(str)
@@ -146,7 +158,7 @@ module Bio
     attr_accessor :rank
 
     def inspect
-      #@todo work on this
+      #@todo work on this / or throw it out. was used for testing.
       print "Taxonomy. scientific_name: #{@scientific_name}\n"
     end
 
@@ -156,6 +168,10 @@ module Bio
   end
 
   
+  #+++
+  # PhyloXMLTaxonomy class
+  #+++
+
   # Element 'id' is used for a unique identifier of a taxon (for example '6500'
   # with 'ncbi_taxonomy' as 'type' for the California sea hare). Attribute
   # 'id_source' is used to link other elements to a taxonomy (on the xml-level).
@@ -166,6 +182,13 @@ module Bio
     attr_accessor :uri
   end
 
+  #+++
+  # Confidence class
+  #+++
+
+  # A general purpose confidence element. For example this can be used to express
+  # the bootstrap support value of a clade (in which case the 'type' attribute
+  # is 'bootstrap').
   class Confidence
     attr_accessor :type
     attr_accessor :value
@@ -176,7 +199,6 @@ module Bio
     end
 
   end
-#
 
   #+++
   # Distribution class
@@ -199,9 +221,11 @@ module Bio
       @points = []
       @pplygons = []
     end
+  end #Distribution class
 
-  end
-
+  #+++
+  # Point class
+  #+++
 
   class Point
     attr_accessor :lat, :long, :alt, :geodetic_datum
@@ -253,7 +277,7 @@ module Bio
     #Example: "UniProtKB"
     attr_accessor :source
     
-    #example: "P17304"
+    #Example: "P17304"
     attr_accessor :value #@todo maybe call it id. 
   end
 
@@ -396,8 +420,6 @@ module Bio
     def file(filename)
       @reader = XML::Reader.file(filename)
     end
-
-
     
     def next_tree()
     
@@ -412,37 +434,36 @@ module Bio
       current_edge = nil
       
       #skip until have reached clade element, processing what pertains to the whole Tree info
-      while not((@reader.node_type==XML::Reader::TYPE_ELEMENT) and @reader.name == "clade") do
-        #parse attribute "rooted"
+      while not is_element?('clade') do
+        #parse attributes
         if is_element?('phylogeny')
           @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
         end
 
-        parse_simple_element(tree, 'name')  if is_element?('name')
-
-        parse_simple_element(tree, 'description') if is_element?('description')
+        #parse elements
+        parse_simple_element(tree, 'name')
+        parse_simple_element(tree, 'description') 
 
         if is_element?('confidence')
           tree.confidence << parse_confidence
           #@todo add unit test for this
         end
-      
-        
+       
         #if for some reason have reached the end of file, return nil
         #@todo take care of other stuff after phylogeny, like align:alignment
         if is_end_element?('phyloxml')
           return nil
         end
         
-        @reader.read
+        @reader.read #go to next element
         puts @reader.name if ($debug and @reader.name != nil)
       end #while
 
       ############
-      # => Now parsing clade element
+      # => Now parsing elements
       ############
 
-      while not((@reader.node_type==XML::Reader::TYPE_END_ELEMENT) and (@reader.name == "phylogeny")) do       
+      while not is_end_element?('phylogeny') do
       
         #clade element
         if is_element?('clade')
@@ -482,27 +503,12 @@ module Bio
         #@todo put width into edge?
         parse_simple_element(current_node, 'width')
 
-        #parse confidence tag
-        if is_element?('confidence')
-          current_node.confidence << parse_confidence
-        end        
-
         #parse events element
         if is_element?('events')
           current_node.events = parse_events
         end
 
-        if is_element?('taxonomy')          
-          current_node.taxonomy << parse_taxonomy
-        end
-
-        if is_element?('sequence')
-          current_node.sequence << parse_sequence
-        end
-
-        if is_element?('distribution')
-          current_node.distribution << parse_distribution
-        end
+        parse_complex_array_elements(current_node, ['confidence', 'taxonomy', 'sequence', 'distribution'])
 
         if is_element?('node_id')
           id = Id.new
@@ -510,7 +516,7 @@ module Bio
           @reader.read
           id.value = @reader.value
           @reader.read 
-          has_reached_end_tag?('node_id')
+          has_reached_end_element?('node_id')
           #@todo write unit test for this. There is no example of this in the example files
           current_node.id = id
         end
@@ -541,7 +547,7 @@ module Bio
         end
         
         #end clade element, go one parent up
-        if is_end_element?('clade') 
+        if is_end_element?('clade')
           current_node = tree.parent(current_node)
         end          
         
@@ -569,7 +575,7 @@ module Bio
       @reader.node_type==XML::Reader::TYPE_END_ELEMENT and @reader.name == str ? true : false
     end
 
-    def has_reached_end_tag?(str)
+    def has_reached_end_element?(str)
       if not(is_end_element?(str))
         puts "Warning: Should have reached </#{str}> element here"
       end
@@ -583,17 +589,38 @@ module Bio
         @reader.read
         object.send("#{name}=", @reader.value)
         @reader.read
-        has_reached_end_tag?(name)
+        has_reached_end_element?(name)
       end
     end
+
+    def parse_simple_elements(object, elements)
+      elements.each do |elmt|
+          parse_simple_element(object, elmt)
+      end
+      
+    end
+
+    #parses elements where attributes of the object are arrays of objects.
+    #@todo maybe there is better name for this method
+    def parse_complex_array_elements(object, elements)
+      #Example code:
+      # if is_element('confidence')
+      #   current_node.confidence << parse_confidence
+      # end
+      elements.each do |elem|
+        if is_element?(elem)
+          object.send("#{elem}") << self.send("parse_#{elem}")
+        end
+      end
+    end #parse_complex_array_elements
 
     def parse_events()
       events = Events.new
       @reader.read #go to next element
       while not(is_end_element?('events')) do
-        ['type', 'duplications', 'speciations', 'losses'].each { |elmt|
-          parse_simple_element(events, elmt)
-        }
+
+        parse_simple_elements(events, ['type', 'duplications', 'speciations', 'losses'])
+
         if is_element?('confidence')
           events.confidence = parse_confidence
           #@todo add unit test for this (example file does not have this case)
@@ -611,10 +638,8 @@ module Bio
       @reader.read
       while not(is_end_element?('taxonomy')) do
 
-        ['code', 'scientific_name', 'rank'].each do |elem|
-          parse_simple_element(taxonomy, elem)
-        end
-
+        parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank'] )
+ 
         if is_element?('id')
           taxonomy.id = parse_id('id')
         end
@@ -623,7 +648,7 @@ module Bio
           @reader.read
           taxonomy.common_name << @reader.value
           @reader.read
-          has_reached_end_tag?('common_name')
+          has_reached_end_element?('common_name')
         end
 
         if is_element?('uri')
@@ -648,11 +673,7 @@ module Bio
       @reader.read
       while not(is_end_element?('sequence'))
 
-        ['symbol', 'name', 'location', 'mol_seq'].each {|elem|
-          parse_simple_element(sequence, elem) if is_element?(elem)
-        }
-
-        parse_simple_element(sequence, 'symbol') if is_element?('symbol')
+        parse_simple_elements(sequence,['symbol', 'name', 'location', 'mol_seq', 'symbol'])
 
         if is_element?('accession')
           sequence.accession = Accession.new
@@ -660,7 +681,7 @@ module Bio
           @reader.read
           sequence.accession.value = @reader.value
           @reader.read
-          has_reached_end_tag?('accession')
+          has_reached_end_element?('accession')
         end
 
         if is_element?('uri')
@@ -706,9 +727,7 @@ module Bio
       annotation.evidence = @reader["evidence"]
       annotation.type = @reader["type"]
 
-      if @reader.empty_element?
-        return annotation
-      else
+      if not @reader.empty_element?
         while not(is_end_element?('annotation'))
           parse_simple_element(annotation, 'desc') if is_element?('desc')
 
@@ -727,12 +746,12 @@ module Bio
 
           @reader.read
         end
-        return annotation
-      end      
+        
+      end
+      return annotation
     end
 
     def parse_property
-      #@todo
       property = Property.new
       property.ref = @reader["ref"]
       property.unit = @reader["unit"]
@@ -743,29 +762,29 @@ module Bio
       @reader.read
       property.value = @reader.value
       property.read
-      has_reached_end_tag?('property')
+      has_reached_end_element?('property')
       return nil
-    end
+    end #parse_property
 
-    def parse_confidence
-      #@todo does it matter if it is float or integer?
+    def parse_confidence      
       type = @reader["type"]
       @reader.read
       value = @reader.value.to_f
       @reader.read
-      has_reached_end_tag?('confidence')
+      has_reached_end_element?('confidence')
       return Confidence.new(type, value)
     end #parse_confidence
 
     def parse_distribution
       distribution = Distribution.new
-
       @reader.read
-
       while not(is_end_element?('distribution')) do
 
-        parse_simple_element(distribution, 'desc') if is_element?('desc')
- 
+        parse_simple_element(distribution, 'desc')
+
+        #@todo this does not work because of the plural form
+        #parse_complex_array_elements(distribution, ['point', 'polygon'])
+
         if is_element?('point')
           distribution.points << parse_point
         end
@@ -791,15 +810,13 @@ module Bio
       @reader.read
       while not(is_end_element?('point')) do
 
-        ['lat', 'long'].each { |elemnt|
-          parse_simple_element(point, elemnt) if is_element?(elemnt)
-        }
+        parse_simple_elements(point, ['lat', 'long'] )
 
         if is_element?('alt')
           @reader.read
           point.alt << @reader.value.to_f
           @reader.read
-          has_reached_end_tag?('alt')
+          has_reached_end_element?('alt')
         end
         #advance reader
         @reader.read
@@ -811,7 +828,6 @@ module Bio
       polygon = Polygon.new
 
       @reader.read
-      #@todo consider renaming is_end_element has_reached_end_tag? so that it is either element or tag
       while not(is_end_element?('polygon')) do
 
         if is_element?('point')
@@ -833,7 +849,7 @@ module Bio
       @reader.read
       id.value = @reader.value
       @reader.read #@todo shouldn't there be another read?
-      has_reached_end_tag?(tag_name)
+      has_reached_end_element?(tag_name)
           #@todo write unit test for this. There is no example of this in the example files
       return id
     end
@@ -844,10 +860,11 @@ module Bio
       domain.to = @reader["to"]
       domain.confidence = @reader["confidence"]
       domain.id = @reader["id"]
+
       @reader.read
       domain.value = @reader.value
       @reader.read
-      has_reached_end_element?('domain')  
+      has_reached_end_element?('domain')
       return domain
     end
 
