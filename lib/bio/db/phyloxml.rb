@@ -396,6 +396,16 @@ module Bio
     end
   end
 
+  #+++
+  # Reference class
+  #+++
+
+  #A literature reference for a clade. It is recommended to use the 'doi'
+  #attribute instead of the free text 'desc' element whenever possible.
+  class Reference
+    attr_accessor :doi, :desc
+  end
+
 
   #---
   # PhyloXML parser
@@ -545,6 +555,23 @@ module Bio
           end
           current_node.date = date
         end
+
+        if is_element?('reference')
+          #@todo write unit test (there is no such tag in example file)
+          reference = Reference.new
+          #parse attributes
+          reference.doi = @reader['doi']
+          @reader.read
+          #@todo test this part, maybe simplify code, since there can be max one desc tag.
+          while not(is_end_element?('desc'))
+            if is_element?('desc')
+              reference.desc = @reader.value@reader.read
+            end
+            @reader.read
+          end
+          current_node.reference = reference
+        end
+
         
         #end clade element, go one parent up
         if is_end_element?('clade')
