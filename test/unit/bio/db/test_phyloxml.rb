@@ -246,19 +246,17 @@ module Bio
        assert_equal(date_c.value, 600)
      end
 
-#     def test_property
-#       7.times do
-#         @tree = @phyloxml.next_tree
-#       end
-#      # puts @tree.name
-#      # <property datatype="xsd:integer" ref="NOAA:depth" applies_to="clade" unit="METRIC:m"> 1200 </property>
-#       property = @tree.get_node_by_name('A').property[0]
-#       assert_equal(property.datatype, 'xsd:integer')
-#       assert_equal(property.ref,'NOAA:depth')
-#       assert_equal(property.applies_to, 'clade')
-#       assert_equal(property.unit, 'METRIC:m')
-#       assert_equal(property.value, ' 1200 ')
-#     end
+     def test_property
+       7.times do
+         @tree = @phyloxml.next_tree
+       end
+       property = @tree.get_node_by_name('A').property[0]
+       assert_equal(property.datatype, 'xsd:integer')
+       assert_equal(property.ref,'NOAA:depth')
+       assert_equal(property.applies_to, 'clade')
+       assert_equal(property.unit, 'METRIC:m')
+       assert_equal(property.value, ' 1200 ')
+     end
 
     
   end #class TestPhyloXML2

@@ -25,7 +25,7 @@ module Bio
 
   class PhyloXMLTree < Bio::Tree
   
-    attr_accessor :name, :description, :rooted 
+    attr_accessor :name, :description, :rooted, :property
  
   end
 
@@ -460,8 +460,17 @@ module Bio
 
       if not is_element?('phylogeny')
         print "Warning: This should have been phylogeny element, but it is: ", @reader.name, " ", @reader.value, "\n"
-        return nil
+
         #@todo deal with rest of the stuff, maybe read in as text and add it to PhyloXML
+        #@todo what if there are phylogeny elements after the extra stuff
+        #for now ignore the rest of the stuff
+        #and loop until the next phylogeny element if there is one, in case 
+        #there are more phylogeny elements after other stuff, so that next read 
+        #is successful
+        while is_element?('phylogeny') or is_end_element?('phyloxml')
+          @reader.read
+        end
+        return nil
       end
 
       tree = Bio::PhyloXMLTree.new()
@@ -479,18 +488,47 @@ module Bio
       # parsing phylogeny
       parsing_clade = false
 
-      #skip until have reached clade element, processing what pertains to the whole Tree info
-      while not is_element?('clade') do
-        #parse attributes
-        if is_element?('phylogeny')
-          @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
-        end
+#      #skip until have reached clade element, processing what pertains to the whole Tree info
+#      while not is_element?('clade') do
+#        #parse attributes
+#        if is_element?('phylogeny')
+#          @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
+#        end
+#
+#        if not parsing_clade
+#
+#          #parse elements
+#          parse_simple_element(tree, 'name')
+#          #puts tree.name
+#          parse_simple_element(tree, 'description')
+#
+#          if is_element?('confidence')
+#            tree.confidence << parse_confidence
+#            #@todo add unit test for this
+#          end
+#
+#        end
+#
+#
+#        @reader.read #go to next element
+#        puts @reader.name if ($debug and @reader.name != nil)
+#      end #while
 
+      ############
+      # => Now parsing clade of the tree
+      ############
+
+      while not is_end_element?('phylogeny') do
+
+      #do the stuff what pertains to the tree  
         if not parsing_clade
+
+          if is_element?('phylogeny')
+            @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
+          end
 
           #parse elements
           parse_simple_element(tree, 'name')
-          #puts tree.name
           parse_simple_element(tree, 'description')
 
           if is_element?('confidence')
@@ -499,24 +537,6 @@ module Bio
           end
 
         end
-
-        #if for some reason have reached the end of file, return nil
-        #@todo take care of other stuff after phylogeny, like align:alignment
-        #@todo fix this, if these 3 lines are removed, then it goes to infinite loop
-        #tood Yey, fixed
-      #  if is_end_element?('phyloxml')
-      #    return nil
-      #  end
-        
-        @reader.read #go to next element
-        puts @reader.name if ($debug and @reader.name != nil)
-      end #while
-
-      ############
-      # => Now parsing clade of the tree
-      ############
-
-      while not is_end_element?('phylogeny') do
 
       #can't do recursion. 
 
@@ -548,6 +568,10 @@ module Bio
         if is_end_element?('clade')
         #  puts current_node.name
           current_node = tree.parent(current_node)
+          if current_node == tree.root
+            #puts "Have reached root"
+            parsing_clade = false
+          end
         end          
 
         parse_clade_elements(current_node, current_edge) if parsing_clade
@@ -555,6 +579,14 @@ module Bio
 
         #parse_tree stuff how do I know if its tree stuff? If the current node is root?
         #what is parent of root node? 
+
+        if not parsing_clade
+          if is_element?('property')
+            tree.property = parse_property
+          end
+          #@todo add unit test for this
+        end
+
 
         # go to next element        
         @reader.read    
@@ -651,18 +683,18 @@ module Bio
           current_node.events = parse_events
         end
 
-       parse_complex_array_elements(current_node, ['confidence', 'taxonomy', 'sequence', 'distribution'])
+       parse_complex_array_elements(current_node, ['confidence', 'taxonomy', 'sequence', 'distribution', 'property'])
 
-       # if is_element?('property')
-         # puts @reader.name
-        #  p = parse_property
-         # puts p
-        #  puts current_node.property.class
-        #  if current_node == nil
-        #    puts "NODE IS NIL"
-        #  end
-        #  current_node.property[current_node.property.length] = p
-        #end
+#       if is_element?('property')
+#          puts @reader.name
+#          p = parse_property
+#          puts p
+#          puts current_node.property.class
+#          if current_node == nil
+#            puts "NODE IS NIL"
+#          end
+#          current_node.property[current_node.property.length] = p
+#       end
 
 
         if is_element?('node_id')
