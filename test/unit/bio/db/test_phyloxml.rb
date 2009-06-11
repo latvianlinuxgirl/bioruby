@@ -41,7 +41,7 @@ module Bio
       assert_equal(@phyloxml.class, Bio::PhyloXML)
     end 
       
-    def test_next_tree
+    def test_next_tree()
       tree = @phyloxml.next_tree
       tree_arr = []
       while tree != nil do
@@ -312,9 +312,15 @@ module Bio
       7.times do
         @tree = @phyloxml.next_tree
       end
-     # puts @tree.name
+      #puts @tree.name
+       #<clade_relation id_ref_0="b" id_ref_1="c" type="network_connection"/>
+       cr = @tree.clade_relation
+       assert_equal(cr.id_ref_0, "b")
+       assert_equal(cr.id_ref_1, "c")
+       assert_equal(cr.type, "network_connection")
     end
 
   end
+
 
 end #end module Bio

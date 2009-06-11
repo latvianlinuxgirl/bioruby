@@ -25,7 +25,8 @@ module Bio
 
   class PhyloXMLTree < Bio::Tree
   
-    attr_accessor :name, :description, :rooted, :property
+    attr_accessor :name, :description, :rooted, :property,
+      :clade_relation, :sequence_relation
  
   end
 
@@ -413,15 +414,9 @@ module Bio
 
   class CladeRelation
     attr_accessor :distance, :type, :confidence
-    attr_reader :id_ref_0, :id_ref_1
+    attr_accessor :id_ref_0, :id_ref_1
 
-    def id_ref_0=(str)
-      @id_ref_0 = str.to_f
-    end
 
-    def id_ref_1=(str)
-      @id_ref_1 = str.to_f
-    end
 
 
   end
@@ -458,6 +453,8 @@ module Bio
     
     def next_tree()
 
+      #@todo what about a method for skipping a tree. (might save on time by not creating all those objects)
+
       if not is_element?('phylogeny')
         print "Warning: This should have been phylogeny element, but it is: ", @reader.name, " ", @reader.value, "\n"
 
@@ -488,39 +485,9 @@ module Bio
       # parsing phylogeny
       parsing_clade = false
 
-#      #skip until have reached clade element, processing what pertains to the whole Tree info
-#      while not is_element?('clade') do
-#        #parse attributes
-#        if is_element?('phylogeny')
-#          @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
-#        end
-#
-#        if not parsing_clade
-#
-#          #parse elements
-#          parse_simple_element(tree, 'name')
-#          #puts tree.name
-#          parse_simple_element(tree, 'description')
-#
-#          if is_element?('confidence')
-#            tree.confidence << parse_confidence
-#            #@todo add unit test for this
-#          end
-#
-#        end
-#
-#
-#        @reader.read #go to next element
-#        puts @reader.name if ($debug and @reader.name != nil)
-#      end #while
-
-      ############
-      # => Now parsing clade of the tree
-      ############
-
       while not is_end_element?('phylogeny') do
 
-      #do the stuff what pertains to the tree  
+         #do the stuff what pertains to the tree
         if not parsing_clade
 
           if is_element?('phylogeny')
@@ -538,7 +505,7 @@ module Bio
 
         end
 
-      #can't do recursion. 
+
 
         #clade element
         if is_element?('clade')
@@ -559,34 +526,48 @@ module Bio
             tree.add_node(node)
             current_edge = tree.add_edge(current_node, node, Bio::Tree::Edge.new(branch_length))
           end
-          current_node = node
-        
-          
+          current_node = node          
         end #end if clade  
     
         #end clade element, go one parent up
         if is_end_element?('clade')
         #  puts current_node.name
           current_node = tree.parent(current_node)
+          #if we have reached the closing tag of the top-most clade, then our
+          # curent node should point to the root, If thats the case, we are done
+          # parsing the clade element          
           if current_node == tree.root
             #puts "Have reached root"
             parsing_clade = false
           end
         end          
 
+        #parsing clade elements
         parse_clade_elements(current_node, current_edge) if parsing_clade
 
-
-        #parse_tree stuff how do I know if its tree stuff? If the current node is root?
-        #what is parent of root node? 
-
+        #parsing phylogeny elements
         if not parsing_clade
           if is_element?('property')
             tree.property = parse_property
           end
           #@todo add unit test for this
-        end
 
+          if is_element?('clade_relation')
+            tree.clade_relation = CladeRelation.new
+            tree.clade_relation.id_ref_0 = @reader["id_ref_0"]
+            tree.clade_relation.id_ref_1 = @reader["id_ref_1"]
+            tree.clade_relation.distance = @reader["distance"]
+            tree.clade_relation.type = @reader["type"]
+
+            #@todo add unit test for this
+            if not @reader.empty_element?
+              @reader.read
+              if is_element?('confidence')
+                tree.clade_relation.confidence = parse_confidence
+              end
+            end
+          end
+        end
 
         # go to next element        
         @reader.read    
@@ -733,7 +714,7 @@ module Bio
           current_node.date = date
         end
 
-
+        #@todo check whats up here
         if is_element?('reference')
           #@todo write unit test (there is no such tag in example file)
           reference = Reference.new
@@ -743,7 +724,7 @@ module Bio
           #@todo test this part, maybe simplify code, since there can be max one desc tag.
           while not(is_end_element?('desc'))
             if is_element?('desc')
-              reference.desc = @reader.value@reader.read
+              reference.desc = @reader.value @reader.read
             end
             @reader.read
           end
