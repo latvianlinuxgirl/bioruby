@@ -45,6 +45,7 @@ module Bio
       tree = @phyloxml.next_tree
       tree_arr = []
       while tree != nil do
+
         tree_arr[tree_arr.length] = tree.name
         tree = @phyloxml.next_tree
       end      
@@ -245,6 +246,20 @@ module Bio
        assert_equal(date_c.value, 600)
      end
 
+#     def test_property
+#       7.times do
+#         @tree = @phyloxml.next_tree
+#       end
+#      # puts @tree.name
+#      # <property datatype="xsd:integer" ref="NOAA:depth" applies_to="clade" unit="METRIC:m"> 1200 </property>
+#       property = @tree.get_node_by_name('A').property[0]
+#       assert_equal(property.datatype, 'xsd:integer')
+#       assert_equal(property.ref,'NOAA:depth')
+#       assert_equal(property.applies_to, 'clade')
+#       assert_equal(property.unit, 'METRIC:m')
+#       assert_equal(property.value, ' 1200 ')
+#     end
+
     
   end #class TestPhyloXML2
   
@@ -280,8 +295,8 @@ module Bio
       node =  @tree.get_node_by_name("AB")
       # nodes  = @tree.children(node).sort { |a,b| a.name <=> b.name }
       node_names = []
-      @tree.children(node).each { |node|
-        node_names[node_names.length] = node.name
+      @tree.children(node).each { |children|
+        node_names[node_names.length] = children.name
       }
       node_names.sort!
       assert_equal(node_names, ["A", "B"])
@@ -290,5 +305,18 @@ module Bio
   
   end # class
 
+  class TestPhyloXML4 < Test::Unit::TestCase
+
+    #test cases what pertain to tree
+
+    def test_clade_relation
+      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      7.times do
+        @tree = @phyloxml.next_tree
+      end
+     # puts @tree.name
+    end
+
+  end
 
 end #end module Bio

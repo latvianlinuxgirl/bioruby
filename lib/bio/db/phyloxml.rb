@@ -97,6 +97,7 @@ module Bio
       @reference = []
       @property = []
     end
+    
 
   end
 
@@ -369,7 +370,7 @@ module Bio
   #Optional attribute 'unit' is used to indicate the unit of the property.
   #An example: <property datatype="xsd:integer" ref="NOAA:depth" applies_to="clade" unit="METRIC:m"> 200 </property>
   class Property
-    attr_accessor :ref, :unit, :id_ref
+    attr_accessor :ref, :unit, :id_ref, :value
     
     attr_reader :datatype, :applies_to
 
@@ -406,6 +407,24 @@ module Bio
     attr_accessor :doi, :desc
   end
 
+  #+++
+  # Clade Relation class
+  #+++
+
+  class CladeRelation
+    attr_accessor :distance, :type, :confidence
+    attr_reader :id_ref_0, :id_ref_1
+
+    def id_ref_0=(str)
+      @id_ref_0 = str.to_f
+    end
+
+    def id_ref_1=(str)
+      @id_ref_1 = str.to_f
+    end
+
+
+  end
 
   #---
   # PhyloXML parser
@@ -425,16 +444,26 @@ module Bio
         #assume it is string input
         @reader = XML::Reader.string(str)
       end
+      #@todo should loop through until reaches phylogeny stuff
+      while not is_element?('phylogeny')
+        @reader.read
+        #puts @reader.name
+      end
     end
     
     def file(filename)
       @reader = XML::Reader.file(filename)
+
     end
     
     def next_tree()
-    
-      puts @reader.name if ($debug and @reader.name != nil)
-        
+
+      if not is_element?('phylogeny')
+        print "Warning: This should have been phylogeny element, but it is: ", @reader.name, " ", @reader.value, "\n"
+        return nil
+        #@todo deal with rest of the stuff, maybe read in as text and add it to PhyloXML
+      end
+
       tree = Bio::PhyloXMLTree.new()
 
       #current_node variable is a pointer to the current node parsed
@@ -442,7 +471,14 @@ module Bio
       
       #keep track of current edge to be able to parse branch_length tag
       current_edge = nil
-      
+
+      #we are going to parse clade iteratively by pointing (and changing) to the
+      # current node in the tree. Since the property element is both in clade
+      # and in the phylogeny, we need some boolean to know if we are
+      # parsing the clade (there can be only max 1 clade in phylogeny) or
+      # parsing phylogeny
+      parsing_clade = false
+
       #skip until have reached clade element, processing what pertains to the whole Tree info
       while not is_element?('clade') do
         #parse attributes
@@ -450,33 +486,43 @@ module Bio
           @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
         end
 
-        #parse elements
-        parse_simple_element(tree, 'name')
-        parse_simple_element(tree, 'description') 
+        if not parsing_clade
 
-        if is_element?('confidence')
-          tree.confidence << parse_confidence
-          #@todo add unit test for this
+          #parse elements
+          parse_simple_element(tree, 'name')
+          #puts tree.name
+          parse_simple_element(tree, 'description')
+
+          if is_element?('confidence')
+            tree.confidence << parse_confidence
+            #@todo add unit test for this
+          end
+
         end
-       
+
         #if for some reason have reached the end of file, return nil
         #@todo take care of other stuff after phylogeny, like align:alignment
-        if is_end_element?('phyloxml')
-          return nil
-        end
+        #@todo fix this, if these 3 lines are removed, then it goes to infinite loop
+        #tood Yey, fixed
+      #  if is_end_element?('phyloxml')
+      #    return nil
+      #  end
         
         @reader.read #go to next element
         puts @reader.name if ($debug and @reader.name != nil)
       end #while
 
       ############
-      # => Now parsing elements
+      # => Now parsing clade of the tree
       ############
 
       while not is_end_element?('phylogeny') do
-      
+
+      #can't do recursion. 
+
         #clade element
         if is_element?('clade')
+          parsing_clade = true #@todo when to set it to false? when current_node points to the root.
           #create a new node
           node= Bio::PhyloXMLNode.new
           
@@ -494,97 +540,31 @@ module Bio
             current_edge = tree.add_edge(current_node, node, Bio::Tree::Edge.new(branch_length))
           end
           current_node = node
+        
           
-        end #end if clade           
-        
-        #parse name element of the clade
-        parse_simple_element(current_node, 'name')
-        
-        #parse branch_length tag
-        if is_element?('branch_length')
-          #read in the name tag value
-          @reader.read
-          branch_length = @reader.value
-          current_edge.distance = branch_length.to_f
-        end 
-
-        #parse width tag
-        #@todo write unit test for this
-        #@todo put width into edge?
-        parse_simple_element(current_node, 'width')
-
-        #parse events element
-        if is_element?('events')
-          current_node.events = parse_events
-        end
-
-        parse_complex_array_elements(current_node, ['confidence', 'taxonomy', 'sequence', 'distribution'])
-
-        if is_element?('node_id')
-          id = Id.new
-          id.type = @reader["type"]
-          @reader.read
-          id.value = @reader.value
-          @reader.read 
-          has_reached_end_element?('node_id')
-          #@todo write unit test for this. There is no example of this in the example files
-          current_node.id = id
-        end
-
-        if is_element?('color')
-          color = BranchColor.new
-          parse_simple_element(color, 'red')
-          parse_simple_element(color, 'green')
-          parse_simple_element(color, 'blue')
-          current_node.color = color
-          #@todo add unit test for this
-        end
-
-        if is_element?('date')
-          date = Date.new
-          #parse attributes
-          date.unit = @reader["unit"]
-          date.range = @reader["range"]
-          #parse tags
-          @reader.read #move to the next token, which is always empty, since date tag does not have text associated with it
-          @reader.read #now the token is the first tag under date tag
-          while not(is_end_element?('date'))
-            parse_simple_element(date, 'desc')
-            parse_simple_element(date, 'value')
-            @reader.read
-          end
-          current_node.date = date
-        end
-
-        if is_element?('reference')
-          #@todo write unit test (there is no such tag in example file)
-          reference = Reference.new
-          #parse attributes
-          reference.doi = @reader['doi']
-          @reader.read
-          #@todo test this part, maybe simplify code, since there can be max one desc tag.
-          while not(is_end_element?('desc'))
-            if is_element?('desc')
-              reference.desc = @reader.value@reader.read
-            end
-            @reader.read
-          end
-          current_node.reference = reference
-        end
-
-        
+        end #end if clade  
+    
         #end clade element, go one parent up
         if is_end_element?('clade')
+        #  puts current_node.name
           current_node = tree.parent(current_node)
         end          
-        
+
+        parse_clade_elements(current_node, current_edge) if parsing_clade
+
+
+        #parse_tree stuff how do I know if its tree stuff? If the current node is root?
+        #what is parent of root node? 
+
         # go to next element        
         @reader.read    
-        if $debug and @reader.name != nil 
-          print "main loop :", @reader.name, "\n"
-        end
-            
-      end #end while not </phylogeny>   
+
+      end #end while not </phylogeny>
+      #move on to the next tag after /phylogeny which is text, since phylogeny
+      #end tag is empty element, which value is nil, therefore need to move to
+      #the next meaningful element (therefore @reader.read twice)
+      @reader.read 
+      @reader.read
       return tree
     end  
 
@@ -635,11 +615,114 @@ module Bio
       #   current_node.confidence << parse_confidence
       # end
       elements.each do |elem|
+        
         if is_element?(elem)
           object.send("#{elem}") << self.send("parse_#{elem}")
         end
       end
     end #parse_complex_array_elements
+
+
+    def parse_clade_elements(current_node, current_edge)
+
+     #no loop inside
+
+        #parse branch_length tag
+        if is_element?('branch_length')
+          #read in the name tag value
+          @reader.read
+          branch_length = @reader.value
+          current_edge.distance = branch_length.to_f
+          @reader.read
+          has_reached_end_element?('branch_length')
+        end
+
+        #parse width tag
+        #@todo write unit test for this
+        #@todo put width into edge?
+        parse_simple_element(current_node, 'width')
+
+
+        #parse name element of the clade
+        parse_simple_element(current_node, 'name')
+
+        #parse events element
+        if is_element?('events')
+          current_node.events = parse_events
+        end
+
+       parse_complex_array_elements(current_node, ['confidence', 'taxonomy', 'sequence', 'distribution'])
+
+       # if is_element?('property')
+         # puts @reader.name
+        #  p = parse_property
+         # puts p
+        #  puts current_node.property.class
+        #  if current_node == nil
+        #    puts "NODE IS NIL"
+        #  end
+        #  current_node.property[current_node.property.length] = p
+        #end
+
+
+        if is_element?('node_id')
+          id = Id.new
+          id.type = @reader["type"]
+          @reader.read
+          id.value = @reader.value
+          @reader.read
+          has_reached_end_element?('node_id')
+          #@todo write unit test for this. There is no example of this in the example files
+          current_node.id = id
+        end
+
+        if is_element?('color')
+          color = BranchColor.new
+          parse_simple_element(color, 'red')
+          parse_simple_element(color, 'green')
+          parse_simple_element(color, 'blue')
+          current_node.color = color
+          #@todo add unit test for this
+        end
+
+        if is_element?('date')
+          date = Date.new
+          #parse attributes
+          date.unit = @reader["unit"]
+          date.range = @reader["range"]
+          #parse tags
+          @reader.read #move to the next token, which is always empty, since date tag does not have text associated with it
+          @reader.read #now the token is the first tag under date tag
+          while not(is_end_element?('date'))
+            parse_simple_element(date, 'desc')
+            parse_simple_element(date, 'value')
+            @reader.read
+          end
+          current_node.date = date
+        end
+
+
+        if is_element?('reference')
+          #@todo write unit test (there is no such tag in example file)
+          reference = Reference.new
+          #parse attributes
+          reference.doi = @reader['doi']
+          @reader.read
+          #@todo test this part, maybe simplify code, since there can be max one desc tag.
+          while not(is_end_element?('desc'))
+            if is_element?('desc')
+              reference.desc = @reader.value@reader.read
+            end
+            @reader.read
+          end
+          current_node.reference << reference
+        end
+
+    #    @reader.read
+    #  end while
+
+    end
+
 
     def parse_events()
       events = Events.new
@@ -779,6 +862,7 @@ module Bio
     end
 
     def parse_property
+
       property = Property.new
       property.ref = @reader["ref"]
       property.unit = @reader["unit"]
@@ -788,10 +872,12 @@ module Bio
 
       @reader.read
       property.value = @reader.value
-      property.read
+      @reader.read
       has_reached_end_element?('property')
-      return nil
+     
+      return property
     end #parse_property
+
 
     def parse_confidence      
       type = @reader["type"]
