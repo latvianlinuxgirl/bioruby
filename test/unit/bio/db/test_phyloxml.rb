@@ -153,7 +153,7 @@ module Bio
       leaves = @tree.leaves
       descrs = []
       leaves.each { |node|
-        descrs[descrs.length] = node.distribution[0].desc
+        descrs << node.distributions[0].desc
       }
       assert_equal(descrs.sort, ['Africa', 'Asia', 'Australia'])
     end
@@ -162,13 +162,13 @@ module Bio
       10.times do
         @tree = @phyloxml.next_tree
       end
-      point = @tree.get_node_by_name('A').distribution[0].points[0]
+      point = @tree.get_node_by_name('A').distributions[0].points[0]
       assert_equal(point.geodetic_datum, "WGS84")
       assert_equal(point.lat, 47.481277)
       assert_equal(point.long, 8.769303)
       assert_equal(point.alt[0],472)
 
-      point = @tree.get_node_by_name('B').distribution[0].points[0]
+      point = @tree.get_node_by_name('B').distributions[0].points[0]
       assert_equal(point.geodetic_datum, "WGS84")
       assert_equal(point.lat, 35.155904)
       assert_equal(point.long, 136.915863)
@@ -359,12 +359,19 @@ module Bio
     end
 
 #    def test_single_clade
-#      2.times do
+#      3.times do
 #        @tree = @phyloxml.next_tree()
 #      end
 #      assert_equal(@tree.root.name, "A")
 #    end
 
+    def test_polygon
+      2.times do
+        @tree = @phyloxml.next_tree
+      end
+      polygon = @tree.get_node_by_name('A').distributions[0].polygons[0]
+      assert_equal(polygon.points.length,3 )
+    end
   end
 
 end #end module Bio

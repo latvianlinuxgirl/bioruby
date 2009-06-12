@@ -87,7 +87,7 @@ module Bio
     #either by free text in the 'desc' element and/or by the coordinates of one
     #or more 'Points' (similar to the 'Point' element in Google's KML format)
     #or by 'Polygons'.
-    attr_accessor :distribution
+    attr_accessor :distributions
 
     #A date associated with a clade/node. Its value can be numerical by using
     #the 'value' element and/or free text with the 'desc' element'
@@ -106,7 +106,7 @@ module Bio
       @confidence = []
       @sequence = []
       @taxonomy = []
-      @distribution = []
+      @distributions = []
       @reference = []
       @property = []
     end
@@ -233,7 +233,7 @@ module Bio
 
     def initialize
       @points = []
-      @pplygons = []
+      @polygons = []
     end
   end #Distribution class
 
@@ -686,7 +686,12 @@ module Bio
         current_node.events = parse_events
       end
 
-      parse_complex_array_elements(current_node, ['confidence', 'taxonomy', 'sequence', 'distribution', 'property'])
+      parse_complex_array_elements(current_node, ['confidence', 'taxonomy', 'sequence', 'property'])
+      #@todo will have to deal with plural forms
+
+      if is_element?('distribution')
+        current_node.distributions << parse_distribution
+      end
 
       if is_element?('node_id')
         id = Id.new

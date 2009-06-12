@@ -12,12 +12,8 @@
       <confidence type="probability">0.71</confidence>
    </phylogeny>
    <phylogeny>
-       <clade>
-           <name>A</name>
-       </clade>
-   </phylogeny>
-   <phylogeny>
-       <clade>
+       <name>testing polygon</name>
+       <clade>           
            <clade>
             <name>A</name>
             <distribution>
@@ -44,6 +40,11 @@
            <clade>
                <name>B</name>
            </clade>
+       </clade>
+   </phylogeny>
+      <phylogeny>
+       <clade>
+           <name>A</name>
        </clade>
    </phylogeny>
 </phyloxml>
