@@ -415,10 +415,11 @@ module Bio
   class CladeRelation
     attr_accessor :distance, :type, :confidence
     attr_accessor :id_ref_0, :id_ref_1
+  end
 
 
-
-
+  class SequenceRelation
+    attr_accessor :id_ref_0, :id_ref_1, :distance, :type
   end
 
   #---
@@ -515,7 +516,9 @@ module Bio
           
           #parse attributes of the clade element
           branch_length = @reader['branch_length']
-          node.id_source = @reader['id_source']
+
+          parse_attributes(node, ["id_source"])
+          
 
           #add new node to the tree
                   
@@ -554,10 +557,8 @@ module Bio
 
           if is_element?('clade_relation')
             tree.clade_relation = CladeRelation.new
-            tree.clade_relation.id_ref_0 = @reader["id_ref_0"]
-            tree.clade_relation.id_ref_1 = @reader["id_ref_1"]
-            tree.clade_relation.distance = @reader["distance"]
-            tree.clade_relation.type = @reader["type"]
+
+            parse_attributes(tree.clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
 
             #@todo add unit test for this
             if not @reader.empty_element?
@@ -616,9 +617,17 @@ module Bio
     def parse_simple_elements(object, elements)
       elements.each do |elmt|
           parse_simple_element(object, elmt)
-      end
-      
+      end      
     end
+
+    #Parses list of attributes
+    #use for the code like: tree.clade_relation.type = @reader["type"]
+    def parse_attributes(object, arr_of_attrs)
+      arr_of_attrs.each do |attr|
+        object.send("#{attr}=", @reader[attr])
+      end
+    end
+
 
     #parses elements where attributes of the object are arrays of objects.
     #@todo maybe there is better name for this method
@@ -700,10 +709,9 @@ module Bio
 
         if is_element?('date')
           date = Date.new
-          #parse attributes
-          date.unit = @reader["unit"]
-          date.range = @reader["range"]
-          #parse tags
+          parse_attributes(date, ["unit", "range"])
+
+        #parse tags
           @reader.read #move to the next token, which is always empty, since date tag does not have text associated with it
           @reader.read #now the token is the first tag under date tag
           while not(is_end_element?('date'))
@@ -756,8 +764,7 @@ module Bio
 
     def parse_taxonomy
       taxonomy = PhyloXMLTaxonomy.new
-      taxonomy.type = @reader["type"]
-      taxonomy.id_source = @reader["id_source"]
+      parse_attributes(taxonomy, ["type", "id_source"])
       @reader.read
       while not(is_end_element?('taxonomy')) do
 
@@ -787,11 +794,9 @@ module Bio
 
       sequence = Sequence.new
 
-      #parse attributes
-      sequence.type = @reader['type']
-      sequence.id_source = @reader['id_source']
-      sequence.id_ref = @reader['id_ref']
+      parse_attributes(sequence, ["type", "id_source", "id_ref"])
 
+      
       #parse tags
       @reader.read
       while not(is_end_element?('sequence'))
@@ -835,8 +840,7 @@ module Bio
     def parse_uri
       #@todo add unit test for this
       uri = Uri.new
-      uri.desc = @reader["desc"]
-      uri.type = @reader["type"]
+      parse_attributes(uri, ["desc", "type"])
       parse_simple_element(uri, 'uri')
       return uri
     end
@@ -844,11 +848,7 @@ module Bio
     def parse_annotation
       annotation = Annotation.new
 
-      #parse attributes
-      annotation.ref = @reader["ref"]
-      annotation.source = @reader["source"]
-      annotation.evidence = @reader["evidence"]
-      annotation.type = @reader["type"]
+      parse_attributes(annotation, ['ref', 'source', 'evidence', 'type'])
 
       if not @reader.empty_element?
         while not(is_end_element?('annotation'))
@@ -877,11 +877,7 @@ module Bio
     def parse_property
 
       property = Property.new
-      property.ref = @reader["ref"]
-      property.unit = @reader["unit"]
-      property.datatype = @reader["datatype"]
-      property.applies_to = @reader["applies_to"]
-      property.id_ref = @reader["id_ref"]
+      parse_attributes(property, ["ref", "unit", "datatype", "applies_to", "id_ref"])
 
       @reader.read
       property.value = @reader.value
@@ -982,10 +978,7 @@ module Bio
 
     def parse_domain
       domain = ProteinDomain.new
-      domain.from = @reader["from"]
-      domain.to = @reader["to"]
-      domain.confidence = @reader["confidence"]
-      domain.id = @reader["id"]
+      parse_attributes(domain, ["from", "to", "confidence", "id"])
 
       @reader.read
       domain.value = @reader.value
