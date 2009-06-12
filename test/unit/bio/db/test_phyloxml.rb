@@ -26,6 +26,10 @@ module TestPhyloXMLData
     File.join TEST_DATA, 'phyloxml_examples.xml'
   end
 
+  def self.made_up_xml
+    File.join TEST_DATA, 'made_up.xml'
+  end
+
 end #end module TestPhyloXMLData
 
 
@@ -337,8 +341,24 @@ module Bio
        assert_equal(sr.type, "paralogy")
 
     end
-
   end
 
+  class TestPhyloXML5 < Test::Unit::TestCase
+
+    #testing file random.xml
+    def setup
+      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.made_up_xml)
+    end
+
+    def test_phylogeny_confidence
+      tree = @phyloxml.next_tree()
+      assert_equal(tree.confidences[0].type, "bootstrap")
+      assert_equal(tree.confidences[0].value, 89)
+      assert_equal(tree.confidences[1].type, "probability")
+      assert_equal(tree.confidences[1].value, 0.71)
+
+    end
+
+  end
 
 end #end module Bio

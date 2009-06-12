@@ -26,13 +26,14 @@ module Bio
   class PhyloXMLTree < Bio::Tree
   
     attr_accessor :name, :description, :rooted, :property,
-      :clade_relations, :sequence_relations
+      :clade_relations, :sequence_relations, :confidences
 
    #This thing here gives an error, I dunno why
    def initialize
      super
      @sequence_relations = []
      @clade_relations = []
+     @confidences = []
    end
  
   end
@@ -447,7 +448,8 @@ module Bio
         #assume it is string input
         @reader = XML::Reader.string(str)
       end
-      #@todo should loop through until reaches phylogeny stuff
+      #@todo deal with stuff before has reached that
+      #loops through until reaches phylogeny stuff
       while not is_element?('phylogeny')
         @reader.read
         #puts @reader.name
@@ -461,15 +463,12 @@ module Bio
     
     def next_tree()
 
-      #@todo change it to have many clade_relations
-
       #@todo what about a method for skipping a tree. (might save on time by not creating all those objects)
 
       if not is_element?('phylogeny')
         print "Warning: This should have been phylogeny element, but it is: ", @reader.name, " ", @reader.value, "\n"
 
         #@todo deal with rest of the stuff, maybe read in as text and add it to PhyloXML
-        #@todo what if there are phylogeny elements after the extra stuff
         #for now ignore the rest of the stuff
         #and loop until the next phylogeny element if there is one, in case 
         #there are more phylogeny elements after other stuff, so that next read 
@@ -509,7 +508,7 @@ module Bio
           parse_simple_element(tree, 'description')
 
           if is_element?('confidence')
-            tree.confidence << parse_confidence
+            tree.confidences << parse_confidence
             #@todo add unit test for this
           end
 
@@ -545,6 +544,7 @@ module Bio
         if is_end_element?('clade')
         #  puts current_node.name
           current_node = tree.parent(current_node)
+          #@todo this does not work, if there is just single clade element. 
           #if we have reached the closing tag of the top-most clade, then our
           # curent node should point to the root, If thats the case, we are done
           # parsing the clade element          
