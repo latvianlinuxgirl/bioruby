@@ -16,4 +16,34 @@
            <name>A</name>
        </clade>
    </phylogeny>
+   <phylogeny>
+       <clade>
+           <clade>
+            <name>A</name>
+            <distribution>
+                <polygon>
+                  <desc>Polygon from random points</desc>
+                  <point geodetic_datum="WGS84">
+                     <lat>47.481277</lat>
+                     <long>8.769303</long>
+                     <alt>472</alt>
+                  </point>
+                  <point geodetic_datum="WGS84">
+                     <lat>35.155904</lat>
+                     <long>136.915863</long>
+                     <alt>10</alt>
+                  </point>
+                  <point geodetic_datum="WGS84">
+                     <lat>47.376334</lat>
+                     <long>8.548108</long>
+                     <alt>452</alt>
+                  </point>
+                </polygon>
+            </distribution>
+           </clade>
+           <clade>
+               <name>B</name>
+           </clade>
+       </clade>
+   </phylogeny>
 </phyloxml>
