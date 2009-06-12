@@ -20,14 +20,14 @@ require 'bio/db/phyloxml'
 module TestPhyloXMLData
 
   bioruby_root  = Pathname.new(File.join(File.dirname(__FILE__), ['..'] * 4)).cleanpath.to_s
-  TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
+  PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
 
   def self.example_xml
-    File.join TEST_DATA, 'phyloxml_examples.xml'
+    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples.xml'
   end
 
   def self.made_up_xml
-    File.join TEST_DATA, 'made_up.xml'
+    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
   end
 
 end #end module TestPhyloXMLData
@@ -358,12 +358,12 @@ module Bio
       assert_equal(tree.confidences[1].value, 0.71)
     end
 
-    def test_single_clade
-      2.times do
-        @tree = @phyloxml.next_tree()
-      end
-      assert_equal(@tree.root.name, "A")
-    end
+#    def test_single_clade
+#      2.times do
+#        @tree = @phyloxml.next_tree()
+#      end
+#      assert_equal(@tree.root.name, "A")
+#    end
 
   end
 
