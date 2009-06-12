@@ -308,6 +308,7 @@ module Bio
     #test cases what pertain to tree
 
     def test_clade_relation
+
       @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
       7.times do
         @tree = @phyloxml.next_tree
@@ -318,6 +319,21 @@ module Bio
        assert_equal(cr.id_ref_0, "b")
        assert_equal(cr.id_ref_1, "c")
        assert_equal(cr.type, "network_connection")
+    end
+
+    def test_sequence_realations
+      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      4.times do
+        @tree = @phyloxml.next_tree
+      end
+      #<sequence_relation id_ref_0="x" id_ref_1="y" type="paralogy"/>
+      #<sequence_relation id_ref_0="x" id_ref_1="z" type="orthology"/>
+      #<sequence_relation id_ref_0="y" id_ref_1="z" type="orthology"/>
+       sr = @tree.sequence_relation[0]
+       assert_equal(sr.id_ref_0, "x")
+       assert_equal(cr.id_ref_1, "y")
+       assert_equal(cr.type, "paralogy")
+
     end
 
   end

@@ -454,6 +454,8 @@ module Bio
     
     def next_tree()
 
+      #@todo change it to have many clade_relations
+
       #@todo what about a method for skipping a tree. (might save on time by not creating all those objects)
 
       if not is_element?('phylogeny')
