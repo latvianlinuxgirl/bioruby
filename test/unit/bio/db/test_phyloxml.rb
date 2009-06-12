@@ -356,7 +356,13 @@ module Bio
       assert_equal(tree.confidences[0].value, 89)
       assert_equal(tree.confidences[1].type, "probability")
       assert_equal(tree.confidences[1].value, 0.71)
+    end
 
+    def test_single_clade
+      2.times do
+        @tree = @phyloxml.next_tree()
+      end
+      assert_equal(@tree.root.name, "A")
     end
 
   end

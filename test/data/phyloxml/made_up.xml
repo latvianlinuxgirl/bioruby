@@ -11,4 +11,9 @@
       <confidence type="bootstrap">89</confidence>
       <confidence type="probability">0.71</confidence>
    </phylogeny>
+   <phylogeny>
+       <clade>
+           <name>A</name>
+       </clade>
+   </phylogeny>
 </phyloxml>
