@@ -315,7 +315,7 @@ module Bio
       end
       #puts @tree.name
        #<clade_relation id_ref_0="b" id_ref_1="c" type="network_connection"/>
-       cr = @tree.clade_relation
+       cr = @tree.clade_relations[0]
        assert_equal(cr.id_ref_0, "b")
        assert_equal(cr.id_ref_1, "c")
        assert_equal(cr.type, "network_connection")

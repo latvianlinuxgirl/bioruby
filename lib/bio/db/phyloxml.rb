@@ -26,12 +26,13 @@ module Bio
   class PhyloXMLTree < Bio::Tree
   
     attr_accessor :name, :description, :rooted, :property,
-      :clade_relation, :sequence_relations
+      :clade_relations, :sequence_relations
 
    #This thing here gives an error, I dunno why
    def initialize
      super
      @sequence_relations = []
+     @clade_relations = []
    end
  
   end
@@ -564,16 +565,17 @@ module Bio
           #@todo add unit test for this
 
           if is_element?('clade_relation')
-            tree.clade_relation = CladeRelation.new
-            parse_attributes(tree.clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
+            clade_relation = CladeRelation.new
+            parse_attributes(clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
 
             #@todo add unit test for this
             if not @reader.empty_element?
               @reader.read
               if is_element?('confidence')
-                tree.clade_relation.confidence = parse_confidence
+                clade_relation.confidence = parse_confidence
               end
             end
+            tree.clade_relations << clade_relation
           end
 
 
