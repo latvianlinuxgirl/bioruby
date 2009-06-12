@@ -26,7 +26,13 @@ module Bio
   class PhyloXMLTree < Bio::Tree
   
     attr_accessor :name, :description, :rooted, :property,
-      :clade_relation, :sequence_relation
+      :clade_relation, :sequence_relations
+
+   #This thing here gives an error, I dunno why
+   def initialize
+     super
+     @sequence_relations = []
+   end
  
   end
 
@@ -559,7 +565,6 @@ module Bio
 
           if is_element?('clade_relation')
             tree.clade_relation = CladeRelation.new
-
             parse_attributes(tree.clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
 
             #@todo add unit test for this
@@ -570,6 +575,26 @@ module Bio
               end
             end
           end
+
+
+          if is_element?('sequence_relation')
+            
+            sequence_relation = SequenceRelation.new
+            parse_attributes(sequence_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
+
+            #@todo add unit test for this
+            if not @reader.empty_element?
+              @reader.read
+              if is_element?('confidence')
+                sequence_relation.confidence = parse_confidence
+              end
+            end
+            #puts sequence_relation.id_ref_0
+            tree.sequence_relations << sequence_relation
+            #puts tree.sequence_relations[0].id_ref_0
+          end
+
+
         end
 
         # go to next element        
