@@ -26,10 +26,15 @@ module Bio
   # PhyloXMLTree class
   #+++
 
-  class PhyloXMLTree < Bio::Tree
+  # PhyloXML standard phylogenetic tree parser class.
+  #
+  # This is alpha version. Incompatible changes may be made frequently.
+  class PhyloXML
+
+  class Tree < Bio::Tree
   
     attr_accessor :name, :description, :rooted, :property,
-      :clade_relations, :sequence_relations, :confidences
+      :clade_relations, :sequence_relations, :confidences, :rerootable, :branch_length_unit, :type
 
    #This thing here gives an error, I dunno why
    def initialize
@@ -42,11 +47,11 @@ module Bio
   end
 
   #+++
-  # PhyloXMLNode class
+  # PhyloXML::Node class
   #+++
 
   # Class to hold clade element of phyloXML.
-  class PhyloXMLNode 
+  class Node 
     
     #Events at the root node of a clade (e.g. one gene duplication).
     attr_accessor :events
@@ -97,7 +102,7 @@ module Bio
     attr_accessor :date
     
     #Array of references
-    attr_accessor :reference
+    attr_accessor :references
 
     #An array of properties, for example depth for sea animals.
     attr_accessor :property
@@ -107,54 +112,13 @@ module Bio
       @sequence = []
       @taxonomy = []
       @distributions = []
-      @reference = []
+      @references = []
       @property = []
     end
     
 
   end
 
-  #+++
-  # Events class
-  #+++
-
-  #Events at the root node of a clade (e.g. one gene duplication).
-  class Events
-    #value comes from list: {'transfer'|'fusion'|'speciation_or_duplication'|'other'|'mixed'|'unassigned'}
-    attr_accessor :type
-    attr_reader :duplications
-    attr_reader :speciations
-    attr_reader :losses
-    attr_reader :confidence
-
-    def confidence=(type, value)
-      @confidence = Confidence.new(type, value)
-    end
-
-    def confidence=(conf)
-      @confidence = conf
-    end
-
-    def duplications=(str)
-      @duplications = str.to_i
-    end
-
-    def losses=(str)
-      @losses = str.to_i
-    end
-
-    def speciations=(str)
-      @speciations=str.to_i
-    end
-
-    def type=(str)
-      @type = str
-      #@todo add unit test for this
-      if not ['transfer','fusion','speciation_or_duplication','other','mixed','unassigned'].include?(str)
-        puts "Warning #{str} is not one of the allowed values"
-      end
-    end
-  end
 
   #+++
   # Taxonomy class
@@ -419,6 +383,12 @@ module Bio
   #attribute instead of the free text 'desc' element whenever possible.
   class Reference
     attr_accessor :doi, :desc
+
+    #@todo when the initialize method is removed then gives ArgumentError: wrong number of arguments (0 for 1)
+  #  def initialize
+      
+   # end
+
   end
 
   #+++
@@ -439,10 +409,53 @@ module Bio
   # PhyloXML parser
   #+++
 
-  # PhyloXML standard phylogenetic tree parser class.
-  #
-  # This is alpha version. Incompatible changes may be made frequently.
-  class PhyloXML
+
+
+     #+++
+    # Events class
+    #+++
+
+    #Events at the root node of a clade (e.g. one gene duplication).
+    class Events
+      #value comes from list: {'transfer'|'fusion'|'speciation_or_duplication'|'other'|'mixed'|'unassigned'}
+      attr_accessor :type
+      attr_reader :duplications
+      attr_reader :speciations
+      attr_reader :losses
+      attr_reader :confidence
+
+      def confidence=(type, value)
+        @confidence = Confidence.new(type, value)
+      end
+
+      def confidence=(conf)
+        @confidence = conf
+      end
+
+      def duplications=(str)
+        @duplications = str.to_i
+      end
+
+      def losses=(str)
+        @losses = str.to_i
+      end
+
+      def speciations=(str)
+        @speciations=str.to_i
+      end
+
+      def type=(str)
+        @type = str
+        #@todo add unit test for this
+        if not ['transfer','fusion','speciation_or_duplication','other','mixed','unassigned'].include?(str)
+          puts "Warning #{str} is not one of the allowed values"
+        end
+      end
+    end
+
+
+
+
 
     def initialize(str) 
       #@todo decide if need to be able initialize using string, since usually xml lives in files
@@ -485,7 +498,7 @@ module Bio
         return nil
       end
 
-      tree = Bio::PhyloXMLTree.new()
+      tree = Bio::PhyloXML::Tree.new()
 
       #current_node variable is a pointer to the current node parsed
       #@todo might need to change this, since node should point to a node, not tree
@@ -510,6 +523,9 @@ module Bio
             @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
           end
 
+          #@todo add unit tests for this
+          parse_attributes(tree, ['rerootable', 'branch_length_unit', 'type'])
+
           parse_simple_elements(tree, ['name', 'description'])
 
           if is_element?('confidence')
@@ -522,7 +538,7 @@ module Bio
         if is_element?('clade')
           parsing_clade = true 
           
-          node= Bio::PhyloXMLNode.new
+          node= Bio::PhyloXML::Node.new
           
           #parse attributes of the clade element
           #@todo this is not consistent with the way i parse attributes
@@ -542,14 +558,16 @@ module Bio
     
         #end clade element, go one parent up
         if is_end_element?('clade')
+
+          if current_node == tree.root
+            parsing_clade = false
+          else
           current_node = tree.parent(current_node)
           #@todo this does not work, if there is just single clade element. 
 
           #if we have reached the closing tag of the top-most clade, then our
           # curent node should point to the root, If thats the case, we are done
           # parsing the clade element          
-          if current_node == tree.root          
-            parsing_clade = false
           end
         end          
 
@@ -581,7 +599,7 @@ module Bio
             sequence_relation = SequenceRelation.new
             parse_attributes(sequence_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
 
-            #@todo add unit test for this
+
             if not @reader.empty_element?
               @reader.read
               if is_element?('confidence')
@@ -727,26 +745,27 @@ module Bio
         current_node.date = date
       end
 
-      #@todo check whats up here
       if is_element?('reference')
         #@todo write unit test (there is no such tag in example file)
-        reference = Reference.new
+        
+        reference = Reference.new()
+        #puts "===="
         #parse attributes
-        reference.doi = @reader['doi']
-        @reader.read
-        #@todo test this part, maybe simplify code, since there can be max one desc tag.
-        while not(is_end_element?('desc'))
-          if is_element?('desc')
-            reference.desc = @reader.value @reader.read
+        reference.doi = @reader['doi']      
+        if not @reader.empty_element?
+          while not is_end_element?('reference')
+            parse_simple_element(reference, 'desc')
+            @reader.read
+            #puts @reader.name
+
           end
-          @reader.read
         end
-        current_node.reference << reference
+        current_node.references << reference
       end
     end #parse_clade_elements
 
     def parse_events()
-      events = Events.new
+      events = PhyloXML::Events.new
       @reader.read #go to next element
       while not(is_end_element?('events')) do
         parse_simple_elements(events, ['type', 'duplications', 'speciations', 'losses'])

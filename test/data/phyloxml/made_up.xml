@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phyloxml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.phyloxml.org http://www.phyloxml.org/1.00/phyloxml.xsd" xmlns="http://www.phyloxml.org">
    <phylogeny rooted="true">
-      <name>A</name>
+      <name>testing confidence</name>
       <clade>
           <name>b</name>
           <clade>
@@ -35,6 +35,24 @@
                      <alt>452</alt>
                   </point>
                 </polygon>
+                <polygon>
+                  <desc>Polygon from random points</desc>
+                  <point geodetic_datum="WGS84">
+                     <lat>40.481277</lat>
+                     <long>8.769303</long>
+                     <alt>42</alt>
+                  </point>
+                  <point geodetic_datum="WGS84">
+                     <lat>25.155904</lat>
+                     <long>136.915863</long>
+                     <alt>10</alt>
+                  </point>
+                  <point geodetic_datum="WGS84">
+                     <lat>47.376334</lat>
+                     <long>7.548108</long>
+                     <alt>452</alt>
+                  </point>
+                </polygon>
             </distribution>
            </clade>
            <clade>
@@ -42,7 +60,19 @@
            </clade>
        </clade>
    </phylogeny>
-      <phylogeny>
+   <phylogeny>
+       <name>testing references</name>
+       <clade>
+           <clade>
+           <name>A</name>
+           <reference doi="10.1093/bioinformatics/btm619">
+               <desc>Phyutility: a phyloinformatics tool for trees, alignments and molecular data</desc>
+           </reference>
+           <reference doi="10.1186/1471-2105-9-S1-S23"></reference>
+           </clade>
+       </clade>
+   </phylogeny>
+   <phylogeny>
        <clade>
            <name>A</name>
        </clade>

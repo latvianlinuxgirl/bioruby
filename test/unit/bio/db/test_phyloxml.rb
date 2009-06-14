@@ -358,19 +358,40 @@ module Bio
       assert_equal(tree.confidences[1].value, 0.71)
     end
 
-#    def test_single_clade
-#      3.times do
-#        @tree = @phyloxml.next_tree()
-#      end
-#      assert_equal(@tree.root.name, "A")
-#    end
-
     def test_polygon
       2.times do
         @tree = @phyloxml.next_tree
       end
       polygon = @tree.get_node_by_name('A').distributions[0].polygons[0]
       assert_equal(polygon.points.length,3 )
+      assert_equal(polygon.points[0].lat, 47.481277)
+      assert_equal(polygon.points[1].long, 136.915863)
+      assert_equal(polygon.points[2].alt[0], 452)
+      polygon = @tree.get_node_by_name('A').distributions[0].polygons[1]
+      #making sure can read in second polygon
+      assert_equal(polygon.points.length,3 )
+      assert_equal(polygon.points[0].lat, 40.481277)
+    end
+
+    def test_reference
+      3.times do
+        @tree = @phyloxml.next_tree
+        #puts "tree name: " ,@tree.name
+      end
+      references = @tree.get_node_by_name('A').references
+      assert_equal(references[0].doi, "10.1093/bioinformatics/btm619")
+      assert_equal(references[0].desc, "Phyutility: a phyloinformatics tool for trees, alignments and molecular data")
+      assert_equal(references[1].doi, "10.1186/1471-2105-9-S1-S23")
+    end
+
+
+    def test_single_clade
+
+      3.times do
+        @tree = @phyloxml.next_tree()
+      end
+      @tree = @phyloxml.next_tree()
+      assert_equal(@tree.root.name, "A")
     end
   end
 
