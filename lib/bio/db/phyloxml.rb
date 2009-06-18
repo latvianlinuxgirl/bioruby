@@ -22,6 +22,33 @@ $debug = false
 
 module Bio
 
+   #+++
+  # Taxonomy class
+  #+++
+
+  # This is general Taxonomy class.
+  class Taxonomy
+    #pattern = [a-zA-Z0-9_]{2,10} Swiss-prot specific in phyloXML case
+    attr_accessor :code
+
+    attr_accessor :scientific_name
+    #An array of strings
+    attr_accessor :common_name
+    # value comes from list: {'domain'|'kingdom'|'subkingdom'|'branch'|'infrakingdom'|'superphylum'|'phylum'|'subphylum'|'infraphylum'|'microphylum'|'superdivision'|'division'|'subdivision'|'infradivision'|'superclass'|'class'|'subclass'|'infraclass'|'superlegion'|'legion'|'sublegion'|'infralegion'|'supercohort'|'cohort'|'subcohort'|'infracohort'|'superorder'|'order'|'suborder'|'superfamily'|'family'|'subfamily'|'supertribe'|'tribe'|'subtribe'|'infratribe'|'genus'|'subgenus'|'superspecies'|'species'|'subspecies'|'variety'|'subvariety'|'form'|'subform'|'cultivar'|'unknown'|'other'}
+    attr_accessor :rank
+
+    def inspect
+      #@todo work on this / or throw it out. was used for testing.
+      print "Taxonomy. scientific_name: #{@scientific_name}\n"
+    end
+
+    def initialize
+      @common_name = []
+    end
+  end
+
+
+
   #+++
   # PhyloXMLTree class
   #+++
@@ -65,7 +92,8 @@ module Bio
       @width = str.to_f
     end
 
-    attr_accessor :taxonomy
+    #Array of Taxonomy objects
+    attr_accessor :taxonomies
 
     #A general purpose confidence element. For example this can be used to express the bootstrap support value of a clade (in which case the 'type' attribute is 'bootstrap').
     attr_accessor :confidence
@@ -110,7 +138,7 @@ module Bio
     def initialize      
       @confidence = []
       @sequence = []
-      @taxonomy = []
+      @taxonomies = []
       @distributions = []
       @references = []
       @property = []
@@ -120,31 +148,7 @@ module Bio
   end
 
 
-  #+++
-  # Taxonomy class
-  #+++
-
-  # This is general Taxonomy class.
-  class Taxonomy
-    #pattern = [a-zA-Z0-9_]{2,10} Swiss-prot specific in phyloXML case
-    attr_accessor :code
-
-    attr_accessor :scientific_name
-    #An array of strings
-    attr_accessor :common_name
-    # value comes from list: {'domain'|'kingdom'|'subkingdom'|'branch'|'infrakingdom'|'superphylum'|'phylum'|'subphylum'|'infraphylum'|'microphylum'|'superdivision'|'division'|'subdivision'|'infradivision'|'superclass'|'class'|'subclass'|'infraclass'|'superlegion'|'legion'|'sublegion'|'infralegion'|'supercohort'|'cohort'|'subcohort'|'infracohort'|'superorder'|'order'|'suborder'|'superfamily'|'family'|'subfamily'|'supertribe'|'tribe'|'subtribe'|'infratribe'|'genus'|'subgenus'|'superspecies'|'species'|'subspecies'|'variety'|'subvariety'|'form'|'subform'|'cultivar'|'unknown'|'other'}
-    attr_accessor :rank
-
-    def inspect
-      #@todo work on this / or throw it out. was used for testing.
-      print "Taxonomy. scientific_name: #{@scientific_name}\n"
-    end
-
-    def initialize
-      @common_name = []
-    end
-  end
-
+ 
   
   #+++
   # PhyloXMLTaxonomy class
@@ -153,7 +157,7 @@ module Bio
   # Element 'id' is used for a unique identifier of a taxon (for example '6500'
   # with 'ncbi_taxonomy' as 'type' for the California sea hare). Attribute
   # 'id_source' is used to link other elements to a taxonomy (on the xml-level).
-  class PhyloXMLTaxonomy < Taxonomy
+  class Taxonomy < Bio::Taxonomy
     attr_accessor :id
     attr_accessor :id_source
     attr_accessor :type
@@ -235,7 +239,8 @@ module Bio
     attr_accessor :type    
     attr_accessor :id_source
     attr_accessor :id_ref
-    attr_accessor :symbol
+    #'symbol' is a short (maximal ten characters) symbol of the sequence (e.g. 'ACTM')
+    attr_accessor :symbol #@todo check for this
     attr_accessor :accession
     attr_accessor :name
     #location of a sequence on a genome/chromosome
@@ -247,7 +252,36 @@ module Bio
     
     def initialize
       @annotation = []
-    end    
+    end
+
+    #convert Bio::PhyloXML::Sequence object to either Bio::Sequence::NA or Bio::Sequence::AA object.
+    def to_biosequence
+      #type is not a required attribute in phyloxml (nor any other Sequence
+      #element) it might not hold any value, so we will not check what type it is.
+      seq = Bio::Sequence.auto(@mol_seq)
+
+      seq.id_namespace = @accession.source
+      seq.entry_id = @accession.id
+     # seq.primary_accession = @accession.id could be this
+      seq.definition = @name
+      #seq.comments = @name this one?
+      if @uri != nil
+        h = {'url' => @uri.uri,
+          'title' => @uri.desc }
+        ref = Bio::Reference.new(h)
+        seq.references << ref
+      end
+      seq.molecule_type = 'RNA' if @type == 'rna'
+      seq.molecule_type = 'DNA' if @type == 'dna'
+      
+      
+      #seq.classification = get from taxonomy
+      #seq.species => get from taxonomy
+      #seq.division => ..
+
+      #@todo deal with the properties. There might be properties which look like bio sequence attributes or features
+
+    end
    
   end
 
@@ -453,10 +487,6 @@ module Bio
       end
     end
 
-
-
-
-
     def initialize(str) 
       #@todo decide if need to be able initialize using string, since usually xml lives in files
 
@@ -559,15 +589,13 @@ module Bio
         #end clade element, go one parent up
         if is_end_element?('clade')
 
+           #if we have reached the closing tag of the top-most clade, then our
+          # curent node should point to the root, If thats the case, we are done
+          # parsing the clade element
           if current_node == tree.root
             parsing_clade = false
           else
-          current_node = tree.parent(current_node)
-          #@todo this does not work, if there is just single clade element. 
-
-          #if we have reached the closing tag of the top-most clade, then our
-          # curent node should point to the root, If thats the case, we are done
-          # parsing the clade element          
+            current_node = tree.parent(current_node)
           end
         end          
 
@@ -704,8 +732,12 @@ module Bio
         current_node.events = parse_events
       end
 
-      parse_complex_array_elements(current_node, ['confidence', 'taxonomy', 'sequence', 'property'])
+      parse_complex_array_elements(current_node, ['confidence', 'sequence', 'property'])
       #@todo will have to deal with plural forms
+
+      if is_element?('taxonomy')
+        current_node.taxonomies << parse_taxonomy
+      end
 
       if is_element?('distribution')
         current_node.distributions << parse_distribution
@@ -779,7 +811,7 @@ module Bio
     end #parse_events
 
     def parse_taxonomy
-      taxonomy = PhyloXMLTaxonomy.new
+      taxonomy = PhyloXML::Taxonomy.new
       parse_attributes(taxonomy, ["type", "id_source"])
       @reader.read
       while not(is_end_element?('taxonomy')) do

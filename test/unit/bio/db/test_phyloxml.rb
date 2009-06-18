@@ -110,9 +110,9 @@ module Bio
       3.times do
         @tree = @phyloxml.next_tree
       end
-      t = @tree.get_node_by_name('A').taxonomy[0]
+      t = @tree.get_node_by_name('A').taxonomies[0]
       assert_equal(t.scientific_name, 'E. coli')
-      t = @tree.get_node_by_name('C').taxonomy[0]
+      t = @tree.get_node_by_name('C').taxonomies[0]
       assert_equal(t.scientific_name, 'C. elegans')
     end
 
@@ -125,8 +125,8 @@ module Bio
       ids = []
       #id_types = []
       leaves.each { |node|
-        codes[codes.length] = node.taxonomy[0].code
-        ids[ids.length] = node.taxonomy[0].id
+        codes[codes.length] = node.taxonomies[0].code
+        ids[ids.length] = node.taxonomies[0].id
         #id_types[id_types.length] = node.taxonomy.id_type
       }
       assert_equal(codes.sort, ["CLOAB",  "DICDI", "OCTVU"])
@@ -137,7 +137,7 @@ module Bio
       9.times do
         @tree = @phyloxml.next_tree
       end
-      taxonomy = @tree.root.taxonomy[0]
+      taxonomy = @tree.root.taxonomies[0]
       assert_equal(taxonomy.id.type, "NCBI")
       assert_equal(taxonomy.id.value, "8556")
       assert_equal(taxonomy.scientific_name, "Varanus")
