@@ -33,7 +33,7 @@ module Bio
 
     attr_accessor :scientific_name
     #An array of strings
-    attr_accessor :common_name
+    attr_accessor :common_names
     # value comes from list: {'domain'|'kingdom'|'subkingdom'|'branch'|'infrakingdom'|'superphylum'|'phylum'|'subphylum'|'infraphylum'|'microphylum'|'superdivision'|'division'|'subdivision'|'infradivision'|'superclass'|'class'|'subclass'|'infraclass'|'superlegion'|'legion'|'sublegion'|'infralegion'|'supercohort'|'cohort'|'subcohort'|'infracohort'|'superorder'|'order'|'suborder'|'superfamily'|'family'|'subfamily'|'supertribe'|'tribe'|'subtribe'|'infratribe'|'genus'|'subgenus'|'superspecies'|'species'|'subspecies'|'variety'|'subvariety'|'form'|'subform'|'cultivar'|'unknown'|'other'}
     attr_accessor :rank
 
@@ -43,7 +43,7 @@ module Bio
     end
 
     def initialize
-      @common_name = []
+      @common_names = []
     end
   end
 
@@ -96,7 +96,7 @@ module Bio
     attr_accessor :taxonomies
 
     #A general purpose confidence element. For example this can be used to express the bootstrap support value of a clade (in which case the 'type' attribute is 'bootstrap').
-    attr_accessor :confidence
+    attr_accessor :confidences
 
     attr_accessor :color 
 
@@ -111,7 +111,7 @@ module Bio
     # of sequence ('dna', 'rna', or 'aa'). One intended use for 'id_ref' is
     # to link a sequence to a taxonomy (via the taxonomy's 'id_source') in
     # case of multiple sequences and taxonomies per node.
-    attr_accessor :sequence
+    attr_accessor :sequences
 
     attr_accessor :binary_characters #@todo design class for this
 
@@ -133,15 +133,15 @@ module Bio
     attr_accessor :references
 
     #An array of properties, for example depth for sea animals.
-    attr_accessor :property
+    attr_accessor :properties
 
     def initialize      
-      @confidence = []
-      @sequence = []
+      @confidences = []
+      @sequences = []
       @taxonomies = []
       @distributions = []
       @references = []
-      @property = []
+      @properties = []
     end
     
 
@@ -212,10 +212,6 @@ module Bio
   class Point
     attr_accessor :lat, :long, :alt, :geodetic_datum
 
-    def initialize
-      @alt = []
-    end
-
     def lat=(str)
       @lat = str.to_f
     end
@@ -247,11 +243,11 @@ module Bio
     attr_accessor :location
     attr_accessor :mol_seq
     attr_accessor :uri #@todo alias method url ?
-    attr_accessor :annotation
+    attr_accessor :annotations
     attr_accessor :domain_architecture
     
     def initialize
-      @annotation = []
+      @annotations = []
     end
 
     #convert Bio::PhyloXML::Sequence object to either Bio::Sequence::NA or Bio::Sequence::AA object.
@@ -306,11 +302,12 @@ module Bio
     attr_accessor :type
     attr_accessor :desc
     attr_accessor :confidence
-    attr_accessor :property
+    attr_accessor :properties
     attr_accessor :uri
 
+    #@todo add unit test for this, since didn't break anything when changed from property to properties
     def initialize
-      @property = []
+      @properties = []
     end
   end
 
@@ -343,10 +340,10 @@ module Bio
 
   class DomainArchitecture
     attr_accessor :length
-    attr_reader :domain
+    attr_reader :domains
 
     def initialize
-      @domain = []
+      @domains = []
     end
   end
 
@@ -732,8 +729,12 @@ module Bio
         current_node.events = parse_events
       end
 
-      parse_complex_array_elements(current_node, ['confidence', 'sequence', 'property'])
+      #parse_complex_array_elements(current_node, ['confidence', 'sequence', 'property'])
       #@todo will have to deal with plural forms
+
+      current_node.confidences << parse_confidence if is_element?('confidence')
+      current_node.sequences << parse_sequence if is_element?('sequence')
+      current_node.properties << parse_property if is_element?('property')
 
       if is_element?('taxonomy')
         current_node.taxonomies << parse_taxonomy
@@ -823,7 +824,7 @@ module Bio
 
         if is_element?('common_name')
           @reader.read
-          taxonomy.common_name << @reader.value
+          taxonomy.common_names << @reader.value
           @reader.read
           has_reached_end_element?('common_name')
         end
@@ -861,7 +862,7 @@ module Bio
         end
 
         if is_element?('annotation')
-          sequence.annotation << parse_annotation
+          sequence.annotations << parse_annotation
         end
 
         if is_element?('domain_architecture')
@@ -903,7 +904,7 @@ module Bio
           end          
 
           if is_element?('property')
-            annotation.property << parse_property
+            annotation.properties << parse_property
           end
 
           if is_element?('uri')
@@ -979,7 +980,7 @@ module Bio
 
         if is_element?('alt')
           @reader.read
-          point.alt << @reader.value.to_f
+          point.alt = @reader.value.to_f
           @reader.read
           has_reached_end_element?('alt')
         end

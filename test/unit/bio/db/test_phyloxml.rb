@@ -93,8 +93,8 @@ module Bio
       @tree = @phyloxml.next_tree
       @tree = @phyloxml.next_tree
       node = @tree.get_node_by_name("AB")
-      assert_equal(node.confidence[0].type, 'bootstrap')
-      assert_equal(node.confidence[0].value, 89)
+      assert_equal(node.confidences[0].type, 'bootstrap')
+      assert_equal(node.confidences[0].value, 89)
     end
 
     def test_duplications
@@ -166,31 +166,31 @@ module Bio
       assert_equal(point.geodetic_datum, "WGS84")
       assert_equal(point.lat, 47.481277)
       assert_equal(point.long, 8.769303)
-      assert_equal(point.alt[0],472)
+      assert_equal(point.alt,472)
 
       point = @tree.get_node_by_name('B').distributions[0].points[0]
       assert_equal(point.geodetic_datum, "WGS84")
       assert_equal(point.lat, 35.155904)
       assert_equal(point.long, 136.915863)
-      assert_equal(point.alt[0],10)
+      assert_equal(point.alt,10)
     end
 
     def test_sequence
       3.times do
         @tree = @phyloxml.next_tree
       end
-      sequence_a = @tree.get_node_by_name('A').sequence[0]
-      assert_equal(sequence_a.annotation[0].desc, 'alcohol dehydrogenase')
-      assert_equal(sequence_a.annotation[0].confidence.type, "probability" )
-      assert_equal(sequence_a.annotation[0].confidence.value, 0.99 )
-      sequence_b = @tree.get_node_by_name('B').sequence[0]
-      assert_equal(sequence_b.annotation[0].desc, 'alcohol dehydrogenase')
-      assert_equal(sequence_b.annotation[0].confidence.type, "probability" )
-      assert_equal(sequence_b.annotation[0].confidence.value, 0.91 )
-      sequence_c = @tree.get_node_by_name('C').sequence[0]
-      assert_equal(sequence_c.annotation[0].desc, 'alcohol dehydrogenase')
-      assert_equal(sequence_c.annotation[0].confidence.type, "probability" )
-      assert_equal(sequence_c.annotation[0].confidence.value, 0.67 )
+      sequence_a = @tree.get_node_by_name('A').sequences[0]
+      assert_equal(sequence_a.annotations[0].desc, 'alcohol dehydrogenase')
+      assert_equal(sequence_a.annotations[0].confidence.type, "probability" )
+      assert_equal(sequence_a.annotations[0].confidence.value, 0.99 )
+      sequence_b = @tree.get_node_by_name('B').sequences[0]
+      assert_equal(sequence_b.annotations[0].desc, 'alcohol dehydrogenase')
+      assert_equal(sequence_b.annotations[0].confidence.type, "probability" )
+      assert_equal(sequence_b.annotations[0].confidence.value, 0.91 )
+      sequence_c = @tree.get_node_by_name('C').sequences[0]
+      assert_equal(sequence_c.annotations[0].desc, 'alcohol dehydrogenase')
+      assert_equal(sequence_c.annotations[0].confidence.type, "probability" )
+      assert_equal(sequence_c.annotations[0].confidence.value, 0.67 )
 
     end
 
@@ -201,14 +201,14 @@ module Bio
        leaves = @tree.leaves
        leaves.each { |node|
          #just test one node for now
-         if node.sequence[0].id_source == 'x'
-           assert_equal(node.sequence[0].symbol, 'adhB')
-           assert_equal(node.sequence[0].accession.source, "ncbi")
-           assert_equal(node.sequence[0].accession.value, 'AAB80874')
-           assert_equal(node.sequence[0].name, 'alcohol dehydrogenase')
+         if node.sequences[0].id_source == 'x'
+           assert_equal(node.sequences[0].symbol, 'adhB')
+           assert_equal(node.sequences[0].accession.source, "ncbi")
+           assert_equal(node.sequences[0].accession.value, 'AAB80874')
+           assert_equal(node.sequences[0].name, 'alcohol dehydrogenase')
          end
-         if node.sequence[0].id_source == 'z'
-           assert_equal(node.sequence[0].annotation[0].ref, "InterPro:IPR002085")
+         if node.sequences[0].id_source == 'z'
+           assert_equal(node.sequences[0].annotations[0].ref, "InterPro:IPR002085")
          end
        }
      end
@@ -218,13 +218,13 @@ module Bio
          @tree = @phyloxml.next_tree
        end
        @tree.leaves.each { |node|
-         if node.sequence[0].symbol == 'ADHX'
-          assert_equal(node.sequence[0].accession.source, 'UniProtKB')
-          assert_equal(node.sequence[0].accession.value, 'P81431')
-          assert_equal(node.sequence[0].name, 'Alcohol dehydrogenase class-3')
-          assert_equal(node.sequence[0].mol_seq, 'TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD')
-          assert_equal(node.sequence[0].annotation[0].ref, 'EC:1.1.1.1')
-          assert_equal(node.sequence[0].annotation[1].ref, 'GO:0004022')
+         if node.sequences[0].symbol == 'ADHX'
+          assert_equal(node.sequences[0].accession.source, 'UniProtKB')
+          assert_equal(node.sequences[0].accession.value, 'P81431')
+          assert_equal(node.sequences[0].name, 'Alcohol dehydrogenase class-3')
+          assert_equal(node.sequences[0].mol_seq, 'TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD')
+          assert_equal(node.sequences[0].annotations[0].ref, 'EC:1.1.1.1')
+          assert_equal(node.sequences[0].annotations[1].ref, 'GO:0004022')
          end
        }
      end
@@ -254,7 +254,7 @@ module Bio
        7.times do
          @tree = @phyloxml.next_tree
        end
-       property = @tree.get_node_by_name('A').property[0]
+       property = @tree.get_node_by_name('A').properties[0]
        assert_equal(property.datatype, 'xsd:integer')
        assert_equal(property.ref,'NOAA:depth')
        assert_equal(property.applies_to, 'clade')
@@ -366,7 +366,7 @@ module Bio
       assert_equal(polygon.points.length,3 )
       assert_equal(polygon.points[0].lat, 47.481277)
       assert_equal(polygon.points[1].long, 136.915863)
-      assert_equal(polygon.points[2].alt[0], 452)
+      assert_equal(polygon.points[2].alt, 452)
       polygon = @tree.get_node_by_name('A').distributions[0].polygons[1]
       #making sure can read in second polygon
       assert_equal(polygon.points.length,3 )
