@@ -431,6 +431,49 @@ module Bio
     attr_accessor :id_ref_0, :id_ref_1
   end
 
+  class BinaryCharacters
+    attr_accessor :type, :gained_count, :lost_count, :present_count, :absent_count,
+      :gained, :lost, :present, :absent
+
+    #todo do really need counts? since the array anyways should hold the correct count of characters
+    #@todo if need, then maybe have define method or smth.
+    def gained_count=(str)
+      @gained_count = str.to_i
+    end
+
+    def lost_count=(str)
+      @lost_count = str.to_i
+    end
+
+    def present_count=(str)
+      @present_count = str.to_i
+    end
+
+    def absent_count=(str)
+      @absent_count = str.to_i
+    end
+
+    def initialize
+      @gained = []
+      @lost = []
+      @present = []
+      @absent = []
+    end
+    
+  end
+
+#
+#  BinaryCharacters
+#* type (string)
+#* gained_count (integer)
+#* lost_count (integer)
+#* present_count (integer)
+#* absent_count (integer)
+#* gained (array of strings)
+#* lost (array of strings)
+#* present ( array of strings)
+#* absent ( array of strings)
+
 
   class SequenceRelation
     attr_accessor :id_ref_0, :id_ref_1, :distance, :type
@@ -795,6 +838,10 @@ module Bio
         end
         current_node.references << reference
       end
+
+      current_node.binary_characters  = parse_binary_characters if is_element?('binary_characters')
+
+
     end #parse_clade_elements
 
     def parse_events()
@@ -1030,6 +1077,42 @@ module Bio
       has_reached_end_element?('domain')
       return domain
     end
+
+    def parse_binary_characters
+      #@todo write a test case and example data for this.
+      b = PhyloXML::BinaryCharacters.new
+
+      parse_attributes(b, ['type', 'gained_count', 'absent_count', 'lost_count', 'present_count'])
+
+      if not @reader.empty_element?
+        @reader.read
+        while not is_end_element?('binary_characters')
+
+          parse_bc(b, 'lost')
+          parse_bc(b, 'gained')
+          parse_bc(b, 'absent')
+          parse_bc(b, 'present')
+
+          @reader.read
+        end
+      end
+      return b
+    end #parse_binary_characters
+
+    def parse_bc(object, element)
+      if is_element?(element)
+        @reader.read
+        while not is_end_element?(element)
+          if is_element?('bc')
+            @reader.read
+            object.send(element) << @reader.value
+            @reader.read
+            has_reached_end_element?('bc')
+          end
+        @reader.read
+        end
+      end
+    end #parse_bc
 
   end #class phyloxml
   
