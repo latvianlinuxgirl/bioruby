@@ -97,6 +97,15 @@ module Bio
       assert_equal(node.confidences[0].value, 89)
     end
 
+    def test_to_biotreenode_bootstrap
+      #iterate throuch first 2 trees to get to the third
+      @tree = @phyloxml.next_tree
+      @tree = @phyloxml.next_tree
+      node = @tree.get_node_by_name("AB")
+      bionode = node.to_biotreenode
+      assert_equal(bionode.bootstrap, 89)
+    end
+
     def test_duplications
       4.times do
         @tree = @phyloxml.next_tree

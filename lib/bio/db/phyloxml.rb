@@ -1,5 +1,5 @@
 #
-# = bio/io/phyloxml.rb - PhyloXML tree parser 
+# = bio/db/phyloxml.rb - PhyloXML parser
 #
 # Copyright::   Copyright (C) 2009
 #               Diana Jaunzeikare <latvianlinuxgirl@gmail.com>
@@ -9,11 +9,13 @@
 #
 # == Description
 #
-# This file containts parser for PhyloXML
+# This file containts parser for PhyloXML and all the classes to represent PhyloXML elements.
 #
 # == References
 #
 # * http://www.phyloxml.org
+#
+# * https://www.nescent.org/wg_phyloinformatics/PhyloSoC:PhyloXML_support_in_BioRuby
 
 require 'bio/tree'
 require 'xml'
@@ -143,7 +145,34 @@ module Bio
       @references = []
       @properties = []
     end
-    
+
+    def to_biotreenode
+      node = Bio::Tree::Node.new
+      node.name = @name
+      node.scientific_name = @taxonomies[0].scientific_name if not @taxonomies.empty?
+      #@todo what if there are more?
+      node.taxonomy_id = @taxonomies[0].id
+
+      if not @confidences.empty?
+        @confidences.each do |confidence|
+          if confidence.type == "bootstrap"
+            node.bootstrap = confidence.value
+            break
+          end
+        end
+      end
+      #@todo write unit test for case with two bootstrap values, for probability and bootstrap, and just probability. 
+      return node
+    end
+
+#    bootstrap  	 [R]   	bootstrap value
+#bootstrap_string 	 [R]  	bootstrap value as a string
+#ec_number 	 [RW]  	EC number (EC_number in PhyloXML, or :E in NHX)
+#name 	 [RW]  	name of the node
+#order_number 	 [RW]  	the order of the node (lower value, high priority)
+#scientific_name 	 [RW]  	scientific name (scientific_name in PhyloXML, or :S in NHX)
+#taxonomy_id 	 [RW]  	taxonomy identifier (taxonomy_identifier in PhyloXML, or :T in NHX)
+
 
   end
 
@@ -549,7 +578,12 @@ module Bio
     def file(filename)
       @reader = XML::Reader.file(filename)
     end
-    
+
+    # ---
+    # *Arguments*:
+    # * (required) _str_: String or Bio::Sequence::NA
+    # * (optional) _nr_: a number that means something
+    # *Returns*:: true or false
     def next_tree()
 
       #@todo what about a method for skipping a tree. (might save on time by not creating all those objects)
