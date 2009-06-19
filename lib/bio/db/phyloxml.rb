@@ -20,8 +20,6 @@
 require 'bio/tree'
 require 'xml'
 
-$debug = false
-
 module Bio
 
    #+++
@@ -49,62 +47,228 @@ module Bio
     end
   end
 
-
-
-  #+++
-  # PhyloXMLTree class
-  #+++
-
-  # PhyloXML standard phylogenetic tree parser class.
+  # == Description
   #
+  # Bio::PhyloXML is for parsing phyloXML format files.
   # This is alpha version. Incompatible changes may be made frequently.
+  #
+  # == Usage
+  #
+  #   require 'bio'
+  #
+  #   # Create new phyloxml reader
+  #   phyloxml = Bio::PhyloXML.new("./phyloxml_examples.xml")
+  #
+  #   # Print the names of all trees in the file
+  #   while tree != nil do
+  #     tree = phyloxml.next_tree
+  #     puts tree.name
+  #   end
+  #
+  # == References
+  #
+  # http://www.phyloxml.org/documentation/version_100/phyloxml.xsd.html
+  #
   class PhyloXML
 
-  class Tree < Bio::Tree
-  
-    attr_accessor :name, :description, :rooted, :property,
-      :clade_relations, :sequence_relations, :confidences, :rerootable, :branch_length_unit, :type
-
-   #This thing here gives an error, I dunno why
-   def initialize
-     super
-     @sequence_relations = []
-     @clade_relations = []
-     @confidences = []
-   end
- 
-  end
-
-  #+++
-  # PhyloXML::Node class
-  #+++
-
-  # Class to hold clade element of phyloXML.
-  class Node 
-    
-    #Events at the root node of a clade (e.g. one gene duplication).
-    attr_accessor :events
-
-    attr_accessor :id_source, :name
+    class Tree < Bio::Tree
+      # String
+      attr_accessor :name, :description
+      # Boolean
+      attr_accessor :rerootable, :rooted
       
-    attr_reader :width
+      # Array of Property object
+      attr_accessor :properties
 
-    #@todo maybe this attr should be part of Bio::Tree::Edge
-    def width=(str)
-      @width = str.to_f
+      # CladeRelation object
+      attr_accessor :clade_relations
+      
+      # SequenceRelation object
+      attr_accessor :sequence_relations
+      
+      # Array of confidence object
+      attr_accessor :confidences
+
+      # String
+      attr_accessor :branch_length_unit, :type
+
+     def initialize
+       super
+       @sequence_relations = []
+       @clade_relations = []
+       @confidences = []
+       @properties = []
+     end
+
     end
 
-    #Array of Taxonomy objects
-    attr_accessor :taxonomies
+    # == Description
+    # Class to hold clade element of phyloXML.
+    class Node
 
-    #A general purpose confidence element. For example this can be used to express the bootstrap support value of a clade (in which case the 'type' attribute is 'bootstrap').
-    attr_accessor :confidences
+      # Events at the root node of a clade (e.g. one gene duplication).
+      attr_accessor :events
 
-    attr_accessor :color 
+      # String
+      attr_accessor :id_source, :name
 
-    attr_accessor :node_id 
+      # Float
+      attr_reader :width
+      
+      def width=(str)
+        @width = str.to_f
+        #@todo maybe this attr should be part of Bio::Tree::Edge
+      end
 
-    #Element Sequence is used to represent a molecular sequence (Protein, DNA,
+      # Array of Taxonomy objects
+      attr_accessor :taxonomies
+
+      # Array of Confidence objects
+      attr_accessor :confidences
+
+      # BranchColor object
+      attr_accessor :color
+
+      # Id object
+      attr_accessor :node_id
+
+      # Array of Sequence objects
+      attr_accessor :sequences
+
+      # BinaryCharacters object
+      attr_accessor :binary_characters
+
+      # Array of Distribution objects
+      attr_accessor :distributions
+
+      # Date object
+      attr_accessor :date
+
+      #Array of Reference objects
+      attr_accessor :references
+
+      #An array of Property objects, for example depth for sea animals.
+      attr_accessor :properties
+
+      def initialize
+        @confidences = []
+        @sequences = []
+        @taxonomies = []
+        @distributions = []
+        @references = []
+        @properties = []
+      end
+
+      # tree = phyloxml.next_tree
+      # 
+      # node = tree.get_node_by_name("A").to_biotreenode
+      # 
+      # ---
+      # *Returns*:: Bio::Tree::Node
+      def to_biotreenode
+        node = Bio::Tree::Node.new
+        node.name = @name
+        node.scientific_name = @taxonomies[0].scientific_name if not @taxonomies.empty?
+        #@todo what if there are more?
+        node.taxonomy_id = @taxonomies[0].id
+
+        if not @confidences.empty?
+          @confidences.each do |confidence|
+            if confidence.type == "bootstrap"
+              node.bootstrap = confidence.value
+              break
+            end
+          end
+        end
+        #@todo write unit test for case with two bootstrap values, for probability and bootstrap, and just probability.
+        return node
+      end
+    end #Node
+
+
+    # Element 'id' is used for a unique identifier of a taxon (for example '6500'
+    # with 'ncbi_taxonomy' as 'type' for the California sea hare). Attribute
+    # 'id_source' is used to link other elements to a taxonomy (on the xml-level).
+    class Taxonomy < Bio::Taxonomy
+      # String
+      attr_accessor :id, :id_source, :type
+      # Uri object
+      attr_accessor :uri
+    end
+
+    # A general purpose confidence element. For example this can be used to express
+    # the bootstrap support value of a clade (in which case the 'type' attribute
+    # is 'bootstrap').
+    class Confidence
+      attr_accessor :type
+      attr_accessor :value
+
+      def initialize(type, value)
+        @type = type
+        @value = value
+      end
+
+    end
+
+    # == Description
+    #
+    # The geographic distribution of the items of a clade (species, sequences),
+    # intended for phylogeographic applications. The location can be described
+    # either by free text in the 'desc' element and/or by the coordinates of
+    # one or more 'Points' (similar to the 'Point' element in Google's KML
+    # format) or by 'Polygons'.
+    class Distribution
+      # String
+      attr_accessor :desc
+      # Array of Point objects
+      attr_accessor :points
+      # Array of Polygon objects
+      attr_accessor :polygons
+
+      def initialize
+        @points = []
+        @polygons = []
+      end
+    end #Distribution class
+
+    # == Description
+    #
+    # The coordinates of a point with an optional altitude (used by element
+    # 'Distribution'). Required attribute 'geodetic_datum' is used to indicate
+    # the geodetic datum (also called 'map datum'), for example
+    # Google's KML uses 'WGS84'.
+    class Point
+      attr_accessor :lat, :long, :alt, :geodetic_datum
+
+      def lat=(str)
+        @lat = str.to_f
+      end
+
+      def long=(str)
+        @long = str.to_f
+      end
+
+      def alt=(str)
+        @alt = str.to_f
+        #@todo add unit test for this
+      end
+
+    end
+
+    # == Description
+    # 
+    # A polygon defined by a list of 'Points'
+    class Polygon
+      # Array of Point objects
+      attr_accessor :points
+
+      def initialize
+        @points = []
+      end
+    end
+
+    # == Description
+    # Element Sequence is used to represent a molecular sequence (Protein, DNA,
     # RNA) associated with a node. 'symbol' is a short (maximal ten characters)
     # symbol of the sequence (e.g. 'ACTM') whereas 'name' is used for the full
     # name (e.g. 'muscle Actin'). 'location' is used for the location of a
@@ -113,418 +277,326 @@ module Bio
     # of sequence ('dna', 'rna', or 'aa'). One intended use for 'id_ref' is
     # to link a sequence to a taxonomy (via the taxonomy's 'id_source') in
     # case of multiple sequences and taxonomies per node.
-    attr_accessor :sequences
+    class Sequence
+      # values from rna, dna, aa
+      attr_accessor :type
+      # String
+      attr_accessor :id_source, :id_ref, :name
+      # 'symbol' is a short (maximal ten characters) symbol of the sequence (e.g. 'ACTM')
+      attr_accessor :symbol
+      # Accession object
+      attr_accessor :accession
+      # Location of a sequence on a genome/chromosome
+      attr_accessor :location
+      # String
+      attr_accessor :mol_seq
+      # Uri object
+      attr_accessor :uri #@todo alias method url ?
+      # Array of Annotation objects
+      attr_accessor :annotations
+      # DomainArchitecture object
+      attr_accessor :domain_architecture
 
-    attr_accessor :binary_characters #@todo design class for this
+      def initialize
+        @annotations = []
+      end
 
-    #The geographic distribution of the items of a clade (species, sequences),
-    #intended for phylogeographic applications. The location can be described
-    #either by free text in the 'desc' element and/or by the coordinates of one
-    #or more 'Points' (similar to the 'Point' element in Google's KML format)
-    #or by 'Polygons'.
-    attr_accessor :distributions
+      #convert Bio::PhyloXML::Sequence object to either Bio::Sequence object.
+      def to_biosequence
+        #type is not a required attribute in phyloxml (nor any other Sequence
+        #element) it might not hold any value, so we will not check what type it is.
+        seq = Bio::Sequence.auto(@mol_seq)
 
-    #A date associated with a clade/node. Its value can be numerical by using
-    #the 'value' element and/or free text with the 'desc' element'
-    #(e.g. 'Silurian'). If a numerical value is used, it is recommended to
-    #employ the 'unit' attribute to indicate the type of the numerical value
-    #(e.g. 'mya' for 'million years ago').
-    attr_accessor :date
-    
-    #Array of references
-    attr_accessor :references
-
-    #An array of properties, for example depth for sea animals.
-    attr_accessor :properties
-
-    def initialize      
-      @confidences = []
-      @sequences = []
-      @taxonomies = []
-      @distributions = []
-      @references = []
-      @properties = []
-    end
-
-    def to_biotreenode
-      node = Bio::Tree::Node.new
-      node.name = @name
-      node.scientific_name = @taxonomies[0].scientific_name if not @taxonomies.empty?
-      #@todo what if there are more?
-      node.taxonomy_id = @taxonomies[0].id
-
-      if not @confidences.empty?
-        @confidences.each do |confidence|
-          if confidence.type == "bootstrap"
-            node.bootstrap = confidence.value
-            break
-          end
+        seq.id_namespace = @accession.source
+        seq.entry_id = @accession.id
+       # seq.primary_accession = @accession.id could be this
+        seq.definition = @name
+        #seq.comments = @name this one?
+        if @uri != nil
+          h = {'url' => @uri.uri,
+            'title' => @uri.desc }
+          ref = Bio::Reference.new(h)
+          seq.references << ref
         end
+        seq.molecule_type = 'RNA' if @type == 'rna'
+        seq.molecule_type = 'DNA' if @type == 'dna'
+
+
+        #seq.classification = get from taxonomy
+        #seq.species => get from taxonomy
+        #seq.division => ..
+
+        #@todo deal with the properties. There might be properties which look
+        #like bio sequence attributes or features
+
       end
-      #@todo write unit test for case with two bootstrap values, for probability and bootstrap, and just probability. 
-      return node
+
     end
 
-#    bootstrap  	 [R]   	bootstrap value
-#bootstrap_string 	 [R]  	bootstrap value as a string
-#ec_number 	 [RW]  	EC number (EC_number in PhyloXML, or :E in NHX)
-#name 	 [RW]  	name of the node
-#order_number 	 [RW]  	the order of the node (lower value, high priority)
-#scientific_name 	 [RW]  	scientific name (scientific_name in PhyloXML, or :S in NHX)
-#taxonomy_id 	 [RW]  	taxonomy identifier (taxonomy_identifier in PhyloXML, or :T in NHX)
+    # == Description
+    # Element Accession is used to capture the local part in a sequence
+    # identifier.
+    class Accession
+      #Example: "UniProtKB"
+      attr_accessor :source
 
-
-  end
-
-
- 
-  
-  #+++
-  # PhyloXMLTaxonomy class
-  #+++
-
-  # Element 'id' is used for a unique identifier of a taxon (for example '6500'
-  # with 'ncbi_taxonomy' as 'type' for the California sea hare). Attribute
-  # 'id_source' is used to link other elements to a taxonomy (on the xml-level).
-  class Taxonomy < Bio::Taxonomy
-    attr_accessor :id
-    attr_accessor :id_source
-    attr_accessor :type
-    attr_accessor :uri
-  end
-
-  #+++
-  # Confidence class
-  #+++
-
-  # A general purpose confidence element. For example this can be used to express
-  # the bootstrap support value of a clade (in which case the 'type' attribute
-  # is 'bootstrap').
-  class Confidence
-    attr_accessor :type
-    attr_accessor :value
-
-    def initialize(type, value)
-      @type = type
-      @value = value
+      #Example: "P17304"
+      attr_accessor :value 
     end
 
-  end
 
-  #+++
-  # Distribution class
-  #+++
-
-  # The geographic distribution of the items of a clade (species, sequences), 
-  # intended for phylogeographic applications. The location can be described 
-  # either by free text in the 'desc' element and/or by the coordinates of 
-  # one or more 'Points' (similar to the 'Point' element in Google's KML 
-  # format) or by 'Polygons'.
-  class Distribution
-    #String
-    attr_accessor :desc
-    #Array of Point objects
-    attr_accessor :points
-
-    attr_accessor :polygons 
-
-    def initialize
-      @points = []
-      @polygons = []
-    end
-  end #Distribution class
-
-  #+++
-  # Point class
-  #+++
-
-  class Point
-    attr_accessor :lat, :long, :alt, :geodetic_datum
-
-    def lat=(str)
-      @lat = str.to_f
+    class Uri
+      # String
+      attr_accessor :desc
+      # String
+      attr_accessor :type
+      attr_accessor :uri #@todo call it url?
     end
 
-    def long=(str)
-      @long = str.to_f
-    end
-    
-  end
+    # == Description
+    #
+    # The annotation of a molecular sequence.
+    class Annotation
+      # String
+      attr_accessor :ref
+      # String
+      attr_accessor :source
+      # String
+      attr_accessor :evidence
+      # String
+      attr_accessor :type
+      # String
+      attr_accessor :desc
+      # Confidence object
+      attr_accessor :confidence
+      # Array of Property objects
+      attr_accessor :properties
+      # Uri object
+      attr_accessor :uri
 
-  class Polygon
-    attr_accessor :points
-
-    def initialize
-      @points = []
-    end
-  end
-  
-  class Sequence
-    #values from rna, dna, aa
-    attr_accessor :type    
-    attr_accessor :id_source
-    attr_accessor :id_ref
-    #'symbol' is a short (maximal ten characters) symbol of the sequence (e.g. 'ACTM')
-    attr_accessor :symbol #@todo check for this
-    attr_accessor :accession
-    attr_accessor :name
-    #location of a sequence on a genome/chromosome
-    attr_accessor :location
-    attr_accessor :mol_seq
-    attr_accessor :uri #@todo alias method url ?
-    attr_accessor :annotations
-    attr_accessor :domain_architecture
-    
-    def initialize
-      @annotations = []
-    end
-
-    #convert Bio::PhyloXML::Sequence object to either Bio::Sequence::NA or Bio::Sequence::AA object.
-    def to_biosequence
-      #type is not a required attribute in phyloxml (nor any other Sequence
-      #element) it might not hold any value, so we will not check what type it is.
-      seq = Bio::Sequence.auto(@mol_seq)
-
-      seq.id_namespace = @accession.source
-      seq.entry_id = @accession.id
-     # seq.primary_accession = @accession.id could be this
-      seq.definition = @name
-      #seq.comments = @name this one?
-      if @uri != nil
-        h = {'url' => @uri.uri,
-          'title' => @uri.desc }
-        ref = Bio::Reference.new(h)
-        seq.references << ref
-      end
-      seq.molecule_type = 'RNA' if @type == 'rna'
-      seq.molecule_type = 'DNA' if @type == 'dna'
       
-      
-      #seq.classification = get from taxonomy
-      #seq.species => get from taxonomy
-      #seq.division => ..
-
-      #@todo deal with the properties. There might be properties which look like bio sequence attributes or features
-
-    end
-   
-  end
-
-  class Accession
-    #Example: "UniProtKB"
-    attr_accessor :source
-    
-    #Example: "P17304"
-    attr_accessor :value #@todo maybe call it id. 
-  end
-
-  class Uri
-    attr_accessor :desc
-    attr_accessor :type
-    attr_accessor :uri #@todo call it url?
-  end
-
-  class Annotation
-    attr_accessor :ref
-    attr_accessor :source
-    attr_accessor :evidence
-    attr_accessor :type
-    attr_accessor :desc
-    attr_accessor :confidence
-    attr_accessor :properties
-    attr_accessor :uri
-
-    #@todo add unit test for this, since didn't break anything when changed from property to properties
-    def initialize
-      @properties = []
-    end
-  end
-
-  class Id
-    attr_accessor :type, :value
-  end
-
-  #@todo maybe should be part of Bio::Tree::Edge
-  class BranchColor
-    attr_accessor :red, :green, :blue
-  end
-
-  class Date
-    attr_accessor :unit,  :desc
-
-    attr_reader :range, :value
-
-    def range=(str)
-      @range = str.to_i
-    end
-
-    def value= (str)
-      @value = str.to_i
-    end
-
-    def to_s
-      return "#{value} #{unit}"
-    end
-  end
-
-  class DomainArchitecture
-    attr_accessor :length
-    attr_reader :domains
-
-    def initialize
-      @domains = []
-    end
-  end
-
-  #To represent an individual domain in a domain architecture. The name/unique identifier is described via the 'id' attribute. 'confidence' can be used to store (i.e.) E-values.
-  class ProteinDomain
-    #simple string, for example to store E-values
-    attr_accessor :confidence
-    
-    #strings
-    attr_accessor :id, :value
-
-    attr_reader :from, :to
-
-    def from=(str)
-      @from = str.to_i
-    end
-
-    def to=(str)
-      @to = str.to_i
-    end
-
-  end
-
-  #Property allows for typed and referenced properties from external resources
-  #to be attached to 'Phylogeny', 'Clade', and 'Annotation'. The value of a
-  #property is its mixed (free text) content. Attribute 'datatype' indicates
-  #the type of a property and is limited to xsd-datatypes (e.g. 'xsd:string',
-  #'xsd:boolean', 'xsd:integer', 'xsd:decimal', 'xsd:float', 'xsd:double',
-  #'xsd:date', 'xsd:anyURI'). Attribute 'applies_to' indicates the item to
-  #which a property applies to (e.g. 'node' for the parent node of a clade,
-  #'parent_branch' for the parent branch of a clade). Attribute 'id_ref' allows
-  #to attached a property specifically to one element (on the xml-level).
-  #Optional attribute 'unit' is used to indicate the unit of the property.
-  #An example: <property datatype="xsd:integer" ref="NOAA:depth" applies_to="clade" unit="METRIC:m"> 200 </property>
-  class Property
-    attr_accessor :ref, :unit, :id_ref, :value
-    
-    attr_reader :datatype, :applies_to
-
-    #@todo add unit test
-    def datatype=(str)
-      unless ['xsd:string','xsd:boolean','xsd:decimal','xsd:float','xsd:double',
-          'xsd:duration','xsd:dateTime','xsd:time','xsd:date','xsd:gYearMonth',
-          'xsd:gYear','xsd:gMonthDay','xsd:gDay','xsd:gMonth','xsd:hexBinary',
-          'xsd:base64Binary','xsd:anyURI','xsd:normalizedString','xsd:token',
-          'xsd:integer','xsd:nonPositiveInteger','xsd:negativeInteger',
-          'xsd:long','xsd:int','xsd:short','xsd:byte','xsd:nonNegativeInteger',
-          'xsd:unsignedLong','xsd:unsignedInt','xsd:unsignedShort',
-          'xsd:unsignedByte','xsd:positiveInteger'].include?(str)
-        puts "Warning: #{str} is not in the list of allowed values."
+      def initialize
+        #@todo add unit test for this, since didn't break anything when changed from property to properties
+        @properties = []
       end
-      @datatype = str
     end
 
-    def applies_to=(str)
-      unless ['phylogeny','clade','node','annotation','parent_branch','other'].include?(str)
-        puts "Warning: #{str} is not in the list of allowed values."
+    class Id
+      attr_accessor :type, :value
+    end
+
+    # == Description
+    # This indicates the color of a node when rendered (the color applies
+    # to the whole node and its children unless overwritten by the
+    # color(s) of sub clades).
+    class BranchColor
+      #Integer
+      attr_reader :red, :green, :blue
+
+      def red=(str)
+        @red = str.to_i
       end
-      @applies_to = str
+
+      def green=(str)
+        @green = str.to_i
+      end
+
+      def blue=(str)
+        @blue = str.to_i
+      end
+
+      #@todo maybe should be part of Bio::Tree::Edge
     end
-  end
 
-  #+++
-  # Reference class
-  #+++
+    # == Description
+    # A date associated with a clade/node. Its value can be numerical by 
+    # using the 'value' element and/or free text with the 'desc' element' 
+    # (e.g. 'Silurian'). If a numerical value is used, it is recommended to 
+    # employ the 'unit' attribute to indicate the type of the numerical 
+    # value (e.g. 'mya' for 'million years ago').
+    class Date
+      attr_accessor :unit,  :desc
 
-  #A literature reference for a clade. It is recommended to use the 'doi'
-  #attribute instead of the free text 'desc' element whenever possible.
-  class Reference
-    attr_accessor :doi, :desc
+      attr_reader :range, :value
 
-    #@todo when the initialize method is removed then gives ArgumentError: wrong number of arguments (0 for 1)
-  #  def initialize
+      def range=(str)
+        @range = str.to_i
+      end
+
+      def value= (str)
+        @value = str.to_i
+      end
+
+      # Returns value + unit, for exampe "7 mya"
+      def to_s
+        return "#{value} #{unit}"
+      end
+    end
+
+    # == Description
+    # This is used describe the domain architecture of a protein. Attribute
+    # 'length' is the total length of the protein
+    class DomainArchitecture
+      attr_accessor :length
+      attr_reader :domains
+
+      def length=(str)
+        @length = str.to_i
+      end
+
+      def initialize
+        @domains = []
+      end
+    end
+
+    # == Description
+    # To represent an individual domain in a domain architecture. The
+    # name/unique identifier is described via the 'id' attribute.
+    class ProteinDomain
+      #String, for example to store E-values
+      attr_accessor :confidence
+
+      # String
+      attr_accessor :id, :value
+
+      # Integer
+      attr_reader :from, :to
+
+      def from=(str)
+        @from = str.to_i
+      end
+
+      def to=(str)
+        @to = str.to_i
+      end
+
+    end
+
+    #Property allows for typed and referenced properties from external resources
+    #to be attached to 'Phylogeny', 'Clade', and 'Annotation'. The value of a
+    #property is its mixed (free text) content. Attribute 'datatype' indicates
+    #the type of a property and is limited to xsd-datatypes (e.g. 'xsd:string',
+    #'xsd:boolean', 'xsd:integer', 'xsd:decimal', 'xsd:float', 'xsd:double',
+    #'xsd:date', 'xsd:anyURI'). Attribute 'applies_to' indicates the item to
+    #which a property applies to (e.g. 'node' for the parent node of a clade,
+    #'parent_branch' for the parent branch of a clade). Attribute 'id_ref' allows
+    #to attached a property specifically to one element (on the xml-level).
+    #Optional attribute 'unit' is used to indicate the unit of the property.
+    #An example: <property datatype="xsd:integer" ref="NOAA:depth" applies_to="clade" unit="METRIC:m"> 200 </property>
+    class Property
+      # String
+      attr_accessor :ref, :unit, :id_ref, :value
+
+      # String
+      attr_reader :datatype, :applies_to
+     
+      def datatype=(str)
+         #@todo add unit test or maybe remove, if assume that xml is valid.
+        unless ['xsd:string','xsd:boolean','xsd:decimal','xsd:float','xsd:double',
+            'xsd:duration','xsd:dateTime','xsd:time','xsd:date','xsd:gYearMonth',
+            'xsd:gYear','xsd:gMonthDay','xsd:gDay','xsd:gMonth','xsd:hexBinary',
+            'xsd:base64Binary','xsd:anyURI','xsd:normalizedString','xsd:token',
+            'xsd:integer','xsd:nonPositiveInteger','xsd:negativeInteger',
+            'xsd:long','xsd:int','xsd:short','xsd:byte','xsd:nonNegativeInteger',
+            'xsd:unsignedLong','xsd:unsignedInt','xsd:unsignedShort',
+            'xsd:unsignedByte','xsd:positiveInteger'].include?(str)
+          puts "Warning: #{str} is not in the list of allowed values."
+        end
+        @datatype = str
+      end
+
+      def applies_to=(str)
+        unless ['phylogeny','clade','node','annotation','parent_branch','other'].include?(str)
+          puts "Warning: #{str} is not in the list of allowed values."
+        end
+        @applies_to = str
+      end
+    end
+
+    # == Description
+    # A literature reference for a clade. It is recommended to use the 'doi'
+    # attribute instead of the free text 'desc' element whenever possible.
+    class Reference
+      # String
+      attr_accessor :doi, :desc
+
+      #@todo should use Bio::Reference
+    end
+
+    # == Description
+    #
+    # This is used to express a typed relationship between two clades.
+    # For example it could be used to describe multiple parents of a clade.
+    class CladeRelation
+      # Float
+      attr_accessor :distance
+      # String
+      attr_accessor :id_ref_0, :id_ref_1, :type
+      # Confidence object
+      attr_accessor :confidence
+
+      def distance=(str)
+        @distance = str.to_f
+      end
       
-   # end
-
-  end
-
-  #+++
-  # Clade Relation class
-  #+++
-
-  class CladeRelation
-    attr_accessor :distance, :type, :confidence
-    attr_accessor :id_ref_0, :id_ref_1
-  end
-
-  class BinaryCharacters
-    attr_accessor :type, :gained_count, :lost_count, :present_count, :absent_count,
-      :gained, :lost, :present, :absent
-
-    #todo do really need counts? since the array anyways should hold the correct count of characters
-    #@todo if need, then maybe have define method or smth.
-    def gained_count=(str)
-      @gained_count = str.to_i
     end
 
-    def lost_count=(str)
-      @lost_count = str.to_i
+    # == Description
+    # The names and/or counts of binary characters present, gained, and
+    # lost at the root of a clade.
+    class BinaryCharacters
+      attr_accessor :type, :gained, :lost, :present, :absent
+      attr_reader :gained_count, :lost_count, :present_count, :absent_count
+       
+      def gained_count=(str)
+        @gained_count = str.to_i
+      end
+
+      def lost_count=(str)
+        @lost_count = str.to_i
+      end
+
+      def present_count=(str)
+        @present_count = str.to_i
+      end
+
+      def absent_count=(str)
+        @absent_count = str.to_i
+      end
+
+      def initialize
+        @gained = []
+        @lost = []
+        @present = []
+        @absent = []
+      end
+
     end
 
-    def present_count=(str)
-      @present_count = str.to_i
+    # == Description
+    # This is used to express a typed relationship between two sequences.
+    # For example it could be used to describe an orthology (in which case
+    # attribute 'type' is 'orthology').
+    class SequenceRelation
+      # String
+      attr_accessor :id_ref_0, :id_ref_1, :type
+      # Float
+      attr_reader :distance
+
+      def distance=(str)
+        @distance = str.to_i
+      end
+
     end
 
-    def absent_count=(str)
-      @absent_count = str.to_i
-    end
-
-    def initialize
-      @gained = []
-      @lost = []
-      @present = []
-      @absent = []
-    end
-    
-  end
-
-#
-#  BinaryCharacters
-#* type (string)
-#* gained_count (integer)
-#* lost_count (integer)
-#* present_count (integer)
-#* absent_count (integer)
-#* gained (array of strings)
-#* lost (array of strings)
-#* present ( array of strings)
-#* absent ( array of strings)
-
-
-  class SequenceRelation
-    attr_accessor :id_ref_0, :id_ref_1, :distance, :type
-  end
-
-  #---
-  # PhyloXML parser
-  #+++
-
-
-
-     #+++
-    # Events class
-    #+++
-
-    #Events at the root node of a clade (e.g. one gene duplication).
+    # == Description
+    # Events at the root node of a clade (e.g. one gene duplication).
     class Events
       #value comes from list: {'transfer'|'fusion'|'speciation_or_duplication'|'other'|'mixed'|'unassigned'}
       attr_accessor :type
-      attr_reader :duplications
-      attr_reader :speciations
-      attr_reader :losses
+      # Integer
+      attr_reader :duplications, :speciations, :losses
+      # Confidence object
       attr_reader :confidence
 
       def confidence=(type, value)
@@ -550,12 +622,28 @@ module Bio
       def type=(str)
         @type = str
         #@todo add unit test for this
+        #@todo probably don't need this if the xml files are valid against the xsd schema
         if not ['transfer','fusion','speciation_or_duplication','other','mixed','unassigned'].include?(str)
           puts "Warning #{str} is not one of the allowed values"
         end
       end
     end
 
+
+    ###########################################################################
+
+
+    # Initializes LibXML::Reader and reads the file until reaches first
+    # phylogeny element.
+    #
+    # Create a new Bio::PhyloXML object.
+    #
+    #   p = Bio::PhyloXML.new("./phyloxml_examples.xml")
+    #
+    # ---
+    # *Arguments*:
+    # * (required) _str_: String 
+    # *Returns*:: Bio::PhyloXML object
     def initialize(str) 
       #@todo decide if need to be able initialize using string, since usually xml lives in files
 
@@ -579,11 +667,14 @@ module Bio
       @reader = XML::Reader.file(filename)
     end
 
+    # Parse and return the next phylogeny tree.
+    # 
+    # p = Bio::PhyloXML.new("./phyloxml_examples.xml")
+    # 
+    # tree = p.next_tree
+    #
     # ---
-    # *Arguments*:
-    # * (required) _str_: String or Bio::Sequence::NA
-    # * (optional) _nr_: a number that means something
-    # *Returns*:: true or false
+    # *Returns*:: Bio::PhyloXML::Tree
     def next_tree()
 
       #@todo what about a method for skipping a tree. (might save on time by not creating all those objects)
@@ -679,7 +770,7 @@ module Bio
         if not parsing_clade
           #@todo add unit test for this
           if is_element?('property')
-            tree.property = parse_property
+            tree.properties << parse_property
           end          
 
           if is_element?('clade_relation')
@@ -744,7 +835,8 @@ module Bio
 
     # Parses a simple XML element. for example <speciations>1</speciations>
     # It reads in the value and assigns it to object.speciation = 1
-    # Also checks if have reached end tag (</speciations> and gives warning if not
+    # Also checks if have reached end tag (</speciations> and gives warning
+    # if not
     def parse_simple_element(object, name)
       if is_element?(name)
         @reader.read
@@ -761,7 +853,7 @@ module Bio
     end
 
     #Parses list of attributes
-    #use for the code like: tree.clade_relation.type = @reader["type"]
+    #use for the code like: clade_relation.type = @reader["type"]
     def parse_attributes(object, arr_of_attrs)
       arr_of_attrs.each do |attr|
         object.send("#{attr}=", @reader[attr])
@@ -769,9 +861,9 @@ module Bio
     end
 
     #parses elements where attributes of the object are arrays of objects.
-    #@todo maybe there is better name for this method
     def parse_complex_array_elements(object, elements)
-      #Example code:
+      # @todo make this work for plural forms
+      # Example code:
       # if is_element('confidence')
       #   current_node.confidence << parse_confidence
       # end
@@ -782,13 +874,10 @@ module Bio
       end
     end #parse_complex_array_elements
 
-
     def parse_clade_elements(current_node, current_edge)
       #no loop inside, it is already outside
 
-      #parse branch_length tag
       if is_element?('branch_length')
-        #read in the name tag value
         @reader.read
         branch_length = @reader.value
         current_edge.distance = branch_length.to_f
@@ -796,15 +885,11 @@ module Bio
         has_reached_end_element?('branch_length')
       end
 
-      #@todo write unit test for this
+      #@todo write unit test for width tag
       #@todo put width into edge?
-      parse_simple_element(current_node, 'width')
+      parse_simple_elements(current_node, ['width', 'name'])
 
-      parse_simple_element(current_node, 'name')
-
-      if is_element?('events')
-        current_node.events = parse_events
-      end
+      current_node.events = parse_events if is_element?('events')
 
       #parse_complex_array_elements(current_node, ['confidence', 'sequence', 'property'])
       #@todo will have to deal with plural forms
@@ -812,14 +897,8 @@ module Bio
       current_node.confidences << parse_confidence if is_element?('confidence')
       current_node.sequences << parse_sequence if is_element?('sequence')
       current_node.properties << parse_property if is_element?('property')
-
-      if is_element?('taxonomy')
-        current_node.taxonomies << parse_taxonomy
-      end
-
-      if is_element?('distribution')
-        current_node.distributions << parse_distribution
-      end
+      current_node.taxonomies << parse_taxonomy if is_element?('taxonomy')
+      current_node.distributions << parse_distribution if is_element?('distribution')
 
       if is_element?('node_id')
         id = Id.new
@@ -845,7 +924,9 @@ module Bio
         date = Date.new
         parse_attributes(date, ["unit", "range"])
 
-        @reader.read #move to the next token, which is always empty, since date tag does not have text associated with it
+        #move to the next token, which is always empty, since date tag does not
+        # have text associated with it
+        @reader.read 
         @reader.read #now the token is the first tag under date tag
         while not(is_end_element?('date'))
           parse_simple_element(date, 'desc')
@@ -859,15 +940,11 @@ module Bio
         #@todo write unit test (there is no such tag in example file)
         
         reference = Reference.new()
-        #puts "===="
-        #parse attributes
         reference.doi = @reader['doi']      
         if not @reader.empty_element?
           while not is_end_element?('reference')
             parse_simple_element(reference, 'desc')
             @reader.read
-            #puts @reader.name
-
           end
         end
         current_node.references << reference
@@ -875,14 +952,14 @@ module Bio
 
       current_node.binary_characters  = parse_binary_characters if is_element?('binary_characters')
 
-
     end #parse_clade_elements
 
     def parse_events()
       events = PhyloXML::Events.new
       @reader.read #go to next element
       while not(is_end_element?('events')) do
-        parse_simple_elements(events, ['type', 'duplications', 'speciations', 'losses'])
+        parse_simple_elements(events, ['type', 'duplications',
+                                            'speciations', 'losses'])
         if is_element?('confidence')
           events.confidence = parse_confidence
           #@todo add unit test for this (example file does not have this case)
@@ -899,9 +976,7 @@ module Bio
       while not(is_end_element?('taxonomy')) do
         parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank'] )
  
-        if is_element?('id')
-          taxonomy.id = parse_id('id')
-        end
+        taxonomy.id = parse_id('id') if is_element?('id')
 
         if is_element?('common_name')
           @reader.read
@@ -910,9 +985,7 @@ module Bio
           has_reached_end_element?('common_name')
         end
 
-        if is_element?('uri')
-          taxonomy.uri = parse_uri
-        end
+        taxonomy.uri = parse_uri if is_element?('uri')
 
         @reader.read  #move to next tag in the loop
       end
@@ -923,7 +996,6 @@ module Bio
       sequence = Sequence.new
       parse_attributes(sequence, ["type", "id_source", "id_ref"])
       
-      #parse tags
       @reader.read
       while not(is_end_element?('sequence'))
 
@@ -938,16 +1010,12 @@ module Bio
           has_reached_end_element?('accession')
         end
 
-        if is_element?('uri')
-          sequence.uri = parse_uri
-        end
+        sequence.uri = parse_uri if is_element?('uri')
 
-        if is_element?('annotation')
-          sequence.annotations << parse_annotation
-        end
+        sequence.annotations << parse_annotation if is_element?('annotation')
 
         if is_element?('domain_architecture')
-          #@todo write unit test for this
+          #@todo write unit test for domain_architecture
           sequence.domain_architecture = DomainArchitecture.new
           sequence.domain_architecture.length = @reader["length"]
 
@@ -961,7 +1029,7 @@ module Bio
         @reader.read
       end
       return sequence
-    end
+    end #parse_sequence
 
     def parse_uri
       #@todo add unit test for this
@@ -980,13 +1048,9 @@ module Bio
         while not(is_end_element?('annotation'))
           parse_simple_element(annotation, 'desc') if is_element?('desc')
 
-          if is_element?('confidence')
-            annotation.confidence  = parse_confidence
-          end          
+          annotation.confidence  = parse_confidence if is_element?('confidence')
 
-          if is_element?('property')
-            annotation.properties << parse_property
-          end
+          annotation.properties << parse_property if is_element?('property')
 
           if is_element?('uri')
             annotation.uri = parse_uri
@@ -1001,10 +1065,8 @@ module Bio
     end
 
     def parse_property
-
       property = Property.new
       parse_attributes(property, ["ref", "unit", "datatype", "applies_to", "id_ref"])
-
       @reader.read
       property.value = @reader.value
       @reader.read
@@ -1012,8 +1074,7 @@ module Bio
       return property
     end #parse_property
 
-
-    def parse_confidence      
+    def parse_confidence
       type = @reader["type"]
       @reader.read
       value = @reader.value.to_f
@@ -1029,31 +1090,19 @@ module Bio
 
         parse_simple_element(distribution, 'desc')
 
-        #@todo this does not work because of the plural form
-        #parse_complex_array_elements(distribution, ['point', 'polygon'])
-
-        if is_element?('point')
-          distribution.points << parse_point
-        end
-
-        if is_element?('polygon')
-          #@todo add unit test
-          distribution.polygons << parse_polygon
-        end
+        distribution.points << parse_point if is_element?('point')
+        distribution.polygons << parse_polygon if is_element?('polygon')
 
         @reader.read
       end
-
       return distribution
     end #parse_distribution
 
     def parse_point
       point = Point.new
 
-      #parse attribute
       point.geodetic_datum = @reader["geodetic_datum"]
 
-      #parse tags
       @reader.read
       while not(is_end_element?('point')) do
 
@@ -1073,17 +1122,13 @@ module Bio
 
     def parse_polygon
       polygon = Polygon.new
-
       @reader.read
       while not(is_end_element?('polygon')) do
-
-        if is_element?('point')
-          polygon.points << parse_point
-        end
-
+        polygon.points << parse_point if is_element?('point')
         @reader.read
       end
 
+      #@should check for it at all?
       if polygon.points.length <3
         puts "Warning: <polygon> should have at least 3 points"
       end
@@ -1099,7 +1144,7 @@ module Bio
       has_reached_end_element?(tag_name)
           #@todo write unit test for this. There is no example of this in the example files
       return id
-    end
+    end #parse_id
 
     def parse_domain
       domain = ProteinDomain.new
