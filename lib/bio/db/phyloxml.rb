@@ -171,7 +171,7 @@ module Bio
         node.name = @name
         node.scientific_name = @taxonomies[0].scientific_name if not @taxonomies.empty?
         #@todo what if there are more?
-        node.taxonomy_id = @taxonomies[0].taxon_id if @taxonomies[0] != nil
+        node.taxonomy_id = @taxonomies[0].taxononmy_id if @taxonomies[0] != nil
 
         if not @confidences.empty?
           @confidences.each do |confidence|
@@ -192,7 +192,7 @@ module Bio
     # 'id_source' is used to link other elements to a taxonomy (on the xml-level).
     class Taxonomy < Bio::Taxonomy
       # String
-      attr_accessor :taxon_id, :id_source, :type
+      attr_accessor :taxonomy_id, :id_source
       # Uri object
       attr_accessor :uri
     end
@@ -314,7 +314,7 @@ module Bio
         seq.entry_id = @accession.value
        # seq.primary_accession = @accession.value could be this
         seq.definition = @name
-        #seq.comments = @name this one?
+        #seq.comments = @name //this one?
         if @uri != nil
           h = {'url' => @uri.uri,
             'title' => @uri.desc }
@@ -976,12 +976,12 @@ module Bio
 
     def parse_taxonomy
       taxonomy = PhyloXML::Taxonomy.new
-      parse_attributes(taxonomy, ["type", "id_source"])
+      parse_attributes(taxonomy, ["id_source"])
       @reader.read
       while not(is_end_element?('taxonomy')) do
         parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank'] )
 
-        taxonomy.taxon_id = parse_id('id') if is_element?('id')
+        taxonomy.taxonomy_id = parse_id('id') if is_element?('id')
 
         if is_element?('common_name')
           @reader.read

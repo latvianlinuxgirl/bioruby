@@ -149,7 +149,7 @@ module Bio
       #id_types = []
       leaves.each { |node|
         codes[codes.length] = node.taxonomies[0].code
-        ids[ids.length] = node.taxonomies[0].taxon_id
+        ids[ids.length] = node.taxonomies[0].taxonomy_id
         #id_types[id_types.length] = node.taxonomy.id_type
       }
       assert_equal(codes.sort, ["CLOAB",  "DICDI", "OCTVU"])
@@ -161,8 +161,7 @@ module Bio
         @tree = @phyloxml.next_tree
       end
       taxonomy = @tree.root.taxonomies[0]
-      assert_equal(taxonomy.taxon_id.type, "NCBI")
-      assert_equal(taxonomy.taxon_id.value, "8556")
+      assert_equal(taxonomy.taxonomy_id.value, "8556")
       assert_equal(taxonomy.scientific_name, "Varanus")
       assert_equal(taxonomy.rank, "genus")
       assert_equal(taxonomy.uri.desc, "EMBL REPTILE DATABASE")
