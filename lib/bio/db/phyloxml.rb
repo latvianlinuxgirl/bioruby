@@ -159,6 +159,7 @@ module Bio
         @properties = []
       end
 
+
       # tree = phyloxml.next_tree
       # 
       # node = tree.get_node_by_name("A").to_biotreenode
@@ -170,7 +171,7 @@ module Bio
         node.name = @name
         node.scientific_name = @taxonomies[0].scientific_name if not @taxonomies.empty?
         #@todo what if there are more?
-        node.taxonomy_id = @taxonomies[0].id
+        node.taxonomy_id = @taxonomies[0].taxon_id if @taxonomies[0] != nil
 
         if not @confidences.empty?
           @confidences.each do |confidence|
@@ -191,7 +192,7 @@ module Bio
     # 'id_source' is used to link other elements to a taxonomy (on the xml-level).
     class Taxonomy < Bio::Taxonomy
       # String
-      attr_accessor :id, :id_source, :type
+      attr_accessor :taxon_id, :id_source, :type
       # Uri object
       attr_accessor :uri
     end
@@ -301,15 +302,17 @@ module Bio
         @annotations = []
       end
 
-      #convert Bio::PhyloXML::Sequence object to either Bio::Sequence object.
+      # converts Bio::PhyloXML:Sequence to Bio::Sequence object.
+      # ---
+      # *Returns*:: Bio::Tree::Sequence
       def to_biosequence
         #type is not a required attribute in phyloxml (nor any other Sequence
         #element) it might not hold any value, so we will not check what type it is.
         seq = Bio::Sequence.auto(@mol_seq)
 
         seq.id_namespace = @accession.source
-        seq.entry_id = @accession.id
-       # seq.primary_accession = @accession.id could be this
+        seq.entry_id = @accession.value
+       # seq.primary_accession = @accession.value could be this
         seq.definition = @name
         #seq.comments = @name this one?
         if @uri != nil
@@ -328,7 +331,7 @@ module Bio
 
         #@todo deal with the properties. There might be properties which look
         #like bio sequence attributes or features
-
+        return seq
       end
 
     end
@@ -623,7 +626,7 @@ module Bio
         @type = str
         #@todo add unit test for this
         #@todo probably don't need this if the xml files are valid against the xsd schema
-        if not ['transfer','fusion','speciation_or_duplication','other','mixed','unassigned'].include?(str)
+        if not ['transfer','fusion','speciation_or_duplication','other','mixed', 'unassigned'].include?(str)
           puts "Warning #{str} is not one of the allowed values"
         end
       end
@@ -952,6 +955,8 @@ module Bio
 
       current_node.binary_characters  = parse_binary_characters if is_element?('binary_characters')
 
+
+      
     end #parse_clade_elements
 
     def parse_events()
@@ -975,8 +980,8 @@ module Bio
       @reader.read
       while not(is_end_element?('taxonomy')) do
         parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank'] )
- 
-        taxonomy.id = parse_id('id') if is_element?('id')
+
+        taxonomy.taxon_id = parse_id('id') if is_element?('id')
 
         if is_element?('common_name')
           @reader.read

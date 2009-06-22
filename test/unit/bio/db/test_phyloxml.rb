@@ -30,6 +30,18 @@ module TestPhyloXMLData
     File.join PHYLOXML_TEST_DATA, 'made_up.xml'
   end
 
+  def self.metazoa_xml
+    File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_metazoa.xml'
+  end
+
+  def self.mollusca_xml
+    File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca.xml'
+  end
+
+  def self.life_xml
+    File.join PHYLOXML_TEST_DATA, 'tol_life_on_earth_1.xml'
+  end
+
 end #end module TestPhyloXMLData
 
 
@@ -57,6 +69,8 @@ module Bio
     end
      
   end #class TestPhyloXML
+
+
 
   class TestPhyloXML2 < Test::Unit::TestCase
   
@@ -135,7 +149,7 @@ module Bio
       #id_types = []
       leaves.each { |node|
         codes[codes.length] = node.taxonomies[0].code
-        ids[ids.length] = node.taxonomies[0].id
+        ids[ids.length] = node.taxonomies[0].taxon_id
         #id_types[id_types.length] = node.taxonomy.id_type
       }
       assert_equal(codes.sort, ["CLOAB",  "DICDI", "OCTVU"])
@@ -147,8 +161,8 @@ module Bio
         @tree = @phyloxml.next_tree
       end
       taxonomy = @tree.root.taxonomies[0]
-      assert_equal(taxonomy.id.type, "NCBI")
-      assert_equal(taxonomy.id.value, "8556")
+      assert_equal(taxonomy.taxon_id.type, "NCBI")
+      assert_equal(taxonomy.taxon_id.value, "8556")
       assert_equal(taxonomy.scientific_name, "Varanus")
       assert_equal(taxonomy.rank, "genus")
       assert_equal(taxonomy.uri.desc, "EMBL REPTILE DATABASE")
@@ -234,6 +248,21 @@ module Bio
           assert_equal(node.sequences[0].mol_seq, 'TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD')
           assert_equal(node.sequences[0].annotations[0].ref, 'EC:1.1.1.1')
           assert_equal(node.sequences[0].annotations[1].ref, 'GO:0004022')
+         end
+       }
+     end
+
+     def test_to_biosequence
+       5.times do
+         @tree = @phyloxml.next_tree
+       end
+       @tree.leaves.each { |node|
+         if node.sequences[0].symbol =='ADHX'
+           seq = node.sequences[0].to_biosequence
+           assert_equal(seq.definition, 'Alcohol dehydrogenase class-3')
+           assert_equal(seq.id_namespace, 'UniProtKB' )
+           assert_equal(seq.entry_id, 'P81431')
+           assert_equal(seq.seq.to_s, 'TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD')
          end
        }
      end
@@ -403,5 +432,39 @@ module Bio
       assert_equal(@tree.root.name, "A")
     end
   end
+
+#  class TestPhyloXMLBigFiles < Test::Unit::TestCase
+#
+#
+#    def test_next_tree_big_file()
+#      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.metazoa_xml)
+#      tree = @phyloxml.next_tree
+#      while tree != nil do
+#        tree = @phyloxml.next_tree
+#        puts tree.root.name
+#      end
+#    end
+#
+#    def test_next_tree_big_file2()
+#      puts "====="
+#      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.mollusca_xml)
+#      tree = @phyloxml.next_tree
+#      while tree != nil do
+#        tree = @phyloxml.next_tree
+#        puts tree.root.name
+#      end
+#    end
+#
+#    def test_next_tree_big_file3()
+#      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.life_xml)
+#      tree = @phyloxml.next_tree
+#      while tree != nil do
+#        tree = @phyloxml.next_tree
+#        puts tree.root.name
+#      end
+#    end
+#
+#  end #class TestPhyloXML
+
 
 end #end module Bio
