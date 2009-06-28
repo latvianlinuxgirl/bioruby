@@ -20,6 +20,7 @@
 require 'bio/tree'
 require 'xml'
 
+
 module Bio
 
    #+++
@@ -814,7 +815,30 @@ module Bio
       @reader.read 
       @reader.read
       return tree
-    end  
+    end
+
+    def next_tree_dummy
+      if not is_element?('phylogeny')
+        #print "Warning: This should have been phylogeny element, but it is: ", @reader.name, " ", @reader.value, "\n"
+
+        #@todo deal with rest of the stuff, maybe read in as text and add it to PhyloXML
+        #for now ignore the rest of the stuff
+        #and loop until the next phylogeny element if there is one, in case
+        #there are more phylogeny elements after other stuff, so that next read
+        #is successful
+        while is_element?('phylogeny') or is_end_element?('phyloxml')
+          @reader.read
+        end
+        return nil
+      end
+
+      while not is_end_element?('phylogeny')
+        @reader.read
+      end
+      
+      return "tree"
+    end
+
 
     private
 
