@@ -29,8 +29,11 @@ end
 
 require 'bio/db/phyloxml'
 
+unless no_libxml
 
-module TestPhyloXMLData
+module Bio
+
+  module TestPhyloXMLData
 
   bioruby_root  = Pathname.new(File.join(File.dirname(__FILE__), ['..'] * 4)).cleanpath.to_s
   PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
@@ -56,10 +59,6 @@ module TestPhyloXMLData
   end
 
 end #end module TestPhyloXMLData
-
-unless no_libxml
-
-module Bio
 
 #  class TestPhyloXML0 <Test::Unit::TestCase
 #    #test if xml lib exists.
