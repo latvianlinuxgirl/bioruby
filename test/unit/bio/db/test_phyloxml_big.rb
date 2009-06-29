@@ -82,19 +82,21 @@ module Bio
 
     def test_next_tree
       phyloxml = Bio::PhyloXML.new(TestPhyloXMLBigData.life_xml)
-      nr_trees = 0
+      puts "Tree of life xml"
+      #nr_trees = -1
       begin
         tree = phyloxml.next_tree
-        puts nr_trees += 1
+        #puts nr_trees += 1
       end while tree != nil
     end
 
     def a_test_next_tree_dummy
-      phyloxml = Bio::PhyloXML.new(TestPhyloXMLBigData.life_xml)
-      nr_trees = -1
+      phyloxml = Bio::PhyloXML.new(TestPhyloXMLBigData.metazoa_xml)
+      #nr_trees = -1
+      puts "metazoa xml"
       begin
         tree = phyloxml.next_tree_dummy
-        puts nr_trees += 1
+       # puts nr_trees += 1
       end while tree != nil
     end
 
