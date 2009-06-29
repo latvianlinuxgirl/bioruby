@@ -19,11 +19,7 @@
 
 require 'bio/tree'
 
-begin
-  require 'xml'
-rescue
-
-end
+require 'xml'
 
 module Bio
 
@@ -56,6 +52,12 @@ module Bio
   #
   # Bio::PhyloXML is for parsing phyloXML format files.
   # This is alpha version. Incompatible changes may be made frequently.
+  #
+  # == Requirements
+  #
+  # Libxml2 XML parser is required. Install libxml-ruby bindings from http://libxml.rubyforge.org or
+  #
+  #   gem install -r libxml-ruby
   #
   # == Usage
   #
