@@ -701,7 +701,8 @@ module Bio
 
       #current_node variable is a pointer to the current node parsed
       #@todo might need to change this, since node should point to a node, not tree
-      current_node = tree
+      clades = []
+      clades.push tree
       
       #keep track of current edge to be able to parse branch_length tag
       current_edge = nil
@@ -750,9 +751,9 @@ module Bio
             tree.root = node
           else                    
             tree.add_node(node)
-            current_edge = tree.add_edge(current_node, node, Bio::Tree::Edge.new(branch_length))
+            current_edge = tree.add_edge(clades[-1], node, Bio::Tree::Edge.new(branch_length))
           end
-          current_node = node          
+          clades.push node
         end #end if clade  
     
         #end clade element, go one parent up
@@ -761,14 +762,14 @@ module Bio
            #if we have reached the closing tag of the top-most clade, then our
           # curent node should point to the root, If thats the case, we are done
           # parsing the clade element
-          if current_node == tree.root
+          if clades[-1] == tree.root
             parsing_clade = false
           else
-            current_node = tree.parent(current_node)
+            clades.pop
           end
         end          
 
-        parse_clade_elements(current_node, current_edge) if parsing_clade
+        parse_clade_elements(clades[-1], current_edge) if parsing_clade
 
         #parsing phylogeny elements
         if not parsing_clade
