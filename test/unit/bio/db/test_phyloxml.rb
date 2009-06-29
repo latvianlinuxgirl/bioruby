@@ -16,13 +16,15 @@ $:.unshift(libpath) unless $:.include?(libpath)
 require 'bio'
 require 'bio/tree'
 
+
+no_libxml = false
+
 #First let's test if xml library is here, since it will be required by bio/db/phyloxml
 begin
   require 'xml'
 rescue LoadError
-  puts "Please install libxml-ruby library. It is needed for Bio::PhyloXML module. Unit tests will exit now."
-  #@todo 
-  exit 1
+  puts "Please install libxml-ruby library. It is needed for Bio::PhyloXML module. Unit test for PhyloXML will not be performed."
+  no_libxml = true
 end
 
 require 'bio/db/phyloxml'
@@ -55,6 +57,7 @@ module TestPhyloXMLData
 
 end #end module TestPhyloXMLData
 
+unless no_libxml
 
 module Bio
 
@@ -71,6 +74,8 @@ module Bio
 #    end
 #
 #  end
+
+  
 
   class TestPhyloXML1 < Test::Unit::TestCase
   
@@ -457,38 +462,9 @@ module Bio
     end
   end
 
-#  class TestPhyloXMLBigFiles < Test::Unit::TestCase
-#
-#
-#    def test_next_tree_big_file()
-#      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.metazoa_xml)
-#      tree = @phyloxml.next_tree
-#      while tree != nil do
-#        tree = @phyloxml.next_tree
-#        puts tree.root.name
-#      end
-#    end
-#
-#    def test_next_tree_big_file2()
-#      puts "====="
-#      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.mollusca_xml)
-#      tree = @phyloxml.next_tree
-#      while tree != nil do
-#        tree = @phyloxml.next_tree
-#        puts tree.root.name
-#      end
-#    end
-#
-#    def test_next_tree_big_file3()
-#      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.life_xml)
-#      tree = @phyloxml.next_tree
-#      while tree != nil do
-#        tree = @phyloxml.next_tree
-#        puts tree.root.name
-#      end
-#    end
-#
-#  end #class TestPhyloXML
+
 
 
 end #end module Bio
+
+  end #@end unles no_libxml
