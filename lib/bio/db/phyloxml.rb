@@ -18,7 +18,12 @@
 # * https://www.nescent.org/wg_phyloinformatics/PhyloSoC:PhyloXML_support_in_BioRuby
 
 require 'bio/tree'
-require 'xml'
+
+begin
+  require 'xml'
+rescue
+
+end
 
 module Bio
 
