@@ -11,6 +11,12 @@
 #
 # This file containts parser for PhyloXML and all the classes to represent PhyloXML elements.
 #
+# == Requirements
+# 
+# Libxml2 XML parser is required. Install libxml-ruby bindings from http://libxml.rubyforge.org or
+#
+#   gem install -r libxml-ruby
+#
 # == References
 #
 # * http://www.phyloxml.org
