@@ -286,26 +286,27 @@ module Bio
 
     # == Description
     # Element Sequence is used to represent a molecular sequence (Protein, DNA,
-    # RNA) associated with a node. 'symbol' is a short (maximal ten characters)
-    # symbol of the sequence (e.g. 'ACTM') whereas 'name' is used for the full
-    # name (e.g. 'muscle Actin'). 'location' is used for the location of a
-    # sequence on a genome/chromosome. The actual sequence can be stored with
-    # the 'mol_seq' element. Attribute 'type' is used to indicate the type
-    # of sequence ('dna', 'rna', or 'aa'). One intended use for 'id_ref' is
-    # to link a sequence to a taxonomy (via the taxonomy's 'id_source') in
-    # case of multiple sequences and taxonomies per node.
+    # RNA) associated with a node.   
     class Sequence
-      # values from rna, dna, aa
+      # Type of sequence (rna, dna, aa)
       attr_accessor :type
+
+      # Full name (e.g. muscle Actin )
+      attr_accessor :name
+
       # String
-      attr_accessor :id_source, :id_ref, :name
+      attr_accessor :id_source
+
+      # String. One intended use for 'id_ref' is to link a sequence to a taxonomy
+      # (via the taxonomy's 'id_source') in the case of multiple sequences and taxonomies per node.
+      attr_accessor :id_ref
       # 'symbol' is a short (maximal ten characters) symbol of the sequence (e.g. 'ACTM')
       attr_accessor :symbol
       # Accession object
       attr_accessor :accession
       # Location of a sequence on a genome/chromosome
       attr_accessor :location
-      # String
+      # String. The actual sequence is stored here.
       attr_accessor :mol_seq
       # Uri object
       attr_accessor :uri #@todo alias method url ?
