@@ -122,10 +122,13 @@ module Bio
       # Events at the root node of a clade (e.g. one gene duplication).
       attr_accessor :events
 
-      # String
-      attr_accessor :id_source, :name
+      # String. Used to link other elements to a clade (node) (on the xml-level).
+      attr_accessor :id_source
 
-      # Float
+      # String
+      attr_accessor :name
+
+      # Float. Branch width for this node (including parent branch). Applies for the whole clade unless overwritten in sub-clades.
       attr_reader :width
       
       def width=(str)
@@ -133,31 +136,31 @@ module Bio
         #@todo maybe this attr should be part of Bio::Tree::Edge
       end
 
-      # Array of Taxonomy objects
+      # Array of Taxonomy objects. Describes taxonomic information for a clade.
       attr_accessor :taxonomies
 
-      # Array of Confidence objects
+      # Array of Confidence objects. Indicates the support for a clade/parent branch.
       attr_accessor :confidences
 
-      # BranchColor object
+      # BranchColor object. Apply for the whole clade unless overwritten in sub-clade.
       attr_accessor :color
 
       # Id object
       attr_accessor :node_id
 
-      # Array of Sequence objects
+      # Array of Sequence objects. Represents a molecular sequence (Protein, DNA, RNA) associated with a node.
       attr_accessor :sequences
 
-      # BinaryCharacters object
+      # BinaryCharacters object. The names and/or counts of binary characters present, gained, and lost at the root of a clade.
       attr_accessor :binary_characters
 
-      # Array of Distribution objects
+      # Array of Distribution objects. The geographic distribution of the items of a clade (species, sequences), intended for phylogeographic applications.
       attr_accessor :distributions
 
-      # Date object
+      # Date object. A date associated with a clade/node.
       attr_accessor :date
 
-      #Array of Reference objects
+      #Array of Reference objects. A literature reference for a clade.
       attr_accessor :references
 
       #An array of Property objects, for example depth for sea animals.
