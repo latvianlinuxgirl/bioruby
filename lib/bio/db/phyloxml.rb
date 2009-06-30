@@ -9,7 +9,7 @@
 #
 # == Description
 #
-# This file containts parser for PhyloXML and all the classes to represent PhyloXML elements.
+# This file containts parser for PhyloXML.
 #
 # == Requirements
 # 
@@ -25,34 +25,12 @@
 
 require 'bio/tree'
 
+require 'bio/db/phyloxml_elements'
+
 require 'xml'
 
 module Bio
 
-   #+++
-  # Taxonomy class
-  #+++
-
-  # This is general Taxonomy class.
-  class Taxonomy
-    #pattern = [a-zA-Z0-9_]{2,10} Swiss-prot specific in phyloXML case
-    attr_accessor :code
-
-    attr_accessor :scientific_name
-    #An array of strings
-    attr_accessor :common_names
-    # value comes from list: {'domain'|'kingdom'|'subkingdom'|'branch'|'infrakingdom'|'superphylum'|'phylum'|'subphylum'|'infraphylum'|'microphylum'|'superdivision'|'division'|'subdivision'|'infradivision'|'superclass'|'class'|'subclass'|'infraclass'|'superlegion'|'legion'|'sublegion'|'infralegion'|'supercohort'|'cohort'|'subcohort'|'infracohort'|'superorder'|'order'|'suborder'|'superfamily'|'family'|'subfamily'|'supertribe'|'tribe'|'subtribe'|'infratribe'|'genus'|'subgenus'|'superspecies'|'species'|'subspecies'|'variety'|'subvariety'|'form'|'subform'|'cultivar'|'unknown'|'other'}
-    attr_accessor :rank
-
-    def inspect
-      #@todo work on this / or throw it out. was used for testing.
-      print "Taxonomy. scientific_name: #{@scientific_name}\n"
-    end
-
-    def initialize
-      @common_names = []
-    end
-  end
 
   # == Description
   #
@@ -203,16 +181,7 @@ module Bio
     end #Node
 
 
-    # Element 'id' is used for a unique identifier of a taxon (for example '6500'
-    # with 'ncbi_taxonomy' as 'type' for the California sea hare). Attribute
-    # 'id_source' is used to link other elements to a taxonomy (on the xml-level).
-    class Taxonomy < Bio::Taxonomy
-      # String
-      attr_accessor :taxonomy_id, :id_source
-      # Uri object
-      attr_accessor :uri
-    end
-
+ 
     # A general purpose confidence element. For example this can be used to express
     # the bootstrap support value of a clade (in which case the 'type' attribute
     # is 'bootstrap').
