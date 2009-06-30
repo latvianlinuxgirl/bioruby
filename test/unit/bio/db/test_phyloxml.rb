@@ -16,20 +16,9 @@ $:.unshift(libpath) unless $:.include?(libpath)
 require 'bio'
 require 'bio/tree'
 
-
-no_libxml = false
-
-#First let's test if xml library is here, since it will be required by bio/db/phyloxml
-begin
-  require 'xml'
-rescue LoadError
-  puts "Please install libxml-ruby library. It is needed for Bio::PhyloXML module. Unit test for PhyloXML will not be performed."
-  no_libxml = true
-end
+begin #begin rescue LoadError block (test if xml is here)
 
 require 'bio/db/phyloxml'
-
-unless no_libxml
 
 module Bio
 
@@ -411,7 +400,7 @@ end #end module TestPhyloXMLData
 
   class TestPhyloXML5 < Test::Unit::TestCase
 
-    #testing file random.xml
+    #testing file made_up.xml
     def setup
       @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.made_up_xml)
     end
@@ -461,9 +450,8 @@ end #end module TestPhyloXMLData
     end
   end
 
-
-
-
 end #end module Bio
 
-  end #@end unles no_libxml
+rescue LoadError
+    puts "Please install libxml-ruby library. It is needed for Bio::PhyloXML module. Unit test for PhyloXML will not be performed."
+end #end begin and rescue block
