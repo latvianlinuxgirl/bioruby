@@ -81,7 +81,7 @@ module Bio
 
 
     def test_next_tree
-      phyloxml = Bio::PhyloXML.new(TestPhyloXMLBigData.life_xml)
+      phyloxml = Bio::PhyloXML.new(TestPhyloXMLBigData.metazoa_xml)
       puts "Tree of life"
       #nr_trees = -1
       begin
