@@ -68,11 +68,11 @@ end #end module TestPhyloXMLData
   class TestPhyloXML1 < Test::Unit::TestCase
   
     def setup
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
     end
     
     def test_init
-      assert_equal(@phyloxml.class, Bio::PhyloXML)
+      assert_equal(@phyloxml.class, Bio::PhyloXML::Parser)
     end 
       
     def test_next_tree()
@@ -94,7 +94,7 @@ end #end module TestPhyloXMLData
   
     #setup is called before and every time any function es executed.  
     def setup
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
       @tree = @phyloxml.next_tree
     end
     
@@ -343,7 +343,7 @@ end #end module TestPhyloXMLData
    </phylogeny>"""
    
     def setup
-      phyloxml = Bio::PhyloXML.new(TEST_STRING)
+      phyloxml = Bio::PhyloXML::Parser.new(TEST_STRING)
       @tree = phyloxml.next_tree()  
 
     end
@@ -368,7 +368,7 @@ end #end module TestPhyloXMLData
 
     def test_clade_relation
 
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
       7.times do
         @tree = @phyloxml.next_tree
       end
@@ -381,7 +381,7 @@ end #end module TestPhyloXMLData
     end
 
     def test_sequence_realations
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
       5.times do
         @tree = @phyloxml.next_tree
       end
@@ -402,7 +402,7 @@ end #end module TestPhyloXMLData
 
     #testing file made_up.xml
     def setup
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.made_up_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.made_up_xml)
     end
 
     def test_phylogeny_confidence
@@ -411,6 +411,12 @@ end #end module TestPhyloXMLData
       assert_equal(tree.confidences[0].value, 89)
       assert_equal(tree.confidences[1].type, "probability")
       assert_equal(tree.confidences[1].value, 0.71)
+    end
+
+    def test_to_biotreenode_probability
+      tree = @phyloxml.next_tree()
+      node = tree.get_node_by_name('c').to_biotreenode
+      assert_equal(node.bootstrap, nil)
     end
 
     def test_polygon
