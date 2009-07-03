@@ -494,9 +494,9 @@ module PhyloXML
     # To represent an individual domain in a domain architecture. The
     # name/unique identifier is described via the 'id' attribute.
     class ProteinDomain
-      #String, for example to store E-values
+      #Float, for example to store E-values    4.7E-14
       attr_accessor :confidence
-
+      
       # String
       attr_accessor :id, :value
 
@@ -509,6 +509,10 @@ module PhyloXML
 
       def to=(str)
         @to = str.to_i
+      end
+      
+      def confidence=(str)
+        @confidence = str.to_f
       end
 
     end

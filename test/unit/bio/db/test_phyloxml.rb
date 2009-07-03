@@ -449,11 +449,31 @@ end #end module TestPhyloXMLData
 
     def test_single_clade
 
-      3.times do
+      4.times do
         @tree = @phyloxml.next_tree()
       end
-      @tree = @phyloxml.next_tree()
       assert_equal(@tree.root.name, "A")
+    end
+
+    def test_domain_architecture
+      5.times {@tree = @phyloxml.next_tree()}
+      node = @tree.get_node_by_name("22_MOUSE")
+      assert_equal(node.name, "22_MOUSE")
+      assert_equal(node.taxonomies[0].code, "MOUSE")
+      domain_arch = node.sequences[0].domain_architecture
+      assert_equal(domain_arch.length,1249 )
+      assert_equal(domain_arch.domains[0].from, 6)
+      assert_equal(domain_arch.domains[0].to, 90)
+      assert_in_delta(domain_arch.domains[0].confidence, 7.0E-26, 1E-26)
+      assert_equal(domain_arch.domains[0].value, "CARD")
+      assert_equal(domain_arch.domains[5].from, 733)
+      assert_equal(domain_arch.domains[5].to, 771)
+      assert_in_delta(domain_arch.domains[5].confidence, 4.7E-14, 1E-15)
+      assert_equal(domain_arch.domains[5].value, "WD40")
+      assert_equal(domain_arch.domains.last.from, 1168)
+      assert_equal(domain_arch.domains.last.to, 1204)
+      assert_equal(domain_arch.domains.last.confidence, 0.3)
+      assert_equal(domain_arch.domains.last.value, "WD40")
     end
   end
 

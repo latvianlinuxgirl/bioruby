@@ -313,9 +313,12 @@ module PhyloXML
       #no loop inside, it is already outside
 
       if is_element?('branch_length')
+        # @todo add unit test for this. current_edge is nil, if the root clade
+        # has branch_length attribute. Is it even supposed to have? Its still
+        # valid xml.
         @reader.read
         branch_length = @reader.value
-        current_edge.distance = branch_length.to_f
+        current_edge.distance = branch_length.to_f if current_edge != nil
         @reader.read
         has_reached_end_element?('branch_length')
       end
@@ -457,12 +460,13 @@ module PhyloXML
           sequence.domain_architecture.length = @reader["length"]
 
           @reader.read
+          @reader.read          
           while not(is_end_element?('domain_architecture'))
-            sequence.domain_architecture.domain << parse_domain
-            @reader.read
+            sequence.domain_architecture.domains << parse_domain
+            @reader.read #go to next domain element
           end
         end
-
+        
         @reader.read
       end
       return sequence
@@ -586,11 +590,11 @@ module PhyloXML
     def parse_domain
       domain = ProteinDomain.new
       parse_attributes(domain, ["from", "to", "confidence", "id"])
-
       @reader.read
       domain.value = @reader.value
       @reader.read
       has_reached_end_element?('domain')
+      @reader.read
       return domain
     end
 
