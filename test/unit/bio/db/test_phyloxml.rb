@@ -18,7 +18,8 @@ require 'bio/tree'
 
 begin #begin rescue LoadError block (test if xml is here)
 
-require 'bio/db/phyloxml'
+require 'bio/db/phyloxml_elements'
+require 'bio/db/phyloxml_parser'
 
 module Bio
 

@@ -2,6 +2,8 @@
 <phyloxml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.phyloxml.org http://www.phyloxml.org/1.00/phyloxml.xsd" xmlns="http://www.phyloxml.org">
    <phylogeny rooted="true">
       <name>testing confidence</name>
+      <confidence type="bootstrap">89</confidence>
+      <confidence type="probability">0.71</confidence>
       <clade>
           <name>b</name>
           <clade>
@@ -10,17 +12,15 @@
               <confidence type="probability">0.71</confidence>
           </clade>
       </clade>
-      <confidence type="bootstrap">89</confidence>
-      <confidence type="probability">0.71</confidence>
    </phylogeny>
-   <phylogeny>
+   <phylogeny rooted="true">
        <name>testing polygon</name>
        <clade>           
            <clade>
             <name>A</name>
             <distribution>
-                <polygon>
-                  <desc>Polygon from random points</desc>
+                <desc>Polygon from random points</desc>
+                <polygon>                  
                   <point geodetic_datum="WGS84">
                      <lat>47.481277</lat>
                      <long>8.769303</long>
@@ -38,7 +38,6 @@
                   </point>
                 </polygon>
                 <polygon>
-                  <desc>Polygon from random points</desc>
                   <point geodetic_datum="WGS84">
                      <lat>40.481277</lat>
                      <long>8.769303</long>
@@ -62,7 +61,7 @@
            </clade>
        </clade>
    </phylogeny>
-   <phylogeny>
+   <phylogeny rooted="true">
        <name>testing references</name>
        <clade>
            <clade>
@@ -74,7 +73,7 @@
            </clade>
        </clade>
    </phylogeny>
-   <phylogeny>
+   <phylogeny rooted="true">
        <clade>
            <name>A</name>
        </clade>

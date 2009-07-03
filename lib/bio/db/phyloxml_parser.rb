@@ -79,6 +79,10 @@ module PhyloXML
 
       #check if parameter is a valid file name
       if File.exists?(str) 
+        schema = XML::Schema.document(XML::Document.file(File.join(File.dirname(__FILE__),'phyloxml.xsd')))
+        xml_instance = XML::Document.file(str)
+        xml_instance.validate_schema(schema)
+
         @reader = XML::Reader.file(str)
       else 
         #assume it is string input
@@ -86,6 +90,7 @@ module PhyloXML
       end
 
       #@todo deal with stuff before has reached that
+
 
       #loops through until reaches phylogeny stuff
       while not is_element?('phylogeny')
