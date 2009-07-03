@@ -318,6 +318,15 @@ end #end module TestPhyloXMLData
        assert_equal(property.value, ' 1200 ')
      end
 
+     def test_uri
+       9.times do
+         @tree = @phyloxml.next_tree
+       end
+       uri = @tree.root.taxonomies[0].uri
+       assert_equal(uri.desc, "EMBL REPTILE DATABASE")
+       assert_equal(uri.uri, "http://www.embl-heidelberg.de/~uetz/families/Varanidae.html")
+     end
+
     
   end #class TestPhyloXML2
   

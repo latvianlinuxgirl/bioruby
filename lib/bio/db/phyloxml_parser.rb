@@ -455,7 +455,6 @@ module PhyloXML
         sequence.annotations << parse_annotation if is_element?('annotation')
 
         if is_element?('domain_architecture')
-          #@todo write unit test for domain_architecture
           sequence.domain_architecture = DomainArchitecture.new
           sequence.domain_architecture.length = @reader["length"]
 
