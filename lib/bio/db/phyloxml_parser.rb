@@ -286,7 +286,7 @@ module PhyloXML
 
     def has_reached_end_element?(str)
       if not(is_end_element?(str))
-        puts "Warning: Should have reached </#{str}> element here"
+        #puts "Warning: Should have reached </#{str}> element here"
         raise "Warning: Should have reached </#{str}> element here"
       end
     end
@@ -587,7 +587,7 @@ module PhyloXML
         @reader.read
       end
 
-      #@should check for it at all?
+      #@should check for it at all? Probably not if xml is valid. 
       if polygon.points.length <3
         puts "Warning: <polygon> should have at least 3 points"
       end

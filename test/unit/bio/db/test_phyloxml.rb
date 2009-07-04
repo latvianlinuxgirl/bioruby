@@ -385,8 +385,6 @@ end #end module TestPhyloXMLData
       7.times do
         @tree = @phyloxml.next_tree
       end
-      #puts @tree.name
-       #<clade_relation id_ref_0="b" id_ref_1="c" type="network_connection"/>
        cr = @tree.clade_relations[0]
        assert_equal(cr.id_ref_0, "b")
        assert_equal(cr.id_ref_1, "c")
@@ -461,7 +459,6 @@ end #end module TestPhyloXMLData
     def test_reference
       3.times do
         @tree = @phyloxml.next_tree
-        #puts "tree name: " ,@tree.name
       end
       references = @tree.get_node_by_name('A').references
       assert_equal(references[0].doi, "10.1093/bioinformatics/btm619")
