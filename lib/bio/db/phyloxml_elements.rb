@@ -636,6 +636,14 @@ module PhyloXML
 
     end
 
+#    class Other
+#      attr_accessor :tag, :atributes, :children, :value
+#      
+#      def initialize
+#        @children = []
+#      end
+#      
+#    end
 
 
 end #module PhyloXML

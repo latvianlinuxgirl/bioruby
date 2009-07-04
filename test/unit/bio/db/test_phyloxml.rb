@@ -147,7 +147,6 @@ end #end module TestPhyloXMLData
       assert_equal(node.events.speciations, 1)
     end
 
-    #@todo should this be in a separate file?
     def test_taxonomy_scientific_name
       3.times do
         @tree = @phyloxml.next_tree
@@ -484,9 +483,24 @@ end #end module TestPhyloXMLData
       assert_equal(domain_arch.domains.last.confidence, 0.3)
       assert_equal(domain_arch.domains.last.value, "WD40")
     end
+
+    def test_clade_width
+      @tree = @phyloxml.next_tree
+      assert_equal(@tree.root.width, 0.2)
+    end
   end
 
-end #end module Bio
+#  class TestPhyloXML5 < Test::Unit::TestCase
+#
+#    def test_get_tree_by_name
+#       @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.made_up_xml)
+#       tree = @phyloxml.get_tree_by_name "testing confidence"
+#
+#    end
+#
+#  end
+
+end #end module Biof
 
 rescue LoadError
     puts "Please install libxml-ruby library. It is needed for Bio::PhyloXML module. Unit test for PhyloXML will not be performed."

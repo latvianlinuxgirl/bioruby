@@ -6,6 +6,7 @@
       <confidence type="probability">0.71</confidence>
       <clade>
           <name>b</name>
+          <width>0.2</width>
           <clade>
               <name>c</name>
               <confidence type="probability">0.9</confidence>

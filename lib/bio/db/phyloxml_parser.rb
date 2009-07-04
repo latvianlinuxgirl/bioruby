@@ -80,8 +80,11 @@ module PhyloXML
       #check if parameter is a valid file name
       if File.exists?(str) 
         schema = XML::Schema.document(XML::Document.file(File.join(File.dirname(__FILE__),'phyloxml.xsd')))
-        xml_instance = XML::Document.file(str)
-        xml_instance.validate_schema(schema)
+        xml_instance = XML::Document.file(str)        
+        xml_instance.validate_schema(schema) do |msg, flag|
+          puts msg
+          raise "Validation of the XML document against phyloxml.xsd schema failed." + msg
+        end        
 
         @reader = XML::Reader.file(str)
       else 
@@ -89,8 +92,7 @@ module PhyloXML
         @reader = XML::Reader.string(str)
       end
 
-      #@todo deal with stuff before has reached that
-
+      #@todo parse PhyloXML element attributes.
 
       #loops through until reaches phylogeny stuff
       while not is_element?('phylogeny')
@@ -114,13 +116,17 @@ module PhyloXML
 
       #@todo what about a method for skipping a tree. (might save on time by not creating all those objects)
 
+      #@todo ok, for now lets assume, everybody plays nicely and gonna call next_tree on something that is tree.
       if not is_element?('phylogeny')
-        #print "Warning: This should have been phylogeny element, but it is: ", @reader.name, " ", @reader.value, "\n"
+        print "Warning: This should have been phylogeny element, but it is: ", @reader.name, " ", @reader.value, "\n"
+        @other = parse_other
+        puts @other
+        return nil
 
         #@todo deal with rest of the stuff, maybe read in as text and add it to PhyloXML
         #for now ignore the rest of the stuff
-        #and loop until the next phylogeny element if there is one, in case 
-        #there are more phylogeny elements after other stuff, so that next read 
+        #and loop until the next phylogeny element if there is one, in case
+        #there are more phylogeny elements after other stuff, so that next read
         #is successful
         while is_element?('phylogeny') or is_end_element?('phyloxml')
           @reader.read
@@ -145,6 +151,11 @@ module PhyloXML
       parsing_clade = false
 
       while not is_end_element?('phylogeny') do
+        if is_end_element?('phyloxml') 
+          break
+        end
+        #puts "inside loop" if @reader.name != nil
+        #puts @reader.name, @reader.value if @reader.name != nil
 
         # parse phylogeny elements, except clade
         if not parsing_clade
@@ -171,8 +182,8 @@ module PhyloXML
           node= Bio::PhyloXML::Node.new
           
           #parse attributes of the clade element
-          #@todo this is not consistent with the way i parse attributes
           branch_length = @reader['branch_length']
+          
           parse_attributes(node, ["id_source"])
           
           #add new node to the tree                  
@@ -203,7 +214,6 @@ module PhyloXML
 
         #parsing phylogeny elements
         if not parsing_clade
-          #@todo add unit test for this
           if is_element?('property')
             tree.properties << parse_property
           end          
@@ -212,7 +222,7 @@ module PhyloXML
             clade_relation = CladeRelation.new
             parse_attributes(clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
 
-            #@todo add unit test for this
+            #@ add unit test for this
             if not @reader.empty_element?
               @reader.read
               if is_element?('confidence')
@@ -248,6 +258,28 @@ module PhyloXML
       return tree
     end  
 
+#    def get_tree_by_name(name)
+#
+#      while not is_end_element?('phyloxml')
+#        if is_element?('phylogeny')
+#          @reader.read
+#          @reader.read
+#
+#          if is_element?('name')
+#            @reader.read
+#            if @reader.value == name
+#              puts "equasl"
+#              tree = next_tree
+#              puts tree
+#            end
+#          end
+#        end
+#        @reader.read
+#      end
+#
+#    end
+
+
     private
 
     ####
@@ -265,6 +297,7 @@ module PhyloXML
     def has_reached_end_element?(str)
       if not(is_end_element?(str))
         puts "Warning: Should have reached </#{str}> element here"
+        raise "Warning: Should have reached </#{str}> element here"
       end
     end
 
@@ -297,7 +330,7 @@ module PhyloXML
 
     #parses elements where attributes of the object are arrays of objects.
     def parse_complex_array_elements(object, elements)
-      # @todo make this work for plural forms
+      #@todo this code might not be needed anymore. (Does not work with plural forms)
       # Example code:
       # if is_element('confidence')
       #   current_node.confidence << parse_confidence
@@ -323,14 +356,12 @@ module PhyloXML
         has_reached_end_element?('branch_length')
       end
 
-      #@todo write unit test for width tag
-      #@todo put width into edge?
+      #Decided that width element should part of node, not edge. 
       parse_simple_elements(current_node, ['width', 'name'])
 
       current_node.events = parse_events if is_element?('events')
 
       #parse_complex_array_elements(current_node, ['confidence', 'sequence', 'property'])
-      #@todo will have to deal with plural forms
 
       current_node.confidences << parse_confidence if is_element?('confidence')
       current_node.sequences << parse_sequence if is_element?('sequence')
@@ -375,7 +406,6 @@ module PhyloXML
       end
 
       if is_element?('reference')
-        #@todo write unit test (there is no such tag in example file)
         
         reference = Reference.new()
         reference.doi = @reader['doi']      
@@ -472,7 +502,6 @@ module PhyloXML
     end #parse_sequence
 
     def parse_uri
-      #@todo add unit test for this
       uri = Uri.new
       parse_attributes(uri, ["desc", "type"])
       parse_simple_element(uri, 'uri')
@@ -632,6 +661,20 @@ module PhyloXML
         end
       end
     end #parse_bc
+
+    def parse_other
+      #@todo i don't want to parse this stuff recursively. What about returning as a string.
+      elem = @reader.name
+      result = []    
+
+      while not is_end_element?(elem) do
+        @reader.read
+        result << @reader.name
+        result << @reader.value.chomp if @reader.value != nil
+      end
+      has_reached_end_element?(elem)
+      return result
+    end
 
   end #class phyloxmlParser
 
