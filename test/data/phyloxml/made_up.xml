@@ -106,4 +106,32 @@
          </clade>
       </clade>
    </phylogeny>
+   <phylogeny rooted="true" rerootable="false">
+   <name>dollo_on_domains__cofilin_e1/o_tol_332</name>
+   <description>[Method: Dollo parsimony on domain presence/absence] [Date: 2008/08/20 18:23:46] [Cost: 4] [Gains: 2] [Losses: 2] [Unchanged: 1314] [Parameters: E-value: 0.1, Cutoff-scores-file: not-set, Max-overlap: 0, Engulfing-overlaps: not-allowed, Ignore-dufs: false]</description>
+   <confidence type="parsimony">4.0</confidence>
+   <clade>
+      <name>cellular_organisms</name>
+      <binary_characters type="parsimony inferred" gained_count="0" lost_count="0" present_count="0">
+      </binary_characters>
+      <clade>
+         <name>Neomura</name>
+         <binary_characters type="parsimony inferred" gained_count="0" lost_count="0" present_count="0">
+         </binary_characters>
+         <clade>
+            <name>Eukaryota</name>
+            <binary_characters type="parsimony inferred" gained_count="2" lost_count="0" present_count="2">
+               <gained>
+                  <bc>Cofilin_ADF</bc>
+                  <bc>Gelsolin</bc>
+               </gained>
+               <present>
+                  <bc>Cofilin_ADF</bc>
+                  <bc>Gelsolin</bc>
+               </present>
+            </binary_characters>
+         </clade>
+      </clade>
+   </clade>
+   </phylogeny>
 </phyloxml>

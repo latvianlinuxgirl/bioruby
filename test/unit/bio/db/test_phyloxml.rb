@@ -330,6 +330,7 @@ end #end module TestPhyloXMLData
        assert_equal(uri.uri, "http://www.embl-heidelberg.de/~uetz/families/Varanidae.html")
      end
 
+
     
   end #class TestPhyloXML2
   
@@ -404,20 +405,7 @@ end #end module TestPhyloXMLData
        assert_equal(sr.type, "paralogy")
     end
 
-    def test_binary_characters
-      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.dollo_xml)
-      tree = phyloxml.next_tree
-      bc = tree.get_node_by_name("cellular_organisms").binary_characters
-      assert_equal(bc.type, "parsimony inferred")
-      assert_equal(bc.lost_count, 0)
-      assert_equal(bc.gained_count,0)
-      assert_equal(bc.lost, [])
 
-      bc2 = tree.get_node_by_name("Eukaryota").binary_characters
-      assert_equal(bc2.gained_count, 2)
-      assert_equal(bc2.gained, ["Cofilin_ADF", "Gelsolin"])
-      assert_equal(bc2.present, ["Cofilin_ADF", "Gelsolin"])
-    end
   end
 
   class TestPhyloXML5 < Test::Unit::TestCase
@@ -499,6 +487,23 @@ end #end module TestPhyloXMLData
       @tree = @phyloxml.next_tree
       assert_equal(@tree.root.width, 0.2)
     end
+
+    def test_binary_characters
+      6.times do
+        @tree = @phyloxml.next_tree
+      end
+      bc =@tree.get_node_by_name("cellular_organisms").binary_characters
+      assert_equal(bc.type, "parsimony inferred")
+      assert_equal(bc.lost_count, 0)
+      assert_equal(bc.gained_count,0)
+      assert_equal(bc.lost, [])
+
+      bc2 = @tree.get_node_by_name("Eukaryota").binary_characters
+      assert_equal(bc2.gained_count, 2)
+      assert_equal(bc2.gained, ["Cofilin_ADF", "Gelsolin"])
+      assert_equal(bc2.present, ["Cofilin_ADF", "Gelsolin"])
+    end
+
   end
 
 
