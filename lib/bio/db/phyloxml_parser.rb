@@ -48,14 +48,14 @@ module PhyloXML
   #
   #   require 'bio'
   #
-  #   # Create new phyloxml reader
-  #   phyloxml = Bio::PhyloXML.new("./phyloxml_examples.xml")
+  #  # Create new phyloxml parser
+  #  phyloxml = Bio::PhyloXML::Parser.new('example.xml')
   #
-  #   # Print the names of all trees in the file
-  #   while tree != nil do
-  #     tree = phyloxml.next_tree
-  #     puts tree.name
-  #   end
+  #  # Print the names of all trees in the file
+  #  phyloxml.each do |tree|
+  #    puts tree.name
+  #  end
+  #
   #
   # == References
   #
