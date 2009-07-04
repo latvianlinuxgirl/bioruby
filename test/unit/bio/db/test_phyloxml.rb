@@ -503,15 +503,24 @@ end #end module TestPhyloXMLData
 
 
 
-#  class TestPhyloXML5 < Test::Unit::TestCase
-#
+  class TestPhyloXML5 < Test::Unit::TestCase
+
+    def test_each
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
+      count = 0
+      phyloxml.each do |tree|
+        count +=1
+      end
+      assert_equal(count, 13)
+    end
+
 #    def test_get_tree_by_name
 #       @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.made_up_xml)
 #       tree = @phyloxml.get_tree_by_name "testing confidence"
 #
 #    end
-#
-#  end
+
+  end
 
 end #end module Biof
 

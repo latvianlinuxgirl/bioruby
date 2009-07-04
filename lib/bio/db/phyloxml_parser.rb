@@ -104,6 +104,19 @@ module PhyloXML
       @reader = XML::Reader.file(filename)
     end
 
+    # Iterate through all trees in the file.
+    #
+    #  phyloxml = Bio::PhyloXML::Parser.new('example.xml')
+    #  phyloxml.each do |tree|
+    #    puts tree.name
+    #  end
+    #
+    def each
+      while tree = next_tree
+        yield tree
+      end
+    end
+
     # Parse and return the next phylogeny tree.
     # 
     # p = Bio::PhyloXML.new("./phyloxml_examples.xml")
