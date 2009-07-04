@@ -114,24 +114,14 @@ module PhyloXML
     # *Returns*:: Bio::PhyloXML::Tree
     def next_tree()
 
-      #@todo what about a method for skipping a tree. (might save on time by not creating all those objects)
-
-      #@todo ok, for now lets assume, everybody plays nicely and gonna call next_tree on something that is tree.
       if not is_element?('phylogeny')
-        print "Warning: This should have been phylogeny element, but it is: ", @reader.name, " ", @reader.value, "\n"
+        # phyloxml can hold only phylogeny and "other" elements. If this is not
+        # phylogeny element then it is other. Also, "other" always comes after
+        # all phylogenies
         @other = parse_other
-        puts @other
-        return nil
-
-        #@todo deal with rest of the stuff, maybe read in as text and add it to PhyloXML
-        #for now ignore the rest of the stuff
-        #and loop until the next phylogeny element if there is one, in case
-        #there are more phylogeny elements after other stuff, so that next read
-        #is successful
-        while is_element?('phylogeny') or is_end_element?('phyloxml')
-          @reader.read
-        end
-        return nil
+        #puts @other
+        return nil #return nil for tree, since this is not valid phyloxml tree.
+        #@todo maybe not, maybe return a tree of Other object elements.
       end
 
       tree = Bio::PhyloXML::Tree.new()
@@ -154,9 +144,7 @@ module PhyloXML
         if is_end_element?('phyloxml') 
           break
         end
-        #puts "inside loop" if @reader.name != nil
-        #puts @reader.name, @reader.value if @reader.name != nil
-
+        
         # parse phylogeny elements, except clade
         if not parsing_clade
 
@@ -258,8 +246,10 @@ module PhyloXML
       return tree
     end  
 
-#    def get_tree_by_name(name)
-#
+    # return tree of specified name.
+    # @todo Implement this method. 
+    def get_tree_by_name(name)
+
 #      while not is_end_element?('phyloxml')
 #        if is_element?('phylogeny')
 #          @reader.read
@@ -277,7 +267,7 @@ module PhyloXML
 #        @reader.read
 #      end
 #
-#    end
+    end
 
 
     private

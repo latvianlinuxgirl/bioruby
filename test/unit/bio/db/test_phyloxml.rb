@@ -48,6 +48,10 @@ module Bio
     File.join PHYLOXML_TEST_DATA, 'tol_life_on_earth_1.xml'
   end
 
+  def self.dollo_xml
+    File.join PHYLOXML_TEST_DATA, 'o_tol_332_d_dollo.xml'
+  end
+
 end #end module TestPhyloXMLData
 
 #  class TestPhyloXML0 <Test::Unit::TestCase
@@ -394,16 +398,27 @@ end #end module TestPhyloXMLData
       5.times do
         @tree = @phyloxml.next_tree
       end
-      #<sequence_relation id_ref_0="x" id_ref_1="y" type="paralogy"/>
-      #<sequence_relation id_ref_0="x" id_ref_1="z" type="orthology"/>
-      #<sequence_relation id_ref_0="y" id_ref_1="z" type="orthology"/>
 
       sr = @tree.sequence_relations[0]
        
        assert_equal(sr.id_ref_0, "x")
        assert_equal(sr.id_ref_1, "y")
        assert_equal(sr.type, "paralogy")
+    end
 
+    def test_binary_characters
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.dollo_xml)
+      tree = phyloxml.next_tree
+      bc = tree.get_node_by_name("cellular_organisms").binary_characters
+      assert_equal(bc.type, "parsimony inferred")
+      assert_equal(bc.lost_count, 0)
+      assert_equal(bc.gained_count,0)
+      assert_equal(bc.lost, [])
+
+      bc2 = tree.get_node_by_name("Eukaryota").binary_characters
+      assert_equal(bc2.gained_count, 2)
+      assert_equal(bc2.gained, ["Cofilin_ADF", "Gelsolin"])
+      assert_equal(bc2.present, ["Cofilin_ADF", "Gelsolin"])
     end
   end
 
@@ -456,7 +471,6 @@ end #end module TestPhyloXMLData
 
 
     def test_single_clade
-
       4.times do
         @tree = @phyloxml.next_tree()
       end
@@ -490,6 +504,8 @@ end #end module TestPhyloXMLData
     end
   end
 
+
+
 #  class TestPhyloXML5 < Test::Unit::TestCase
 #
 #    def test_get_tree_by_name
@@ -503,5 +519,5 @@ end #end module TestPhyloXMLData
 end #end module Biof
 
 rescue LoadError
-    puts "Please install libxml-ruby library. It is needed for Bio::PhyloXML module. Unit test for PhyloXML will not be performed."
+    raise "Error: libxml-ruby library is not present. Please install libxml-ruby library. It is needed for Bio::PhyloXML module. Unit test for PhyloXML will not be performed."
 end #end begin and rescue block
