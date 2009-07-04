@@ -56,13 +56,16 @@ module PhyloXML
 
   # Object to hold one phylogeny element (and its subelements.) Extended version of Bio::Tree.
   class Tree < Bio::Tree
-    # String
-    attr_accessor :name, :description
+    # String. Name of tree (name subelement of phylogeny element).
+    attr_accessor :name
+
+    # String. Description of tree.
+    attr_accessor :description
    
     # Boolean. Can be used to indicate that the phylogeny is not allowed to be rooted differently (i.e. because it is associated with root dependent data, such as gene duplications).
     attr_accessor :rerootable
 
-    # Boolean
+    # Boolean. Required element.
     attr_accessor  :rooted
 
     # Array of Property object. Allows for typed and referenced properties from external resources to be attached.
@@ -77,7 +80,7 @@ module PhyloXML
     # Array of confidence object
     attr_accessor :confidences
 
-    # String
+    # String.
     attr_accessor :branch_length_unit
 
     # String. Indicate the type of phylogeny (i.e. 'gene tree').
@@ -192,8 +195,10 @@ module PhyloXML
   class Events
     #value comes from list: transfer, fusion, speciation_or_duplication, other, mixed, unassigned
     attr_accessor :type
+
     # Integer
     attr_reader :duplications, :speciations, :losses
+
     # Confidence object
     attr_reader :confidence
 
@@ -221,13 +226,11 @@ module PhyloXML
       @type = str
       #@todo add unit test for this
       if not ['transfer','fusion','speciation_or_duplication','other','mixed', 'unassigned'].include?(str)
-        puts "Warning #{str} is not one of the allowed values"
+        raise "Warning #{str} is not one of the allowed values"
+        #@todo don't need this since, file is validated.
       end
     end
   end
-
-
-  #@todo add documentation
 
     # A general purpose confidence element. For example this can be used to express
     # the bootstrap support value of a clade (in which case the 'type' attribute
@@ -246,16 +249,13 @@ module PhyloXML
     # == Description
     #
     # The geographic distribution of the items of a clade (species, sequences),
-    # intended for phylogeographic applications. The location can be described
-    # either by free text in the 'desc' element and/or by the coordinates of
-    # one or more 'Points' (similar to the 'Point' element in Google's KML
-    # format) or by 'Polygons'.
+    # intended for phylogeographic applications. 
     class Distribution
-      # String
+      # String. Free text description of location.
       attr_accessor :desc
-      # Array of Point objects
+      # Array of Point objects. Holds coordinates of the location.
       attr_accessor :points
-      # Array of Polygon objects
+      # Array of Polygon objects.
       attr_accessor :polygons
 
       def initialize
@@ -267,12 +267,21 @@ module PhyloXML
 
     # == Description
     #
-    # The coordinates of a point with an optional altitude (used by element
-    # 'Distribution'). Required attribute 'geodetic_datum' is used to indicate
-    # the geodetic datum (also called 'map datum'), for example
-    # Google's KML uses 'WGS84'.
+    # The coordinates of a point with an optional altitude. Required attribute
+    # 'geodetic_datum' is used to indicate the geodetic datum (also called
+    # 'map datum'), for example Google's KML uses 'WGS84'.
     class Point
-      attr_accessor :lat, :long, :alt, :geodetic_datum
+      # Float. Latitude
+      attr_accessor :lat
+
+      # Float. Longitute
+      attr_accessor :long
+      
+      # Float. Altitude
+      attr_accessor :alt
+
+      # Geodedic datum / map datum
+      attr_accessor :geodetic_datum
 
       def lat=(str)
         @lat = str.to_f
@@ -284,17 +293,16 @@ module PhyloXML
 
       def alt=(str)
         @alt = str.to_f
-        #@todo add unit test for this
       end
 
     end
 
 
-        # == Description
+    # == Description
     #
-    # A polygon defined by a list of 'Points'
+    # A polygon defined by a list of Points objects.
     class Polygon
-      # Array of Point objects
+      # Array of Point objects.
       attr_accessor :points
 
       def initialize
@@ -312,25 +320,26 @@ module PhyloXML
       # Full name (e.g. muscle Actin )
       attr_accessor :name
 
-      # String
+      # String. Used to link with other elements.
       attr_accessor :id_source
 
       # String. One intended use for 'id_ref' is to link a sequence to a taxonomy
       # (via the taxonomy's 'id_source') in the case of multiple sequences and taxonomies per node.
       attr_accessor :id_ref
-      # 'symbol' is a short (maximal ten characters) symbol of the sequence (e.g. 'ACTM')
+
+      # short (maximal ten characters) symbol of the sequence (e.g. 'ACTM')
       attr_accessor :symbol
-      # Accession object
+      # Accession object. Holds source and identifier for the sequence.
       attr_accessor :accession
-      # Location of a sequence on a genome/chromosome
+      # String. Location of a sequence on a genome/chromosome
       attr_accessor :location
       # String. The actual sequence is stored here.
       attr_accessor :mol_seq
       # Uri object
-      attr_accessor :uri #@todo alias method url ?
-      # Array of Annotation objects
+      attr_accessor :uri
+      # Array of Annotation objects. Annotations of molecular sequence.
       attr_accessor :annotations
-      # DomainArchitecture object
+      # DomainArchitecture object. Describes domain architecture of a protein.
       attr_accessor :domain_architecture
 
       def initialize
@@ -347,7 +356,7 @@ module PhyloXML
 
         seq.id_namespace = @accession.source
         seq.entry_id = @accession.value
-       # seq.primary_accession = @accession.value could be this
+        # seq.primary_accession = @accession.value could be this
         seq.definition = @name
         #seq.comments = @name //this one?
         if @uri != nil
@@ -375,43 +384,51 @@ module PhyloXML
     # Element Accession is used to capture the local part in a sequence
     # identifier.
     class Accession
-      #Example: "UniProtKB"
+      #String. Source of the accession id. Example: "UniProtKB"
       attr_accessor :source
 
-      #Example: "P17304"
+      #String. Value of the accession id. Example: "P17304"
       attr_accessor :value
     end
 
-
+    # A uniform resource identifier. In general, this is expected to be an URL
+    # (for example, to link to an image on a website, in which case the 'type'
+    # attribute might be 'image' and 'desc' might be  'image of a California
+    # sea hare')
     class Uri
-      # String
+      # String. Description of the uri. For example, image of a California sea hare'
       attr_accessor :desc
-      # String
+      # String. For example, image.
       attr_accessor :type
+      # String. URL of the resource.
       attr_accessor :uri #@todo call it url?
     end
 
     # == Description
     #
-    # The annotation of a molecular sequence.
+    # The annotation of a molecular sequence. It is recommended to annotate by
+    # using the optional 'ref' attribute (some examples of acceptable values
+    # for the ref attribute: 'GO:0008270', 'KEGG:Tetrachloroethene degradation',
+    #  'EC:1.1.1.1').
     class Annotation
-      # String
+      # String. For example, 'GO:0008270', 'KEGG:Tetrachloroethene degradation',
+      # 'EC:1.1.1.1'
       attr_accessor :ref
       # String
       attr_accessor :source
-      # String
+      # String. evidence for a annotation as free text (e.g. 'experimental')
       attr_accessor :evidence
-      # String
+      # String. Type of the annotation.
       attr_accessor :type
-      # String
+      # String. Free text description. 
       attr_accessor :desc
-      # Confidence object
+      # Confidence object. Type and value of support for a annotation.
       attr_accessor :confidence
-      # Array of Property objects
+      # Array of Property objects. Allows for further, typed and referenced
+      # annotations from external resources
       attr_accessor :properties
-      # Uri object
+      # Uri object.
       attr_accessor :uri
-
 
       def initialize
         #@todo add unit test for this, since didn't break anything when changed from property to properties
@@ -422,8 +439,6 @@ module PhyloXML
     class Id
       attr_accessor :type, :value
     end
-
-
 
     # == Description
     # This indicates the color of a node when rendered (the color applies
@@ -457,7 +472,11 @@ module PhyloXML
     class Date
       attr_accessor :unit,  :desc
 
-      attr_reader :range, :value
+      # Integer. Allowed range of the value.
+      attr_reader :range
+
+      # Integer. Value of the date.
+      attr_reader :value
 
       def range=(str)
         @range = str.to_i
@@ -477,7 +496,10 @@ module PhyloXML
     # This is used describe the domain architecture of a protein. Attribute
     # 'length' is the total length of the protein
     class DomainArchitecture
+      # Integer. Total length of the protein
       attr_accessor :length
+
+      # Array of ProteinDomain objects.
       attr_reader :domains
 
       def length=(str)
@@ -500,8 +522,11 @@ module PhyloXML
       # String
       attr_accessor :id, :value
 
-      # Integer
-      attr_reader :from, :to
+      # Integer. Beginning of the domain.
+      attr_reader :from
+
+      # Integer. End of the domain.
+      attr_reader :to
 
       def from=(str)
         @from = str.to_i
@@ -546,7 +571,7 @@ module PhyloXML
             'xsd:long','xsd:int','xsd:short','xsd:byte','xsd:nonNegativeInteger',
             'xsd:unsignedLong','xsd:unsignedInt','xsd:unsignedShort',
             'xsd:unsignedByte','xsd:positiveInteger'].include?(str)
-          puts "Warning: #{str} is not in the list of allowed values."
+          raise "Warning: #{str} is not in the list of allowed values."
         end
         @datatype = str
       end
@@ -563,10 +588,12 @@ module PhyloXML
     # A literature reference for a clade. It is recommended to use the 'doi'
     # attribute instead of the free text 'desc' element whenever possible.
     class Reference
-      # String
-      attr_accessor :doi, :desc
+      # String. Digital Object Identifier.
+      attr_accessor :doi
 
-      #@todo should use Bio::Reference
+      # String. Free text description.
+      attr_accessor :desc
+
     end
 
     # == Description
@@ -576,8 +603,10 @@ module PhyloXML
     class CladeRelation
       # Float
       attr_accessor :distance
+      # String. Id of the referenced parents of a clade.
+      attr_accessor :id_ref_0, :id_ref_1
       # String
-      attr_accessor :id_ref_0, :id_ref_1, :type
+      attr_accessor :type
       # Confidence object
       attr_accessor :confidence
 
