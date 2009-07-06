@@ -504,6 +504,22 @@ end #end module TestPhyloXMLData
       assert_equal(bc2.present, ["Cofilin_ADF", "Gelsolin"])
     end
 
+    def test_rerootable2
+      6.times do
+        @tree = @phyloxml.next_tree
+      end
+      assert_equal(@tree.rerootable, false)
+    end
+
+    def test_phylogeny_attributes
+      @tree = @phyloxml.next_tree
+      assert_equal(@tree.rooted, true)
+      assert_equal(@tree.rerootable, false)
+      #@todo make this test pass
+      #assert_equal(@tree.branch_length_unit, "1")
+
+    end
+
   end
 
 

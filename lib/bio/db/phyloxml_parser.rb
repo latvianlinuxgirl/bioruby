@@ -13,7 +13,8 @@
 #
 # == Requirements
 # 
-# Libxml2 XML parser is required. Install libxml-ruby bindings from http://libxml.rubyforge.org or
+# Libxml2 XML parser is required. Install libxml-ruby bindings from
+# http://libxml.rubyforge.org or
 #
 #   gem install -r libxml-ruby
 #
@@ -36,11 +37,12 @@ module PhyloXML
   # == Description
   #
   # Bio::PhyloXML is for parsing phyloXML format files.
-  # This is alpha version. Incompatible changes may be made frequently.
+  # This is an alpha version. Incompatible changes may be made frequently.
   #
   # == Requirements
   #
-  # Libxml2 XML parser is required. Install libxml-ruby bindings from http://libxml.rubyforge.org or
+  # Libxml2 XML parser is required. Install libxml-ruby bindings from
+  # http://libxml.rubyforge.org or
   #
   #   gem install -r libxml-ruby
   #
@@ -63,7 +65,7 @@ module PhyloXML
   #
   class Parser
 
-    # Initializes LibXML::Reader and reads the file until reaches first
+    # Initializes LibXML::Reader and reads the file until it reaches the first
     # phylogeny element.
     #
     # Create a new Bio::PhyloXML object.
@@ -72,37 +74,38 @@ module PhyloXML
     #
     # ---
     # *Arguments*:
-    # * (required) _str_: String 
-    # *Returns*:: Bio::PhyloXML object
-    def initialize(str) 
+    # * (required) _filename_: Path to the file to parse.
+    # *Returns*:: Bio::PhyloXML::Parser object
+    def initialize(filename)
       #@todo decide if need to be able initialize using string, since usually xml lives in files
 
       #check if parameter is a valid file name
-      if File.exists?(str) 
+      if File.exists?(filename)
         schema = XML::Schema.document(XML::Document.file(File.join(File.dirname(__FILE__),'phyloxml.xsd')))
-        xml_instance = XML::Document.file(str)        
+        xml_instance = XML::Document.file(filename)
         xml_instance.validate_schema(schema) do |msg, flag|
           puts msg
           raise "Validation of the XML document against phyloxml.xsd schema failed." + msg
         end        
 
-        @reader = XML::Reader.file(str)
+        @reader = XML::Reader.file(filename)
       else 
         #assume it is string input
-        @reader = XML::Reader.string(str)
+        @reader = XML::Reader.string(filename)
       end
 
-      #@todo parse PhyloXML element attributes.
-
       #loops through until reaches phylogeny stuff
+      # Have to leave this way, if accepting strings, instead of files
       while not is_element?('phylogeny')
         @reader.read
       end
     end
-    
-    def file(filename)
-      @reader = XML::Reader.file(filename)
-    end
+
+    # Create new Parser which reads the specified file.
+    # *Returns*:: Bio::PhyloXML::Parser object
+#    def file(filename)
+#      @reader = XML::Reader.file(filename)
+#    end
 
     # Iterate through all trees in the file.
     #
@@ -119,7 +122,7 @@ module PhyloXML
 
     # Parse and return the next phylogeny tree.
     # 
-    # p = Bio::PhyloXML.new("./phyloxml_examples.xml")
+    # p = Bio::PhyloXML::Parser.new("./phyloxml_examples.xml")
     # 
     # tree = p.next_tree
     #
@@ -137,20 +140,19 @@ module PhyloXML
         #@todo maybe not, maybe return a tree of Other object elements.
       end
 
-      tree = Bio::PhyloXML::Tree.new()
+      tree = Bio::PhyloXML::Tree.new
 
-      #current_node variable is a pointer to the current node parsed
-      #@todo might need to change this, since node should point to a node, not tree
-      #current_node = tree
+      # keep track of current node in clades array/stack. Current node is the
+      # last element in the clades array
       clades = []
       clades.push tree
       
       #keep track of current edge to be able to parse branch_length tag
       current_edge = nil
 
-      #we are going to parse clade iteratively by pointing (and changing) to the
-      # current node in the tree. Since the property element is both in clade
-      # and in the phylogeny, we need some boolean to know if we are
+      # we are going to parse clade iteratively by pointing (and changing) to
+      # the current node in the tree. Since the property element is both in
+      # clade and in the phylogeny, we need some boolean to know if we are
       # parsing the clade (there can be only max 1 clade in phylogeny) or
       # parsing phylogeny
       parsing_clade = false
@@ -163,14 +165,17 @@ module PhyloXML
         # parse phylogeny elements, except clade
         if not parsing_clade
 
+          # @todo when entering in next_tree, first element should be phylogeny,
+          # so it should not be checked here.
           if is_element?('phylogeny')
             @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
           end
 
-          #@todo add unit tests for this
-          parse_attributes(tree, ['rerootable', 'branch_length_unit', 'type'])
+          @reader["rerootable"] == "true" ? tree.rerootable = true : tree.rerootable = false
 
-          parse_simple_elements(tree, ['name', 'description'])
+          parse_attributes(tree, ["branch_length_unit", 'type'])
+
+          parse_simple_elements(tree, [ "name", 'description'])
 
           if is_element?('confidence')
             tree.confidences << parse_confidence
@@ -190,12 +195,14 @@ module PhyloXML
           parse_attributes(node, ["id_source"])
           
           #add new node to the tree                  
-          # The first clade will always be root since by xsd schema phyloxml can have 0..1 clades in it.
+          # The first clade will always be root since by xsd schema phyloxml can
+          # have 0 to 1 clades in it.
           if tree.root == nil
             tree.root = node
           else                    
             tree.add_node(node)
-            current_edge = tree.add_edge(clades[-1], node, Bio::Tree::Edge.new(branch_length))
+            current_edge = tree.add_edge(clades[-1], node,
+                                         Bio::Tree::Edge.new(branch_length))
           end
           clades.push node
         end #end if clade  
@@ -206,11 +213,10 @@ module PhyloXML
            #if we have reached the closing tag of the top-most clade, then our
           # curent node should point to the root, If thats the case, we are done
           # parsing the clade element
-          #if current_node == tree.root
           if clades[-1] == tree.root
             parsing_clade = false
           else
-            #current_node = tree.parent(current_node)
+            # set current node to the previous clade in the array
             clades.pop
           end
         end          
@@ -635,7 +641,6 @@ module PhyloXML
     end
 
     def parse_binary_characters
-      #@todo write a test case and example data for this.
       b = PhyloXML::BinaryCharacters.new
 
       parse_attributes(b, ['type', 'gained_count', 'absent_count', 'lost_count', 'present_count'])
@@ -671,14 +676,12 @@ module PhyloXML
     end #parse_bc
 
     def parse_other
-      #@todo i don't want to parse this stuff recursively. What about returning as a string.
       elem = @reader.name
       result = []    
 
       while not is_end_element?(elem) do
         @reader.read
-        result << @reader.name
-        result << @reader.value.chomp if @reader.value != nil
+        result << [@reader.name, @reader.value]
       end
       has_reached_end_element?(elem)
       return result
