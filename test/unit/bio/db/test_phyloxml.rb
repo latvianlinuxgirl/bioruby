@@ -20,6 +20,7 @@ begin #begin rescue LoadError block (test if xml is here)
 
 require 'bio/db/phyloxml_elements'
 require 'bio/db/phyloxml_parser'
+require 'bio/db/phyloxml_writer'
 
 module Bio
 
@@ -44,12 +45,26 @@ module Bio
     File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca.xml'
   end
 
+
+
   def self.life_xml
     File.join PHYLOXML_TEST_DATA, 'tol_life_on_earth_1.xml'
   end
 
   def self.dollo_xml
     File.join PHYLOXML_TEST_DATA, 'o_tol_332_d_dollo.xml'
+  end
+
+  def self.test_xml
+    File.join PHYLOXML_TEST_DATA, 'test.xml'
+  end
+
+  def self.test2_xml
+    File.join PHYLOXML_TEST_DATA, 'test2.xml'
+  end
+
+  def self.mollusca_short_xml
+    File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca_short.xml'
   end
 
 end #end module TestPhyloXMLData
@@ -542,6 +557,7 @@ end #end module TestPhyloXMLData
 #    end
 
   end
+
 
 end #end module Biof
 
