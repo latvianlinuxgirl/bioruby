@@ -96,9 +96,7 @@ module PhyloXML
 
       #loops through until reaches phylogeny stuff
       # Have to leave this way, if accepting strings, instead of files
-      while not is_element?('phylogeny')
-        @reader.read
-      end
+      @reader.read until is_element?('phylogeny')
     end
 
     # Create new Parser which reads the specified file.
@@ -118,6 +116,11 @@ module PhyloXML
       while tree = next_tree
         yield tree
       end
+
+#      loop {
+#        yield tree = next_tree
+#        last unless tree
+#      }
     end
 
     # Parse and return the next phylogeny tree.
@@ -158,9 +161,7 @@ module PhyloXML
       parsing_clade = false
 
       while not is_end_element?('phylogeny') do
-        if is_end_element?('phyloxml') 
-          break
-        end
+        break if is_end_element?('phyloxml')
         
         # parse phylogeny elements, except clade
         if not parsing_clade
@@ -434,8 +435,6 @@ module PhyloXML
 
       current_node.binary_characters  = parse_binary_characters if is_element?('binary_characters')
 
-
-      
     end #parse_clade_elements
 
     def parse_events()
@@ -546,6 +545,7 @@ module PhyloXML
       end
       return annotation
     end
+
 
     def parse_property
       property = Property.new
