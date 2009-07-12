@@ -44,6 +44,30 @@ module Bio
 
 module PhyloXML
 
+  def self.generate_xml(root, elem, subelement_array)
+          #[[ :complex,'accession', ], [:simple, 'name',  @name], [:simple, 'location', @location]])
+    subelement_array.each do |subelem|
+      if subelem[0] == :simple
+       # seq << XML::Node.new('name', @name) if @name != nil
+        root << XML::Node.new(subelem[1], subelem[2]) if subelem[2] != nil
+      elsif subelem[0] == :complex
+          #seq << @accession.to_xml if @accession != nil
+      #  puts elem.accession.to_xml
+        o =  elem.send("#{subelem[1]}")
+        root << o.send("to_xml") if o != nil
+
+        #root << elem.send("#{subelem[1]}.to_xml") if elem.send("#{subelem[1]}") != nil
+      end
+    end
+
+
+#      # seq << XML::Node.new('name', @name) if @name != nil
+#      # seq << @accession.to_xml if @accession != nil
+#
+#        seq << XML::Node.new('location', @location) if @location != nil
+#
+   end
+
   # Taxonomy class
   class Taxonomy < Bio::Taxonomy
     # String. Unique identifier of a taxon.
@@ -52,6 +76,16 @@ module PhyloXML
     attr_accessor :id_source
     # Uri object
     attr_accessor :uri
+
+    def to_xml
+      taxonomy = nil
+      if @scientific_name != nil
+        taxonomy = XML::Node.new('taxonomy')
+        taxonomy << XML::Node.new('scientific_name', @scientific_name)
+      end
+      return taxonomy
+    end
+
   end
 
   # Object to hold one phylogeny element (and its subelements.) Extended version of Bio::Tree.
@@ -188,6 +222,21 @@ module PhyloXML
       end      
       return node
     end
+
+    def to_xml
+      clade = XML::Node.new('clade')
+      clade << XML::Node.new('name', @name) if @name != nil
+
+      @taxonomies.each do |taxonomy|
+        clade << taxonomy.to_xml
+      end
+
+      @sequences.each do |sequence|
+        clade << sequence.to_xml
+      end
+      return clade
+    end
+
   end #Node
 
   # == Description
@@ -346,6 +395,45 @@ module PhyloXML
         @annotations = []
       end
 
+      def to_xml
+        #simple attributes
+        #attributes with restricted values
+        #simple elements, creating new elem.
+        #complex elements, calling to_xml method on it.
+
+        seq = XML::Node.new('sequence')
+        seq["type"] = @type if @type != nil and ["dna", "rna", "a"].include?(@type)
+        #@todo should check if there exists node with id as id_source and id_ref
+        seq["id_source"] = @id_source if @id_source != nil
+        seq["id_ref"] = @id_ref if @id_ref != nil
+
+        #symbol
+       # if @symbol =~
+        #xs:pattern value="\S{1,10}"/>
+
+
+        #accession, name, location, mol_seq, uri
+        PhyloXML::generate_xml(seq, self, [[:complex, 'accession'],[:simple, 'name', @name],
+            [ :simple, 'location', @location]])
+
+        #seq << @accession.to_xml if @accession != nil
+
+        #seq << XML::Node.new('name', @name) if @name != nil
+
+        #seq << XML::Node.new('location', @location) if @location != nil
+
+        unless @annotations.empty?          
+          @annotations.each do |annot|
+            #PhyloXML::generate_xml(seq, self, [[:complex, 'annotation']])
+            seq << annot.to_xml
+          end
+        end
+
+        #domain_architecture
+        #any
+        return seq
+      end
+
       # converts Bio::PhyloXML:Sequence to Bio::Sequence object.
       # ---
       # *Returns*:: Bio::Tree::Sequence
@@ -389,6 +477,14 @@ module PhyloXML
 
       #String. Value of the accession id. Example: "P17304"
       attr_accessor :value
+
+      def to_xml
+        raise "Source attribute is required for Accession object." if @source == nil
+        accession = XML::Node.new('accession', @value)
+        accession['source'] = @source
+        return accession
+      end
+
     end
 
     # A uniform resource identifier. In general, this is expected to be an URL
@@ -433,6 +529,12 @@ module PhyloXML
       def initialize
         #@todo add unit test for this, since didn't break anything when changed from property to properties
         @properties = []
+      end
+
+      def to_xml
+        annot = XML::Node.new('annotation')
+        annot << XML::Node.new('desc', @desc) if @desc != nil
+        return annot
       end
     end
 

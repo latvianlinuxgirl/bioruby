@@ -23,11 +23,18 @@ module Bio
 
         #have to process root node separately because tree.children takes node
         #as a parameter
+        phylogeny << XML::Node.new('description', tree.description) unless tree.description == nil
+
+        #Writing root clade
         phylogeny << root_clade = XML::Node.new('clade')
         root_clade << XML::Node.new('name', tree.root.name) if tree.root.name != nil
-        #if node.taxonomies[0] != nil and node.taxonomies[0].scientific_name != nil)
+        if tree.root.taxonomies[0] != nil and tree.root.taxonomies[0].scientific_name != nil
           root_clade << taxonomy = XML::Node.new('taxonomy')
-          taxonomy << scientific_name = XML::Node.new('scientific_name', tree.root.taxonomies[0].scientific_name) if tree.root.taxonomies != nil
+          taxonomy <<  XML::Node.new('scientific_name', tree.root.taxonomies[0].scientific_name) if tree.root.taxonomies != nil
+        end
+        #IndexError: node1 not found
+            #	from /usr/local/lib/site_ruby/1.8/bio/tree.rb:591:in `path'
+            #from /usr/local/lib/site_ruby/1.8/bio/tree.rb:640:in `children'
 
         tree.children(tree.root).each do |node|
           root_clade << node_to_xml(tree, node)
@@ -38,13 +45,7 @@ module Bio
       end
 
       def node_to_xml(tree, node)
-        clade = XML::Node.new('clade')
-        clade << XML::Node.new('name', node.name) if node.name != nil
-        if (node.taxonomies[0] != nil and node.taxonomies[0].scientific_name != nil)
-          clade << taxonomy = XML::Node.new('taxonomy')
-          taxonomy << XML::Node.new('scientific_name', node.taxonomies[0].scientific_name)
-        end
-
+        clade = node.to_xml
 
         tree.children(node).each do |new_node|        
           clade << node_to_xml(tree, new_node)
@@ -53,9 +54,7 @@ module Bio
         return clade
       end
 
-      def node_elements_to_xml(node)
 
-      end
 
     end
 

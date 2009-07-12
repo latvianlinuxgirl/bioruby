@@ -69,6 +69,10 @@ module Bio
     File.join PHYLOXML_TEST_DATA, 'sample.xml'
   end
 
+  def self.example_tree4_xml
+    File.join PHYLOXML_TEST_DATA, 'example_tree4.xml'
+  end
+
   end #end module TestPhyloXMLData
 
   class TestPhyloXMLWriter < Test::Unit::TestCase
@@ -122,6 +126,64 @@ module Bio
       assert_equal("  </phylogeny>", lines[13].chomp)
       assert_equal("</phyloxml>", lines[14].chomp)
 
+    end
+
+    def test_phyloxml_examples_tree1
+      tree = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml).next_tree
+
+      writer = Bio::PhyloXML::Writer.new('./example_tree1.xml')
+      writer.write(tree)
+
+      assert_nothing_thrown do
+        tree2  = Bio::PhyloXML::Parser.new('./example_tree1.xml')
+      end
+    end
+
+    def test_phyloxml_examples_tree4
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
+      4.times do
+        @tree = phyloxml.next_tree
+      end
+      #@todo tree = phyloxml[4]
+      writer = Bio::PhyloXML::Writer.new('./example_tree4.xml')
+      writer.write(@tree)
+      assert_nothing_thrown do
+        @tree2 = Bio::PhyloXML::Parser.new('./example_tree4.xml').next_tree
+      end
+      assert_equal(@tree.name, @tree2.name)
+      assert_equal(@tree.get_node_by_name('A').taxonomies[0].scientific_name, @tree2.get_node_by_name('A').taxonomies[0].scientific_name)
+      assert_equal(@tree.get_node_by_name('B').sequences[0].annotations[0].desc,
+        @tree2.get_node_by_name('B').sequences[0].annotations[0].desc)
+     # assert_equal(@tree.get_node_by_name('B').sequences[0].annotations[0].confidence.value,@tree2.get_node_by_name('B').sequences[0].annotations[0].confidence.value)
+    end
+
+    def test_generate_xml_with_sequence
+      tree = Bio::PhyloXML::Tree.new
+      r = Bio::PhyloXML::Node.new
+      tree.add_node(r)
+      tree.root = r
+      n = Bio::PhyloXML::Node.new
+      tree.add_node(n)
+      tree.add_edge(tree.root, n)
+      tree.rooted = true
+
+      n.name = "A"
+      seq = PhyloXML::Sequence.new
+      n.sequences[0] = seq
+      seq.annotations[0] = PhyloXML::Annotation.new
+      seq.annotations[0].desc = "Sample annotation"
+      seq.name = "sequence name"
+      seq.location = "somewhere"
+      seq.accession = PhyloXML::Accession.new
+      seq.accession.source = "ncbi"
+      seq.accession.value = "AAB80874"
+      seq.symbol = "adhB"
+
+      Bio::PhyloXML::Writer.new('./sequence.xml').write(tree)
+
+      assert_nothing_thrown do
+        Bio::PhyloXML::Parser.new('./sequence.xml').next_tree
+      end
     end
 
   end
