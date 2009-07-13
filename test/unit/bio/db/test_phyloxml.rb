@@ -536,9 +536,6 @@ end #end module TestPhyloXMLData
     end
 
   end
-
-
-
   class TestPhyloXML5 < Test::Unit::TestCase
 
     def test_each

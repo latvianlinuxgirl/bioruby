@@ -178,6 +178,24 @@ module Bio
       seq.accession.source = "ncbi"
       seq.accession.value = "AAB80874"
       seq.symbol = "adhB"
+      seq.mol_seq = "TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD"
+      seq.uri = PhyloXML::Uri.new
+      seq.uri.desc = "EMBL REPTILE DATABASE"
+      seq.uri.uri = "http://www.embl-heidelberg.de/~uetz/families/Varanidae.html"
+      seq.domain_architecture = PhyloXML::DomainArchitecture.new
+      seq.domain_architecture.length = 1249
+      domain1 = PhyloXML::ProteinDomain.new
+      seq.domain_architecture.domains << domain1
+      domain1.from = 6
+      domain1.to = 90
+      domain1.confidence = "7.0E-26"
+      domain1.value = "CARD"
+      domain2 = PhyloXML::ProteinDomain.new
+      seq.domain_architecture.domains << domain2
+      domain2.from = 109
+      domain2.to = 414
+      domain2.confidence = "7.2E-117"
+      domain2.value = "NB-ARC"
 
       Bio::PhyloXML::Writer.new('./sequence.xml').write(tree)
 

@@ -51,12 +51,35 @@ module PhyloXML
        # seq << XML::Node.new('name', @name) if @name != nil
         root << XML::Node.new(subelem[1], subelem[2]) if subelem[2] != nil
       elsif subelem[0] == :complex
-          #seq << @accession.to_xml if @accession != nil
-      #  puts elem.accession.to_xml
         o =  elem.send("#{subelem[1]}")
         root << o.send("to_xml") if o != nil
+      elsif subelem[0] == :pattern
+        #seq, self, [[:pattern, 'symbol', @symbol, "\S{1,10}"]
+        if subelem[2] != nil
+          if subelem[2] =~ subelem[3]
+            
+            root << XML::Node.new(subelem[1], subelem[2])
+          else
+            raise "#{subelem[2]} is not a valid value of #{subelem[1]}. It should follow pattern #{subelem[3]}"
+          end
+        end
+      elsif subelem[0] == :objarr
+        #[:objarr, 'annotation', 'annotations']])
 
-        #root << elem.send("#{subelem[1]}.to_xml") if elem.send("#{subelem[1]}") != nil
+        obj_arr = elem.send(subelem[2])
+        obj_arr.each do |arr_elem|
+          root << arr_elem.to_xml
+        end
+           
+#     
+#        unless @annotations.empty?
+#          @annotations.each do |annot|
+#            #PhyloXML::generate_xml(seq, self, [[:complex, 'annotation']])
+#            seq << annot.to_xml
+#          end
+#        end
+#
+
       end
     end
 
@@ -407,29 +430,17 @@ module PhyloXML
         seq["id_source"] = @id_source if @id_source != nil
         seq["id_ref"] = @id_ref if @id_ref != nil
 
-        #symbol
-       # if @symbol =~
-        #xs:pattern value="\S{1,10}"/>
+        PhyloXML::generate_xml(seq, self, [
+            [:pattern, 'symbol', @symbol, Regexp.new("^\\S{1,10}$")],
+            [:complex, 'accession'],
+            [:simple, 'name', @name],
+            [:simple, 'location', @location],
+            [:pattern, 'mol_seq', @mol_seq, Regexp.new("^[a-zA-Z\.\-\?\*_]+$")],
+            [:complex, 'uri'],
+            [:objarr, 'annotation', 'annotations'],
+            [:complex, 'domain_architecture']])
+            #@todo test domain_architecture
 
-
-        #accession, name, location, mol_seq, uri
-        PhyloXML::generate_xml(seq, self, [[:complex, 'accession'],[:simple, 'name', @name],
-            [ :simple, 'location', @location]])
-
-        #seq << @accession.to_xml if @accession != nil
-
-        #seq << XML::Node.new('name', @name) if @name != nil
-
-        #seq << XML::Node.new('location', @location) if @location != nil
-
-        unless @annotations.empty?          
-          @annotations.each do |annot|
-            #PhyloXML::generate_xml(seq, self, [[:complex, 'annotation']])
-            seq << annot.to_xml
-          end
-        end
-
-        #domain_architecture
         #any
         return seq
       end
@@ -498,6 +509,16 @@ module PhyloXML
       attr_accessor :type
       # String. URL of the resource.
       attr_accessor :uri #@todo call it url?
+
+      def to_xml
+        #@todo refactor this method
+        if @uri != nil
+          xml_node = XML::Node.new('uri', @uri)
+          xml_node["desc"] = @desc if @desc != nil
+          xml_node ["type"] = @type if @type != nil
+          return xml_node
+        end
+      end
     end
 
     # == Description
@@ -611,6 +632,15 @@ module PhyloXML
       def initialize
         @domains = []
       end
+
+      def to_xml
+        xml_node = XML::Node.new('domain_architecture')
+        xml_node['length'] = @length.to_s if @length != nil
+        #attribute length
+        #domain, required
+        PhyloXML::generate_xml(xml_node, self,[[:objarr, 'domain', 'domains']])
+        return xml_node
+      end
     end
 
 
@@ -640,6 +670,25 @@ module PhyloXML
       
       def confidence=(str)
         @confidence = str.to_f
+      end
+
+      def to_xml
+        if @from == nil
+          raise "from attribute of ProteinDomain class is required."
+        elsif @to == nil
+          raise "to attribute of ProteinDomain class is required."
+        else
+          xml_node = XML::Node.new('domain', @value)
+          xml_node["from"] = @from.to_s
+          xml_node["to"] = @to.to_s
+          xml_node["id"] = @id if @id != nil
+          #@todo can't call it @id, gives error TypeError: wrong argument type nil (expected String)
+
+          xml_node["confidence"] = @confidence.to_s
+
+          return xml_node
+        end
+
       end
 
     end
