@@ -44,53 +44,7 @@ module Bio
 
 module PhyloXML
 
-  def self.generate_xml(root, elem, subelement_array)
-          #[[ :complex,'accession', ], [:simple, 'name',  @name], [:simple, 'location', @location]])
-    subelement_array.each do |subelem|
-      if subelem[0] == :simple
-       # seq << XML::Node.new('name', @name) if @name != nil
-        root << XML::Node.new(subelem[1], subelem[2]) if subelem[2] != nil
-      elsif subelem[0] == :complex
-        o =  elem.send("#{subelem[1]}")
-        root << o.send("to_xml") if o != nil
-      elsif subelem[0] == :pattern
-        #seq, self, [[:pattern, 'symbol', @symbol, "\S{1,10}"]
-        if subelem[2] != nil
-          if subelem[2] =~ subelem[3]
-            
-            root << XML::Node.new(subelem[1], subelem[2])
-          else
-            raise "#{subelem[2]} is not a valid value of #{subelem[1]}. It should follow pattern #{subelem[3]}"
-          end
-        end
-      elsif subelem[0] == :objarr
-        #[:objarr, 'annotation', 'annotations']])
-
-        obj_arr = elem.send(subelem[2])
-        obj_arr.each do |arr_elem|
-          root << arr_elem.to_xml
-        end
-           
-#     
-#        unless @annotations.empty?
-#          @annotations.each do |annot|
-#            #PhyloXML::generate_xml(seq, self, [[:complex, 'annotation']])
-#            seq << annot.to_xml
-#          end
-#        end
-#
-
-      end
-    end
-
-
-#      # seq << XML::Node.new('name', @name) if @name != nil
-#      # seq << @accession.to_xml if @accession != nil
-#
-#        seq << XML::Node.new('location', @location) if @location != nil
-#
-   end
-
+  
   # Taxonomy class
   class Taxonomy < Bio::Taxonomy
     # String. Unique identifier of a taxon.
@@ -101,11 +55,19 @@ module PhyloXML
     attr_accessor :uri
 
     def to_xml
-      taxonomy = nil
-      if @scientific_name != nil
-        taxonomy = XML::Node.new('taxonomy')
-        taxonomy << XML::Node.new('scientific_name', @scientific_name)
-      end
+      taxonomy = XML::Node.new('taxonomy')
+      taxonomy["type"] = @type if @type != nil
+      taxonomy["id_source"] = @id_source if @id_source != nil
+
+      PhyloXML.generate_xml(taxonomy, self, [[:complex, 'id', @taxonomy_id],
+        [:pattern, 'code', @code, Regexp.new("^[a-zA-Z0-9_]{2,10}$")],
+        [:simple, 'scientific_name', @scientific_name],
+        [:simplearr, 'common_name', @common_names],
+        #@todo rank
+        [:complex, 'uri']])
+      #id, code, scientific name, common name, rank, uri
+      
+
       return taxonomy
     end
 
@@ -432,13 +394,13 @@ module PhyloXML
 
         PhyloXML::generate_xml(seq, self, [
             [:pattern, 'symbol', @symbol, Regexp.new("^\\S{1,10}$")],
-            [:complex, 'accession'],
+            [:complex, 'accession', @accession],
             [:simple, 'name', @name],
             [:simple, 'location', @location],
             [:pattern, 'mol_seq', @mol_seq, Regexp.new("^[a-zA-Z\.\-\?\*_]+$")],
-            [:complex, 'uri'],
+            [:complex, 'uri', @uri],
             [:objarr, 'annotation', 'annotations'],
-            [:complex, 'domain_architecture']])
+            [:complex, 'domain_architecture', @domain_architecture]])
             #@todo test domain_architecture
 
         #any
@@ -561,6 +523,12 @@ module PhyloXML
 
     class Id
       attr_accessor :type, :value
+
+      def to_xml
+        xml_node = XML::Node.new('id', @value)
+        xml_node["type"] = @type if @type != nil
+        return xml_node
+      end
     end
 
     # == Description

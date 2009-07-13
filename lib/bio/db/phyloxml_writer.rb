@@ -9,8 +9,7 @@ module Bio
          # seq << XML::Node.new('name', @name) if @name != nil
           root << XML::Node.new(subelem[1], subelem[2]) if subelem[2] != nil
         elsif subelem[0] == :complex
-          o =  elem.send("#{subelem[1]}")
-          root << o.send("to_xml") if o != nil
+          root << subelem[2].send("to_xml") if subelem[2] != nil
         elsif subelem[0] == :pattern
           #seq, self, [[:pattern, 'symbol', @symbol, "\S{1,10}"]
           if subelem[2] != nil
@@ -29,15 +28,11 @@ module Bio
             root << arr_elem.to_xml
           end
 
-  #
-  #        unless @annotations.empty?
-  #          @annotations.each do |annot|
-  #            #PhyloXML::generate_xml(seq, self, [[:complex, 'annotation']])
-  #            seq << annot.to_xml
-  #          end
-  #        end
-  #
-
+        elsif subelem[0] == :simplearr
+          #  [:simplearr, 'common_name', @common_names]
+          subelem[2].each do |elem_val|
+            root << XML::Node.new(subelem[1], elem_val)
+          end
         end
       end
 
