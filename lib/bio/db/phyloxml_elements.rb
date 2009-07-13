@@ -49,7 +49,7 @@ module PhyloXML
   class Taxonomy < Bio::Taxonomy
     # String. Unique identifier of a taxon.
     attr_accessor :taxonomy_id
-    #Used to link other elements to a taxonomy (on the xml-level).
+    #Used to link other elements to a taxonomy (on the xml-level)
     attr_accessor :id_source
     # Uri object
     attr_accessor :uri
@@ -65,8 +65,7 @@ module PhyloXML
         [:simplearr, 'common_name', @common_names],
         #@todo rank
         [:complex, 'uri']])
-      #id, code, scientific name, common name, rank, uri
-      
+      #id, code, scientific name, common name, rank, uri     
 
       return taxonomy
     end
@@ -275,7 +274,17 @@ module PhyloXML
 
       def initialize(type, value)
         @type = type
-        @value = value
+        @value = value.to_f
+      end
+
+      def to_xml
+        if @type == nil
+          raise "Type is a required attribute for confidence."
+        else
+          confidence = XML::Node.new('confidence', @value.to_f)
+          confidence["type"] = @type
+          return confidence
+        end
       end
 
     end
@@ -516,7 +525,8 @@ module PhyloXML
 
       def to_xml
         annot = XML::Node.new('annotation')
-        annot << XML::Node.new('desc', @desc) if @desc != nil
+        PhyloXML::generate_xml(annot, self, [[:simple, 'desc', @desc],
+          [:complex, 'confidence', @confidence]])
         return annot
       end
     end
