@@ -218,6 +218,10 @@ module PhyloXML
       @sequences.each do |sequence|
         clade << sequence.to_xml
       end
+
+      #@todo add unit test for events
+      PhyloXML.generate_xml(clade, self, [[:complex, 'events', @events]])
+
       return clade
     end
 
@@ -263,6 +267,18 @@ module PhyloXML
         #@todo don't need this since, file is validated.
       end
     end
+
+    def to_xml
+      #@todo add unit test
+      events = XML::Node.new('events')
+      PhyloXML::generate_xml(events, self, [
+        [:simple, 'type', @type],
+        [:simple, 'duplications', @duplications],
+        [:simple, 'speciations', @speciations],
+        [:ismple, 'losses', @losses],
+        [:complex, 'confidence', @confidence]])
+    end
+
   end
 
     # A general purpose confidence element. For example this can be used to express
