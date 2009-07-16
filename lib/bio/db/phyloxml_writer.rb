@@ -60,7 +60,7 @@ module Bio
       @doc.save(@filename, @indent)
       end
 
-      def write(tree)
+      def write(tree, write_branch_length_as_subelement=true)
         @root << phylogeny = XML::Node.new('phylogeny')
         phylogeny['rooted'] = tree.rooted.to_s
         phylogeny << name = XML::Node.new('name', tree.name) if tree.name != nil
@@ -81,20 +81,19 @@ module Bio
             #from /usr/local/lib/site_ruby/1.8/bio/tree.rb:640:in `children'
 
         tree.children(tree.root).each do |node|
-          root_clade << node_to_xml(tree, node, tree.root)
+          root_clade << node_to_xml(tree, node, tree.root, write_branch_length_as_subelement)
         end
 
 
         @doc.save(@filename, @indent)
       end
 
-      def node_to_xml(tree, node, parent)
+      def node_to_xml(tree, node, parent, write_branch_length_as_subelement)
         branch_length = tree.get_edge(parent, node).distance
-        write_as_subelement = true
-        clade = node.to_xml(branch_length, write_as_subelement)
+        clade = node.to_xml(branch_length, write_branch_length_as_subelement)
 
         tree.children(node).each do |new_node|        
-          clade << node_to_xml(tree, new_node, node)
+          clade << node_to_xml(tree, new_node, node, write_branch_length_as_subelement)
         end
         
         return clade

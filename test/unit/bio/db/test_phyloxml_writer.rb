@@ -132,7 +132,7 @@ module Bio
       tree = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml).next_tree
 
       writer = Bio::PhyloXML::Writer.new('./example_tree1.xml')
-      writer.write(tree)
+      writer.write(tree,false)
 
       assert_nothing_thrown do
         tree2  = Bio::PhyloXML::Parser.new('./example_tree1.xml')

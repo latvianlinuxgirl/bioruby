@@ -215,7 +215,7 @@ module PhyloXML
         if write_as_subelement
           clade << XML::Node.new('branch_length', branch_length)
         else
-          clade["branch_length"] = branch_length
+          clade["branch_length"] = branch_length.to_s
         end
       end
 
