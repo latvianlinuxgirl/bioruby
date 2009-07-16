@@ -81,18 +81,20 @@ module Bio
             #from /usr/local/lib/site_ruby/1.8/bio/tree.rb:640:in `children'
 
         tree.children(tree.root).each do |node|
-          root_clade << node_to_xml(tree, node)
+          root_clade << node_to_xml(tree, node, tree.root)
         end
 
 
         @doc.save(@filename, @indent)
       end
 
-      def node_to_xml(tree, node)
-        clade = node.to_xml
+      def node_to_xml(tree, node, parent)
+        branch_length = tree.get_edge(parent, node).distance
+        write_as_subelement = true
+        clade = node.to_xml(branch_length, write_as_subelement)
 
         tree.children(node).each do |new_node|        
-          clade << node_to_xml(tree, new_node)
+          clade << node_to_xml(tree, new_node, node)
         end
         
         return clade

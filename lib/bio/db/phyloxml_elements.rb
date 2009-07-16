@@ -207,9 +207,17 @@ module PhyloXML
       return node
     end
 
-    def to_xml
+    def to_xml(branch_length, write_as_subelement=true)
       clade = XML::Node.new('clade')
       clade << XML::Node.new('name', @name) if @name != nil
+
+      if branch_length != nil 
+        if write_as_subelement
+          clade << XML::Node.new('branch_length', branch_length)
+        else
+          clade["branch_length"] = branch_length
+        end
+      end
 
       @taxonomies.each do |taxonomy|
         clade << taxonomy.to_xml
@@ -806,6 +814,10 @@ module PhyloXML
 
       def distance=(str)
         @distance = str.to_i
+      end
+
+      def to_xml
+        
       end
 
     end
