@@ -139,6 +139,20 @@ module Bio
       end
     end
 
+    def test_phyloxml_examples_tree2
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
+      2.times do
+        @tree = phyloxml.next_tree
+      end
+      
+      writer = Bio::PhyloXML::Writer.new('./example_tree2.xml')
+      writer.write(@tree)
+
+      assert_nothing_thrown do
+        tree2  = Bio::PhyloXML::Parser.new('./example_tree2.xml')
+      end
+    end
+
     def test_phyloxml_examples_tree4
       phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
       4.times do
