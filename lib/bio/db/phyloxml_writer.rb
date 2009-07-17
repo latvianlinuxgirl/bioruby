@@ -8,8 +8,10 @@ module Bio
         if subelem[0] == :simple
          # seq << XML::Node.new('name', @name) if @name != nil
           root << XML::Node.new(subelem[1], subelem[2]) if subelem[2] != nil and not subelem[2].to_s.empty?
+
         elsif subelem[0] == :complex
           root << subelem[2].send("to_xml") if subelem[2] != nil
+
         elsif subelem[0] == :pattern
           #seq, self, [[:pattern, 'symbol', @symbol, "\S{1,10}"]
           if subelem[2] != nil
@@ -20,6 +22,7 @@ module Bio
               raise "#{subelem[2]} is not a valid value of #{subelem[1]}. It should follow pattern #{subelem[3]}"
             end
           end
+
         elsif subelem[0] == :objarr
           #[:objarr, 'annotation', 'annotations']])
 
@@ -33,6 +36,8 @@ module Bio
           subelem[2].each do |elem_val|
             root << XML::Node.new(subelem[1], elem_val)
           end
+        else
+          raise "Not supported type of element by method generate_xml."
         end
       end
 
@@ -66,16 +71,20 @@ module Bio
         phylogeny << name = XML::Node.new('name', tree.name) if tree.name != nil
 
         #have to process root node separately because tree.children takes node
-        #as a parameter
+        #as a parameterclade = node.to_xml(branch_length, write_branch_length_as_subelement)
         phylogeny << XML::Node.new('description', tree.description) unless tree.description == nil
 
+        root_clade = tree.root.to_xml(nil, write_branch_length_as_subelement)
         #Writing root clade
-        phylogeny << root_clade = XML::Node.new('clade')
-        root_clade << XML::Node.new('name', tree.root.name) if tree.root.name != nil
-        if tree.root.taxonomies[0] != nil and tree.root.taxonomies[0].scientific_name != nil
-          root_clade << taxonomy = XML::Node.new('taxonomy')
-          taxonomy <<  XML::Node.new('scientific_name', tree.root.taxonomies[0].scientific_name) if tree.root.taxonomies != nil
-        end
+        phylogeny << root_clade #= XML::Node.new('clade')
+
+
+
+#        root_clade << XML::Node.new('name', tree.root.name) if tree.root.name != nil
+#        if tree.root.taxonomies[0] != nil and tree.root.taxonomies[0].scientific_name != nil
+#          root_clade << taxonomy = XML::Node.new('taxonomy')
+#          taxonomy <<  XML::Node.new('scientific_name', tree.root.taxonomies[0].scientific_name) if tree.root.taxonomies != nil
+#        end
         #IndexError: node1 not found
             #	from /usr/local/lib/site_ruby/1.8/bio/tree.rb:591:in `path'
             #from /usr/local/lib/site_ruby/1.8/bio/tree.rb:640:in `children'

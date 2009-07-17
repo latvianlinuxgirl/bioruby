@@ -236,7 +236,8 @@ module PhyloXML
       end
 
       #@todo add unit test for events
-      PhyloXML.generate_xml(clade, self, [[:complex, 'events', @events]])
+      #PhyloXML.generate_xml(clade, self, [[:complex, 'events', @events]])
+      clade << @events.to_xml if @events != nil
 
       return clade
     end
@@ -286,12 +287,13 @@ module PhyloXML
 
     def to_xml
       #@todo add unit test
+      #puts "events", @speciations
       events = XML::Node.new('events')
       PhyloXML::generate_xml(events, self, [
         [:simple, 'type', @type],
         [:simple, 'duplications', @duplications],
         [:simple, 'speciations', @speciations],
-        [:ismple, 'losses', @losses],
+        [:simple, 'losses', @losses],
         [:complex, 'confidence', @confidence]])
       return events
     end
@@ -557,10 +559,22 @@ module PhyloXML
         @properties = []
       end
 
+
       def to_xml
+        #@todo add uni test. Specifically test property. Add Annotation->property for made_up xml
         annot = XML::Node.new('annotation')
+        annot["ref"] = @ref if @ref != nil
         PhyloXML::generate_xml(annot, self, [[:simple, 'desc', @desc],
-          [:complex, 'confidence', @confidence]])
+          [:complex, 'confidence', @confidence],
+          [:objarr, 'property', 'properties'],
+          [:complex, 'uri', @uri]])
+
+#        @properties.each do |property|
+#          annot << property.to_xml
+#        end
+#
+#        PhyloXML::generate_xml(annot, self, [[:complex, 'uri', @uri]])
+
         return annot
       end
     end
@@ -744,6 +758,10 @@ module PhyloXML
           puts "Warning: #{str} is not in the list of allowed values."
         end
         @applies_to = str
+      end
+
+      def to_xml
+        return nil
       end
     end
 
