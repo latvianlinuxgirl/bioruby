@@ -7,7 +7,7 @@ module Bio
       subelement_array.each do |subelem|
         if subelem[0] == :simple
          # seq << XML::Node.new('name', @name) if @name != nil
-          root << XML::Node.new(subelem[1], subelem[2]) if subelem[2] != nil
+          root << XML::Node.new(subelem[1], subelem[2]) if subelem[2] != nil and not subelem[2].to_s.empty?
         elsif subelem[0] == :complex
           root << subelem[2].send("to_xml") if subelem[2] != nil
         elsif subelem[0] == :pattern

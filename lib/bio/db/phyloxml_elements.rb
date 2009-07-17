@@ -211,12 +211,20 @@ module PhyloXML
       clade = XML::Node.new('clade')
       clade << XML::Node.new('name', @name) if @name != nil
 
+      #PhyloXML::generate_xml(clade, self, [[:complex, 'confidence', @confidence]        ])
+
+
+
       if branch_length != nil 
         if write_as_subelement
           clade << XML::Node.new('branch_length', branch_length)
         else
           clade["branch_length"] = branch_length.to_s
         end
+      end
+
+      @confidences.each do |confidence|
+        clade << confidence.to_xml
       end
 
       @taxonomies.each do |taxonomy|
@@ -285,6 +293,7 @@ module PhyloXML
         [:simple, 'speciations', @speciations],
         [:ismple, 'losses', @losses],
         [:complex, 'confidence', @confidence]])
+      return events
     end
 
   end
@@ -307,6 +316,7 @@ module PhyloXML
         else
           confidence = XML::Node.new('confidence', @value.to_f)
           confidence["type"] = @type
+          
           return confidence
         end
       end
