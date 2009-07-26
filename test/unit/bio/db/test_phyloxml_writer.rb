@@ -175,6 +175,28 @@ module Bio
      # assert_equal(@tree.get_node_by_name('B').sequences[0].annotations[0].confidence.value,@tree2.get_node_by_name('B').sequences[0].annotations[0].confidence.value)
     end
 
+    def test_phyloxml_examples_sequence_relation
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
+      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.example_xml_test)
+      phyloxml.each do |tree|
+        writer.write(tree)
+      end
+
+      assert_nothing_thrown do
+        @phyloxml_test = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml_test)
+      end
+
+      5.times do
+        @tree = @phyloxml_test.next_tree
+      end
+
+      assert_equal(@tree.sequence_relations[0].id_ref_0, "x")
+      assert_equal(@tree.sequence_relations[1].id_ref_1, "z")
+      assert_equal(@tree.sequence_relations[2].distance, nil)
+      assert_equal(@tree.sequence_relations[2].type, "orthology")
+
+    end
+
     def test_generate_xml_with_sequence
       tree = Bio::PhyloXML::Tree.new
       r = Bio::PhyloXML::Node.new

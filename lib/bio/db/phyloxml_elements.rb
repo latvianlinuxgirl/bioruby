@@ -840,12 +840,35 @@ module PhyloXML
       # Float
       attr_reader :distance
 
+      #@todo it has Confidences objects.
+
       def distance=(str)
-        @distance = str.to_i
+        @distance = str.to_f if str != nil
+      end
+
+      def type=(str)
+        #@todo do warning instead?
+        #@todo do validation at actually writing xml
+        allowed_values = ["orthology", "one_to_one_orthology", "super_orthology", "paralogy",
+            "ultra_paralogy", "xenology", "unknown", "other"]
+        if not allowed_values.include? str
+          raise "SequenceRelation#type has to be one one of #{allowed_values.join("; ")}"
+        else
+          @type = str
+        end
       end
 
       def to_xml
-        
+        if @id_ref_0 == nil or @id_ref_1 == nil or @type == nil
+          raise "Attributes id_ref_0, id_ref_1, type are required elements by SequenceRelation element."
+        else
+          sr = XML::Node.new('sequence_relation')
+          sr['id_ref_0'] = @id_ref_0
+          sr['id_ref_1'] = @id_ref_1
+          sr['distance'] = @distance.to_s if @distance != nil
+          sr['type'] = @type
+          return sr
+        end
       end
 
     end

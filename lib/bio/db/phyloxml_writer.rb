@@ -93,6 +93,7 @@ module Bio
           root_clade << node_to_xml(tree, node, tree.root, write_branch_length_as_subelement)
         end
 
+        Bio::PhyloXML.generate_xml(phylogeny, tree, [[:objarr, 'sequence_relation', 'sequence_relations']] )
 
         @doc.save(@filename, @indent)
       end
@@ -104,6 +105,7 @@ module Bio
         tree.children(node).each do |new_node|        
           clade << node_to_xml(tree, new_node, node, write_branch_length_as_subelement)
         end
+
         
         return clade
       end
