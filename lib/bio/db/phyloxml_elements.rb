@@ -207,21 +207,23 @@ module PhyloXML
       return node
     end
 
-    def to_xml(branch_length, write_as_subelement=true)
+    def to_xml(branch_length, write_branch_length_as_subelement)
       clade = XML::Node.new('clade')
       clade << XML::Node.new('name', @name) if @name != nil
 
       #PhyloXML::generate_xml(clade, self, [[:complex, 'confidence', @confidence]        ])
 
-
-
-      if branch_length != nil 
-        if write_as_subelement
+      if branch_length != nil
+       
+        if write_branch_length_as_subelement
           clade << XML::Node.new('branch_length', branch_length)
         else
           clade["branch_length"] = branch_length.to_s
         end
       end
+
+      clade["id_source"] = @id_source if @id_source != nil
+      #@todo add rest of the clade attributes
 
       @confidences.each do |confidence|
         clade << confidence.to_xml

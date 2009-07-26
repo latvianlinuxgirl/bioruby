@@ -337,7 +337,7 @@ module PhyloXML
 
     #Parses list of attributes
     #use for the code like: clade_relation.type = @reader["type"]
-    def parse_attributes(object, arr_of_attrs)
+  def parse_attributes(object, arr_of_attrs)
       arr_of_attrs.each do |attr|
         object.send("#{attr}=", @reader[attr])
       end

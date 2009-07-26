@@ -52,7 +52,11 @@ module Bio
 
 
     class Writer
+      
+      attr_accessor :write_branch_length_as_subelement
+      
       def initialize(filename, indent=true)
+      @write_branch_length_as_subelement = true #default value
       @filename = filename
       @indent = true
       @doc = XML::Document.new()
@@ -65,7 +69,7 @@ module Bio
       @doc.save(@filename, @indent)
       end
 
-      def write(tree, write_branch_length_as_subelement=true)
+      def write(tree)
         @root << phylogeny = XML::Node.new('phylogeny')
         phylogeny['rooted'] = tree.rooted.to_s
         phylogeny << name = XML::Node.new('name', tree.name) if tree.name != nil
@@ -74,7 +78,7 @@ module Bio
         #as a parameterclade = node.to_xml(branch_length, write_branch_length_as_subelement)
         phylogeny << XML::Node.new('description', tree.description) unless tree.description == nil
 
-        root_clade = tree.root.to_xml(nil, write_branch_length_as_subelement)
+        root_clade = tree.root.to_xml(nil, @write_branch_length_as_subelement)
         #Writing root clade
         phylogeny << root_clade #= XML::Node.new('clade')
 
@@ -90,7 +94,7 @@ module Bio
             #from /usr/local/lib/site_ruby/1.8/bio/tree.rb:640:in `children'
 
         tree.children(tree.root).each do |node|
-          root_clade << node_to_xml(tree, node, tree.root, write_branch_length_as_subelement)
+          root_clade << node_to_xml(tree, node, tree.root)
         end
 
         Bio::PhyloXML.generate_xml(phylogeny, tree, [[:objarr, 'sequence_relation', 'sequence_relations']] )
@@ -98,12 +102,12 @@ module Bio
         @doc.save(@filename, @indent)
       end
 
-      def node_to_xml(tree, node, parent, write_branch_length_as_subelement)
+      def node_to_xml(tree, node, parent)
         branch_length = tree.get_edge(parent, node).distance
-        clade = node.to_xml(branch_length, write_branch_length_as_subelement)
+        clade = node.to_xml(branch_length, @write_branch_length_as_subelement)
 
         tree.children(node).each do |new_node|        
-          clade << node_to_xml(tree, new_node, node, write_branch_length_as_subelement)
+          clade << node_to_xml(tree, new_node, node)
         end
 
         
