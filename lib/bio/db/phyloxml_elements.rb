@@ -241,6 +241,11 @@ module PhyloXML
       #PhyloXML.generate_xml(clade, self, [[:complex, 'events', @events]])
       clade << @events.to_xml if @events != nil
 
+
+      @properties.each do |property|
+        clade << property.to_xml
+      end
+      
       return clade
     end
 
@@ -763,7 +768,19 @@ module PhyloXML
       end
 
       def to_xml
-        return nil
+        raise "ref is an required element of property"  if @ref.nil?
+        raise "datatype is an required element of property" if @datatype.nil?
+        raise "applies_to is an required element of property" if @applies_to.nil?
+
+        property = XML::Node.new('property')
+        property["ref"] = @ref
+        property["unit"] = @unit if @unit != nil
+        property["datatype"] = @datatype
+        property["applies_to"] = @applies_to
+        property["id_ref"] = @id_ref if @id_ref != nil
+        #@todo check if id_ref forms pattern
+        property << @value if @value != nil
+        return property
       end
     end
 
