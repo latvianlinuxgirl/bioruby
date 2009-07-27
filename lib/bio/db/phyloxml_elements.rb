@@ -59,13 +59,15 @@ module PhyloXML
       taxonomy["type"] = @type if @type != nil
       taxonomy["id_source"] = @id_source if @id_source != nil
 
+      puts @uri
       PhyloXML.generate_xml(taxonomy, self, [[:complex, 'id', @taxonomy_id],
         [:pattern, 'code', @code, Regexp.new("^[a-zA-Z0-9_]{2,10}$")],
         [:simple, 'scientific_name', @scientific_name],
         [:simplearr, 'common_name', @common_names],
-        #@todo rank
-        [:complex, 'uri']])
-      #id, code, scientific name, common name, rank, uri     
+        [:simple, 'rank', @rank],
+        [:complex, 'uri',@uri]])
+        #@todo anything else
+
 
       return taxonomy
     end
