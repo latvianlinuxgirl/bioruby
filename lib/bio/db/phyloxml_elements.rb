@@ -59,7 +59,6 @@ module PhyloXML
       taxonomy["type"] = @type if @type != nil
       taxonomy["id_source"] = @id_source if @id_source != nil
 
-      puts @uri
       PhyloXML.generate_xml(taxonomy, self, [[:complex, 'id', @taxonomy_id],
         [:pattern, 'code', @code, Regexp.new("^[a-zA-Z0-9_]{2,10}$")],
         [:simple, 'scientific_name', @scientific_name],
@@ -243,6 +242,11 @@ module PhyloXML
       #PhyloXML.generate_xml(clade, self, [[:complex, 'events', @events]])
       clade << @events.to_xml if @events != nil
 
+      @distributions.each do |distribution|
+        clade << distribution.to_xml
+      end
+
+      clade << @date.to_xml unless date.nil?
 
       @properties.each do |property|
         clade << property.to_xml
@@ -350,6 +354,17 @@ module PhyloXML
         @points = []
         @polygons = []
       end
+
+      def to_xml
+        distr = XML::Node.new('distribution')
+        PhyloXML::generate_xml(distr, self, [
+            [:simple, 'desc', @desc],
+            [:objarr, 'point', 'points'],
+            [:objarr, 'polygon', 'polygons']])
+        return distr
+      end
+
+
     end #Distribution class
 
 
@@ -372,15 +387,28 @@ module PhyloXML
       attr_accessor :geodetic_datum
 
       def lat=(str)
-        @lat = str.to_f
+        @lat = str.to_f unless str.nil?
       end
 
       def long=(str)
-        @long = str.to_f
+        @long = str.to_f unless str.nil?
       end
 
       def alt=(str)
-        @alt = str.to_f
+        @alt = str.to_f unless str.nil?
+      end
+
+      def to_xml
+        raise "Geodedic datum is a required attribute of Point element." if @geodetic_datum.nil?
+
+        p = XML::Node.new('point')
+        p["geodetic_datum"] = @geodetic_datum
+        PhyloXML::generate_xml(p, self, [
+            [:simple, 'lat', @lat],
+            [:simple, 'long', @long],
+            [:simple, 'alt', @alt]])
+        return p
+        #@todo check if characters are correctly generated, like Zuric
       end
 
     end
@@ -648,6 +676,17 @@ module PhyloXML
       def to_s
         return "#{value} #{unit}"
       end
+
+      def to_xml
+        date = XML::Node.new('date')
+        date["unit"] = @unit unless @unit.nil?
+        date["range"] = @range.to_s unless @range.nil?
+        PhyloXML::generate_xml(date, self, [
+            [:simple, 'desc', @desc],
+            [:simple, 'value', @value]])
+        return date
+      end
+
     end
 
     # == Description
@@ -814,6 +853,21 @@ module PhyloXML
 
       def distance=(str)
         @distance = str.to_f
+      end
+
+      def to_xml
+        if @id_ref_0 == nil or @id_ref_1 == nil or @type == nil
+          raise "Attributes id_ref_0, id_ref_1, type are required elements by SequenceRelation element."
+        else
+          cr = XML::Node.new('clade_relation')
+          cr['id_ref_0'] = @id_ref_0
+          cr['id_ref_1'] = @id_ref_1
+          cr['distance'] = @distance.to_s if @distance != nil
+          cr['type'] = @type
+          cr << @confidence.to_xml unless @confidence.nil?
+
+          return cr
+        end
       end
 
     end
