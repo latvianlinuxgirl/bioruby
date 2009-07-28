@@ -30,7 +30,7 @@ module Bio
   PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
 
   def self.example_xml
-    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples_test.xml'
+    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples.xml'
   end
 
   def self.made_up_xml

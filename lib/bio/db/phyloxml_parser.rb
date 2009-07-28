@@ -195,13 +195,13 @@ module PhyloXML
           
           parse_attributes(node, ["id_source"])
           
-          #add new node to the tree                  
+          #add new node to the tree
+          tree.add_node(node)
           # The first clade will always be root since by xsd schema phyloxml can
           # have 0 to 1 clades in it.
           if tree.root == nil
             tree.root = node
           else                    
-            tree.add_node(node)
             current_edge = tree.add_edge(clades[-1], node,
                                          Bio::Tree::Edge.new(branch_length))
           end

@@ -424,6 +424,18 @@ module PhyloXML
       def initialize
         @points = []
       end
+
+      def to_xml
+        if @points.length > 2          
+          pol = XML::Node.new('polygon')
+          @points.each do |p|
+            pol << p.to_xml
+          end
+          return pol
+        end
+      end
+
+
     end
 
     # == Description

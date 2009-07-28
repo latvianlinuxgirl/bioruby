@@ -77,6 +77,10 @@ module Bio
     File.join PHYLOXML_TEST_DATA, 'phyloxml_examples_test.xml'
   end
 
+  def self.made_up_xml_test
+     File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
+  end
+
   end #end module TestPhyloXMLData
 
   class TestPhyloXMLWriter < Test::Unit::TestCase
@@ -257,6 +261,14 @@ module Bio
       assert_nothing_thrown do
         Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml_test)
       end
+    end
+
+    def test_made_up_xml_file
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.made_up_xml)
+      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.made_up_xml_test)      
+      phyloxml.each do |tree|
+        writer.write(tree)
+      end      
     end
 
   end

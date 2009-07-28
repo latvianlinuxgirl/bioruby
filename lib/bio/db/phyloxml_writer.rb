@@ -92,7 +92,8 @@ module Bio
         #IndexError: node1 not found
             #	from /usr/local/lib/site_ruby/1.8/bio/tree.rb:591:in `path'
             #from /usr/local/lib/site_ruby/1.8/bio/tree.rb:640:in `children'
-
+            #
+        #puts tree.name
         tree.children(tree.root).each do |node|
           root_clade << node_to_xml(tree, node, tree.root)
         end
