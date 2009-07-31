@@ -36,6 +36,9 @@ module Bio
           subelem[2].each do |elem_val|
             root << XML::Node.new(subelem[1], elem_val)
           end
+        elsif subelem[0] == :attr
+          #[:attr, 'rooted']
+          root[subelem[1]] = elem.send(subelem[1]).to_s
         else
           raise "Not supported type of element by method generate_xml."
         end
@@ -58,7 +61,7 @@ module Bio
       def initialize(filename, indent=true)
       @write_branch_length_as_subelement = true #default value
       @filename = filename
-      @indent = true
+      @indent = indent
       @doc = XML::Document.new()
       @doc.root = XML::Node.new('phyloxml')
       @root = @doc.root
@@ -70,30 +73,19 @@ module Bio
       end
 
       def write(tree)
-        @root << phylogeny = XML::Node.new('phylogeny')
-        phylogeny['rooted'] = tree.rooted.to_s
-        phylogeny << name = XML::Node.new('name', tree.name) if tree.name != nil
-
-        #have to process root node separately because tree.children takes node
-        #as a parameterclade = node.to_xml(branch_length, write_branch_length_as_subelement)
-        phylogeny << XML::Node.new('description', tree.description) unless tree.description == nil
+        @root << phylogeny = XML::Node.new('phylogeny')        
+        
+        Bio::PhyloXML.generate_xml(phylogeny, tree, [
+            [:attr, 'rooted'],
+            [:simple, 'name', tree.name],
+            [:complex, 'id', tree.phylogeny_id],
+            [:simple, 'description', tree.description],
+            #@todo date xs:dateTime
+            [:objarr, 'confidence', 'confidences']])
 
         root_clade = tree.root.to_xml(nil, @write_branch_length_as_subelement)
-        #Writing root clade
-        phylogeny << root_clade #= XML::Node.new('clade')
+        phylogeny << root_clade 
 
-
-
-#        root_clade << XML::Node.new('name', tree.root.name) if tree.root.name != nil
-#        if tree.root.taxonomies[0] != nil and tree.root.taxonomies[0].scientific_name != nil
-#          root_clade << taxonomy = XML::Node.new('taxonomy')
-#          taxonomy <<  XML::Node.new('scientific_name', tree.root.taxonomies[0].scientific_name) if tree.root.taxonomies != nil
-#        end
-        #IndexError: node1 not found
-            #	from /usr/local/lib/site_ruby/1.8/bio/tree.rb:591:in `path'
-            #from /usr/local/lib/site_ruby/1.8/bio/tree.rb:640:in `children'
-            #
-        #puts tree.name
         tree.children(tree.root).each do |node|
           root_clade << node_to_xml(tree, node, tree.root)
         end
@@ -113,13 +105,9 @@ module Bio
         tree.children(node).each do |new_node|        
           clade << node_to_xml(tree, new_node, node)
         end
-
-        
+       
         return clade
       end
-
-
-
     end
 
 

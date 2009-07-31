@@ -78,6 +78,9 @@ module PhyloXML
     # String. Name of tree (name subelement of phylogeny element).
     attr_accessor :name
 
+    # Id object.
+    attr_accessor :phylogeny_id
+
     # String. Description of tree.
     attr_accessor :description
    
@@ -214,8 +217,7 @@ module PhyloXML
 
       #PhyloXML::generate_xml(clade, self, [[:complex, 'confidence', @confidence]        ])
 
-      if branch_length != nil
-       
+      if branch_length != nil       
         if write_branch_length_as_subelement
           clade << XML::Node.new('branch_length', branch_length)
         else
@@ -226,32 +228,21 @@ module PhyloXML
       clade["id_source"] = @id_source if @id_source != nil
       #@todo add rest of the clade attributes
 
-      @confidences.each do |confidence|
-        clade << confidence.to_xml
-      end
-
-      @taxonomies.each do |taxonomy|
-        clade << taxonomy.to_xml
-      end
-
-      @sequences.each do |sequence|
-        clade << sequence.to_xml
-      end
-
-      #@todo add unit test for events
-      #PhyloXML.generate_xml(clade, self, [[:complex, 'events', @events]])
-      clade << @events.to_xml if @events != nil
-
-      @distributions.each do |distribution|
-        clade << distribution.to_xml
-      end
-
-      clade << @date.to_xml unless date.nil?
-
-      @properties.each do |property|
-        clade << property.to_xml
-      end
-      
+      #generate all elements, except clade
+      PhyloXML::generate_xml(clade, self, [
+          [:objarr, 'confidence', 'confidences'],
+          #width
+          #color
+          [:simple, 'node_id', @node_id],
+          [:objarr, 'taxonomy', 'taxonomies'],
+          [:objarr, 'sequence', 'sequences'],
+          [:complex, 'events', @events],
+          #binary_characters
+          [:objarr, 'distribution', 'distributions'],
+          [:complex, 'date', @date],
+          #reference
+          [:objarr, 'propery', 'properties']])
+     
       return clade
     end
 
