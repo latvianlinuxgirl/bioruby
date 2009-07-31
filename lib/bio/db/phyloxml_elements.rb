@@ -211,7 +211,7 @@ module PhyloXML
       return node
     end
 
-    def to_xml(branch_length, write_branch_length_as_subelement)
+    def to_xml(branch_length,  write_branch_length_as_subelement)
       clade = XML::Node.new('clade')
       clade << XML::Node.new('name', @name) if @name != nil
 
@@ -231,17 +231,17 @@ module PhyloXML
       #generate all elements, except clade
       PhyloXML::generate_xml(clade, self, [
           [:objarr, 'confidence', 'confidences'],
-          #width
+          [:simple, 'width', @width],
           #color
           [:simple, 'node_id', @node_id],
           [:objarr, 'taxonomy', 'taxonomies'],
           [:objarr, 'sequence', 'sequences'],
           [:complex, 'events', @events],
-          [:complex, 'binary_characters', @binary_characters],
-          
+          [:complex, 'binary_characters', @binary_characters],          
           [:objarr, 'distribution', 'distributions'],
           [:complex, 'date', @date],
           #reference
+          [:objarr, 'reference', 'references'],
           [:objarr, 'propery', 'properties']])
      
       return clade
@@ -838,6 +838,13 @@ module PhyloXML
 
       # String. Free text description.
       attr_accessor :desc
+
+      def to_xml
+        ref = XML::Node.new('reference')
+        ref << XML::Node.new('desc', @desc) if @desc != nil
+        ref["doi"] = @doi  if @doi != nil
+        return ref
+      end
 
     end
 

@@ -99,7 +99,10 @@ module Bio
       end
 
       def node_to_xml(tree, node, parent)
-        branch_length = tree.get_edge(parent, node).distance
+        edge = tree.get_edge(parent, node)
+        branch_length = edge.distance
+     
+     
         clade = node.to_xml(branch_length, @write_branch_length_as_subelement)
 
         tree.children(node).each do |new_node|        
