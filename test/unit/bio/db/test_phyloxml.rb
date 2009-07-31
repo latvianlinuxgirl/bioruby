@@ -34,7 +34,7 @@ module Bio
   end
 
   def self.made_up_xml
-    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
+    File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
   end
 
   def self.metazoa_xml
@@ -508,7 +508,7 @@ end #end module TestPhyloXMLData
         @tree = @phyloxml.next_tree
       end
       bc =@tree.get_node_by_name("cellular_organisms").binary_characters
-      assert_equal(bc.type, "parsimony inferred")
+      assert_equal(bc.bc_type, "parsimony inferred")
       assert_equal(bc.lost_count, 0)
       assert_equal(bc.gained_count,0)
       assert_equal(bc.lost, [])

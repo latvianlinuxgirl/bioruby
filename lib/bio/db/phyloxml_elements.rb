@@ -237,7 +237,8 @@ module PhyloXML
           [:objarr, 'taxonomy', 'taxonomies'],
           [:objarr, 'sequence', 'sequences'],
           [:complex, 'events', @events],
-          #binary_characters
+          [:complex, 'binary_characters', @binary_characters],
+          
           [:objarr, 'distribution', 'distributions'],
           [:complex, 'date', @date],
           #reference
@@ -880,7 +881,7 @@ module PhyloXML
     # The names and/or counts of binary characters present, gained, and
     # lost at the root of a clade.
     class BinaryCharacters
-      attr_accessor :type, :gained, :lost, :present, :absent
+      attr_accessor :bc_type, :gained, :lost, :present, :absent
       attr_reader :gained_count, :lost_count, :present_count, :absent_count
 
       def gained_count=(str)
@@ -905,6 +906,43 @@ module PhyloXML
         @present = []
         @absent = []
       end
+
+      def to_xml
+        bc = XML::Node.new('binary_characters')
+        bc['type'] = @bc_type
+        PhyloXML::generate_xml(bc, self, [
+            [:attr, 'gained_count'],
+            [:attr, 'lost_count'],
+            [:attr, 'present_count'],
+            [:attr, 'absent_count']])
+
+        if not @gained.empty?
+          gained_xml = XML::Node.new('gained')
+          PhyloXML::generate_xml(gained_xml, self, [[:simplearr, 'bc', @gained]])
+          bc << gained_xml
+        end
+
+        if not @lost.empty?
+          lost_xml = XML::Node.new('lost')
+          PhyloXML::generate_xml(lost_xml, self, [[:simplearr, 'bc', @lost]])
+          bc << lost_xml
+        end
+
+        if not @present.empty?
+          present_xml = XML::Node.new('present')
+          PhyloXML::generate_xml(present_xml, self, [[:simplearr, 'bc', @present]])
+          bc << present_xml
+        end
+
+        if not @absent.empty?
+          absent_xml = XML::Node.new('absent')
+          PhyloXML::generate_xml(absent_xml, self, [[:simplearr, 'bc', @absent]])
+          bc << absent_xml
+        end
+
+        return bc
+      end
+
 
     end
 

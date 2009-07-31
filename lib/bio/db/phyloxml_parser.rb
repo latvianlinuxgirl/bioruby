@@ -642,9 +642,10 @@ module PhyloXML
 
     def parse_binary_characters
       b = PhyloXML::BinaryCharacters.new
+      b.bc_type = @reader['type']
 
-      parse_attributes(b, ['type', 'gained_count', 'absent_count', 'lost_count', 'present_count'])
-
+      #parse_attributes(b, ['type', 'gained_count', 'absent_count', 'lost_count', 'present_count'])
+      parse_attributes(b, ['gained_count', 'absent_count', 'lost_count', 'present_count'])
       if not @reader.empty_element?
         @reader.read
         while not is_end_element?('binary_characters')
