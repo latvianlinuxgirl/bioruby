@@ -34,7 +34,7 @@ module Bio
   end
 
   def self.made_up_xml
-    File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
+    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
   end
 
   def self.metazoa_xml

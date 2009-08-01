@@ -409,4 +409,9 @@
       <seq name="B">aggtcgcggcctgtggaagtcctctcct</seq>
       <seq name="C">taaatcgc--cccgtgg-agtccc-cct</seq>
    </align:alignment>
+   <align:alignment xmlns:align="http://example.org/align">
+      <seq name="D">acgtcgcggcccgtggaagtcctctcct</seq>
+      <seq name="E">aggtcgcggcctgtggaagtcctctcct</seq>
+      <seq name="F">taaatcgc--cccgtgg-agtccc-cct</seq>
+   </align:alignment>
 </phyloxml>

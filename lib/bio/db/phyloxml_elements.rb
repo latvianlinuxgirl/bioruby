@@ -996,14 +996,15 @@ module PhyloXML
 
     end
 
-#    class Other
-#      attr_accessor :tag, :atributes, :children, :value
-#      
-#      def initialize
-#        @children = []
-#      end
-#      
-#    end
+   class Other
+      attr_accessor :element_name, :attributes, :children, :value
+      
+      def initialize
+        @children = []
+        @attributes = Hash.new
+      end
+      
+    end
 
 
 end #module PhyloXML

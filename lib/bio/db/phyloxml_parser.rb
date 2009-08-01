@@ -65,6 +65,8 @@ module PhyloXML
   #
   class Parser
 
+    attr_reader :other
+
     # Initializes LibXML::Reader and reads the file until it reaches the first
     # phylogeny element.
     #
@@ -77,6 +79,8 @@ module PhyloXML
     # * (required) _filename_: Path to the file to parse.
     # *Returns*:: Bio::PhyloXML::Parser object
     def initialize(filename)
+
+      @other = []
       #@todo decide if need to be able initialize using string, since usually xml lives in files
 
       #check if parameter is a valid file name
@@ -134,13 +138,33 @@ module PhyloXML
     def next_tree()
 
       if not is_element?('phylogeny')
+        if @reader.node_type == XML::Reader::TYPE_END_ELEMENT
+          if is_end_element?('phyloxml')
+            return nil
+          else
+            @reader.read
+            @reader.read
+            if is_end_element?('phyloxml')
+              return nil
+            end
+          end
+        end        
         # phyloxml can hold only phylogeny and "other" elements. If this is not
         # phylogeny element then it is other. Also, "other" always comes after
         # all phylogenies
-        @other = parse_other
-        #puts @other
-        return nil #return nil for tree, since this is not valid phyloxml tree.
+        #@other = parse_other
+        #puts "===================  Other parsed: "
+        #p @other
+        #return @other
+        @other << parse_other
+        #p o
+        return nil
+        
+         #return nil for tree, since this is not valid phyloxml tree.
         #@todo maybe not, maybe return a tree of Other object elements.
+        #Lets return other object too, then it will also be easier to write all the trees back to file
+      elsif is_end_element?('phyloxml')
+        puts "end"
       end
 
       tree = Bio::PhyloXML::Tree.new
@@ -268,6 +292,7 @@ module PhyloXML
       #the next meaningful element (therefore @reader.read twice)
       @reader.read 
       @reader.read
+
       return tree
     end  
 
@@ -677,16 +702,27 @@ module PhyloXML
     end #parse_bc
 
     def parse_other
-      elem = @reader.name
-      result = []    
-
-      while not is_end_element?(elem) do
-        @reader.read
-        result << [@reader.name, @reader.value]
+      other_obj = PhyloXML::Other.new
+      other_obj.element_name = @reader.name
+      #parse attributes
+      code = @reader.move_to_first_attribute
+      while code ==1
+        other_obj.attributes[@reader.name] = @reader.value
+        code = @reader.move_to_next_attribute        
       end
-      has_reached_end_element?(elem)
-      return result
-    end
+
+      while not is_end_element?(other_obj.element_name) do
+        @reader.read
+        if @reader.node_type == XML::Reader::TYPE_ELEMENT
+           other_obj.children << parse_other #recursice call to parse children
+        elsif @reader.node_type == XML::Reader::TYPE_TEXT
+          other_obj.value = @reader.value
+        end
+      end
+      #just a check
+      has_reached_end_element?(other_obj.element_name)
+      return other_obj
+    end #parse_other
 
   end #class phyloxmlParser
 
