@@ -650,6 +650,24 @@ module PhyloXML
         @blue = str.to_i
       end
 
+      def to_xml
+        #@todo add unit test
+        if @red == nil
+          raise "Subelement red of BranchColor element should not be nil"
+        elsif @green == nil
+          raise "Subelement green of BranchColor element should not be nil"
+        elsif @blue == nil
+          raise "Subelement blue of BranchColor element should not be nil"
+        end
+
+        c = XML::Node.new('branch_color')
+        PhyloXML::generate_xml(c, self, [
+            [:simple, 'red', @red],
+            [:simple, 'green', @green],
+            [:simple, 'blue', @blue]])
+        return c
+      end
+
       #@todo maybe should be part of Bio::Tree::Edge
     end
 
@@ -1003,6 +1021,18 @@ module PhyloXML
       def initialize
         @children = []
         @attributes = Hash.new
+      end
+
+      def to_xml
+        o = XML::Node.new(@element_name)
+        @attributes.each do |key, value|
+          o[key] = value
+        end
+        o << value if value != nil
+        children.each do |child_node|
+          o << child_node.to_xml
+        end
+        return o
       end
       
     end

@@ -55,6 +55,7 @@ module Bio
 
 
     class Writer
+      #require 'xml/encoding'
       
       attr_accessor :write_branch_length_as_subelement
       
@@ -68,8 +69,9 @@ module Bio
       @root['xmlns:xsi'] = 'http://www.w3.org/2001/XMLSchema-instance'
       @root['xsi:schemaLocation'] = 'http://www.phyloxml.org http://www.phyloxml.org/1.00/phyloxml.xsd'
       @root['xmlns'] = 'http://www.phyloxml.org'
-      #@root <<  = XML::Node.new('clade')
-      @doc.save(@filename, @indent)
+      #puts XML::LIBXML_VERSION
+      #@doc.encoding = XML::Encoding::UTF_8
+      @doc.save(@filename, true)
       end
 
       def write(tree)
@@ -112,6 +114,12 @@ module Bio
         return clade
       end
 
+      def write_other(other_arr)
+        other_arr.each do |other_obj|
+          @root << other_obj.to_xml
+        end
+        @doc.save(@filename, @indent)
+      end
 
     end
 

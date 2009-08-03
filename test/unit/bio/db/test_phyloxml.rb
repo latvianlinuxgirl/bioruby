@@ -30,11 +30,11 @@ module Bio
   PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
 
   def self.example_xml
-    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples_test.xml'
+    File.join PHYLOXML_TEST_DATA, 'phyloxml_example_test2.xml'
   end
 
   def self.made_up_xml
-    File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
+    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
   end
 
   def self.metazoa_xml
@@ -545,6 +545,20 @@ end #end module TestPhyloXMLData
         count +=1
       end
       assert_equal(count, 13)
+    end
+
+    def test_other
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
+      assert_equal(phyloxml.other[0], nil)
+      phyloxml.each do |tree|
+        #iterate through all trees, to get to the end
+      end
+      o = phyloxml.other[0]
+      assert_equal(o.element_name, 'align:alignment')
+      assert_equal(o.children[0].element_name, 'seq')
+      assert_equal(o.children[1].value, 'aggtcgcggcctgtggaagtcctctcct')
+      assert_equal(o.children[2].attributes["name"], "C")
+
     end
 
 #    def test_get_tree_by_name

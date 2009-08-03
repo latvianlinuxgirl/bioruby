@@ -217,13 +217,14 @@ module Bio
 
     def test_phyloxml_examples_file
       phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
-      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.example_xml_test)
+      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.file("phyloxml_example_test2.xml"))
       phyloxml.each do |tree|
         writer.write(tree)
       end
+      writer.write_other(phyloxml.other)
 
       assert_nothing_thrown do
-        Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml_test)
+        Bio::PhyloXML::Parser.new(TestPhyloXMLData.file("phyloxml_example_test2.xml"))
       end
     end
 
