@@ -30,11 +30,11 @@ module Bio
   PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
 
   def self.example_xml
-    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples.xml'
+    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples_test.xml'
   end
 
   def self.made_up_xml
-    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
+    File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
   end
 
   def self.metazoa_xml

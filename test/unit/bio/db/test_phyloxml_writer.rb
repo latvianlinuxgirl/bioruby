@@ -27,58 +27,22 @@ module Bio
   module TestPhyloXMLData
 
   bioruby_root  = Pathname.new(File.join(File.dirname(__FILE__), ['..'] * 4)).cleanpath.to_s
-  PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
+  PHYLOXML_WRITER_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
 
+  def self.file(f)
+    File.join PHYLOXML_WRITER_TEST_DATA, f
+  end
+    
   def self.example_xml
-    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples.xml'
-  end
-
-  def self.made_up_xml
-    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
-  end
-
-  def self.metazoa_xml
-    File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_metazoa.xml'
-  end
-
-  def self.mollusca_xml
-    File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca.xml'
-  end
-
-  def self.life_xml
-    File.join PHYLOXML_TEST_DATA, 'tol_life_on_earth_1.xml'
-  end
-
-  def self.dollo_xml
-    File.join PHYLOXML_TEST_DATA, 'o_tol_332_d_dollo.xml'
-  end
-
-  def self.test_xml
-    File.join PHYLOXML_TEST_DATA, 'test.xml'
-  end
-
-  def self.test2_xml
-    File.join PHYLOXML_TEST_DATA, 'test2.xml'
+    File.join PHYLOXML_WRITER_TEST_DATA, 'phyloxml_examples.xml'
   end
 
   def self.mollusca_short_xml
-    File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca_short.xml'
-  end
-
-  def self.sample_xml
-    File.join PHYLOXML_TEST_DATA, 'sample.xml'
-  end
-
-  def self.example_tree4_xml
-    File.join PHYLOXML_TEST_DATA, 'example_tree4.xml'
+    File.join PHYLOXML_WRITER_TEST_DATA, 'ncbi_taxonomy_mollusca_short.xml'
   end
 
   def self.example_xml_test
-    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples_test.xml'
-  end
-
-  def self.made_up_xml_test
-     File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
+    File.join PHYLOXML_WRITER_TEST_DATA, 'phyloxml_examples_test.xml'
   end
 
   end #end module TestPhyloXMLData
@@ -87,23 +51,23 @@ module Bio
 
     def test_write
       tree = Bio::PhyloXML::Tree.new
-      tree.write(TestPhyloXMLData.test_xml)
+      tree.write(TestPhyloXMLData.file('test.xml'))
     end
 
     def test_init
-      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.test2_xml)
+      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.file("test2.xml"))
       
       tree = Bio::PhyloXML::Parser.new(TestPhyloXMLData.mollusca_short_xml).next_tree
       
       writer.write(tree)
 
       assert_nothing_thrown do
-        Bio::PhyloXML::Parser.new(TestPhyloXMLData.test2_xml)
+        Bio::PhyloXML::Parser.new(TestPhyloXMLData.file("test2.xml"))
       end
     end
 
     def test_simple_xml
-      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.sample_xml)
+      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.file("sample.xml"))
       tree = Bio::PhyloXML::Tree.new
       tree.rooted = true
       tree.name = "Test tree"
@@ -119,7 +83,7 @@ module Bio
       tree.add_edge(root_node, node2)
       writer.write(tree)
       
-      lines = File.open(TestPhyloXMLData.sample_xml).readlines()
+      lines = File.open(TestPhyloXMLData.file("sample.xml")).readlines()
       assert_equal("<phyloxml xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.phyloxml.org http://www.phyloxml.org/1.00/phyloxml.xsd\" xmlns=\"http://www.phyloxml.org\">",
                     lines[1].chomp)
       assert_equal("  <phylogeny rooted=\"true\">", lines[2].chomp)
@@ -264,8 +228,8 @@ module Bio
     end
 
     def test_made_up_xml_file
-      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.made_up_xml)
-      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.made_up_xml_test)      
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.file("made_up.xml"))
+      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.file("made_up_test.xml"))
       phyloxml.each do |tree|
         writer.write(tree)
       end      

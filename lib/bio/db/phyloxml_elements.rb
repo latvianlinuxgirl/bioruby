@@ -813,6 +813,7 @@ module PhyloXML
       end
 
       def to_xml
+        #@todo  write unit test for this
         raise "ref is an required element of property"  if @ref.nil?
         raise "datatype is an required element of property" if @datatype.nil?
         raise "applies_to is an required element of property" if @applies_to.nil?
