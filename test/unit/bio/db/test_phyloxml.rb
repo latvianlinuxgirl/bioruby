@@ -199,6 +199,7 @@ end #end module TestPhyloXMLData
       end
       taxonomy = @tree.root.taxonomies[0]
       assert_equal(taxonomy.taxonomy_id.value, "8556")
+      assert_equal(taxonomy.taxonomy_id.provider, "NCBI")
       assert_equal(taxonomy.scientific_name, "Varanus")
       assert_equal(taxonomy.rank, "genus")
       assert_equal(taxonomy.uri.desc, "EMBL REPTILE DATABASE")
@@ -309,19 +310,18 @@ end #end module TestPhyloXMLData
        end
        date_a = @tree.get_node_by_name('A').date
        assert_equal(date_a.unit, 'mya')
-       assert_equal(date_a.range, 10)
        assert_equal(date_a.desc, "Silurian")
        assert_equal(date_a.value, 425)
        date_b = @tree.get_node_by_name('B').date
        assert_equal(date_b.unit, 'mya')
-       assert_equal(date_b.range, 20)
        assert_equal(date_b.desc, "Devonian")
        assert_equal(date_b.value, 320)
        date_c = @tree.get_node_by_name('C').date
        assert_equal(date_c.unit, 'mya')
-       assert_equal(date_c.range, 30)
        assert_equal(date_c.desc, 'Ediacaran')
        assert_equal(date_c.value, 600)
+       assert_equal(date_c.minimum, 570)
+       assert_equal(date_c.maximum, 630)
      end
 
      def test_property

@@ -6,13 +6,13 @@
 <!-- License: LGPL                                   -->
 <!-- Copyright (c) 2008-2009 Christian M Zmasek      -->
 <!-- www.phyloxml.org                                -->
-<!-- Version: 1.00                                   -->
-<!-- Last modified: 2008.04.18 by Christian M Zmasek -->
+<!-- Version: 1.10 BETA                              -->
+<!-- Last modified: 2009.07.15 by Christian M Zmasek -->
 <!--                                                 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:phy="http://www.phyloxml.org"
    targetNamespace="http://www.phyloxml.org" elementFormDefault="qualified" attributeFormDefault="unqualified">
    <xs:annotation>
-      <xs:documentation> phyloXML is an XML language to describe phylogenies and associated data. Version: 1.00.
+      <xs:documentation> phyloXML is an XML language to describe phylogenies and associated data. Version: 1.10 BETA.
          License: LGPL. Copyright (c) 2008-2009 Christian M Zmasek.</xs:documentation>
    </xs:annotation>
    <!-- phyloxml is the root element:-->
@@ -96,20 +96,22 @@
       <xs:annotation>
          <xs:documentation> Element Taxonomy is used to describe taxonomic information for a clade. Element 'code' is
             intended to store UniProt/Swiss-Prot style organism codes (e.g. 'APLCA' for the California sea hare 'Aplysia
-            californica'). Element 'id' is used for a unique identifier of a taxon (for example '6500' with
-            'ncbi_taxonomy' as 'type' for the California sea hare). Attribute 'id_source' is used to link other elements
-            to a taxonomy (on the xml-level).</xs:documentation>
+            californica') or other styles of mnemonics (e.g. 'Aca'). Element 'authority' is used to keep the authority,
+            such as 'J. G. Cooper, 1863', associated with the 'scientific_name'. Element 'id' is used for a unique
+            identifier of a taxon (for example '6500' with 'ncbi_taxonomy' as 'source' for the California sea hare).
+            Attribute 'id_source' is used to link other elements to a taxonomy (on the xml-level).</xs:documentation>
       </xs:annotation>
       <xs:sequence>
          <xs:element name="id" type="phy:Id" minOccurs="0"/>
          <xs:element name="code" type="phy:TaxonomyCode" minOccurs="0"/>
          <xs:element name="scientific_name" type="xs:token" minOccurs="0"/>
+         <xs:element name="authority" type="xs:token" minOccurs="0"/>
          <xs:element name="common_name" type="xs:token" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="synonym" type="xs:token" minOccurs="0" maxOccurs="unbounded"/>
          <xs:element name="rank" type="phy:Rank" minOccurs="0"/>
          <xs:element name="uri" type="phy:Uri" minOccurs="0"/>
          <xs:any minOccurs="0" maxOccurs="unbounded" processContents="lax" namespace="##other"/>
       </xs:sequence>
-      <xs:attribute name="type" type="xs:token"/>
       <xs:attribute name="id_source" type="phy:id_source"/>
    </xs:complexType>
    <xs:simpleType name="TaxonomyCode">
@@ -176,7 +178,7 @@
             with a node. 'symbol' is a short (maximal ten characters) symbol of the sequence (e.g. 'ACTM') whereas
             'name' is used for the full name (e.g. 'muscle Actin'). 'location' is used for the location of a sequence on
             a genome/chromosome. The actual sequence can be stored with the 'mol_seq' element. Attribute 'type' is used
-            to indicate the type of sequence ('dna', 'rna', or 'aa'). One intended use for 'id_ref' is to link a
+            to indicate the type of sequence ('dna', 'rna', or 'protein'). One intended use for 'id_ref' is to link a
             sequence to a taxonomy (via the taxonomy's 'id_source') in case of multiple sequences and taxonomies per
             node. </xs:documentation>
       </xs:annotation>
@@ -195,21 +197,34 @@
       <xs:attribute name="id_source" type="phy:id_source"/>
       <xs:attribute name="id_ref" type="phy:id_ref"/>
    </xs:complexType>
-   <xs:simpleType name="MolSeq">
-      <xs:restriction base="xs:token">
-         <xs:pattern value="[a-zA-Z\.\-\?\*_]+"/>
-      </xs:restriction>
-   </xs:simpleType>
    <xs:simpleType name="SequenceSymbol">
       <xs:restriction base="xs:token">
          <xs:pattern value="\S{1,10}"/>
+      </xs:restriction>
+   </xs:simpleType>
+   <xs:complexType name="MolSeq">
+      <xs:annotation>
+         <xs:documentation> Element 'mol_seq' is used to store molecular sequences. The 'is_aligned' attribute is used
+            to indicated that this molecular sequence is aligned with all other sequences in the same phylogeny for
+            which 'is aligned' is true as well (which, in most cases, means that gaps were introduced, and that all
+            sequences for which 'is aligned' is true must have the same length).</xs:documentation>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="phy:MolSeqChars">
+            <xs:attribute name="is_aligned" type="xs:boolean"/>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:simpleType name="MolSeqChars">
+      <xs:restriction base="xs:token">
+         <xs:pattern value="[a-zA-Z\.\-\?\*_]+"/>
       </xs:restriction>
    </xs:simpleType>
    <xs:simpleType name="SequenceType">
       <xs:restriction base="xs:token">
          <xs:enumeration value="rna"/>
          <xs:enumeration value="dna"/>
-         <xs:enumeration value="aa"/>
+         <xs:enumeration value="protein"/>
       </xs:restriction>
    </xs:simpleType>
    <!-- Accession:-->
@@ -432,12 +447,12 @@
    <!-- Identifier:-->
    <xs:complexType name="Id">
       <xs:annotation>
-         <xs:documentation> A general purpose identifier element. Allows to indicate the type (or source) of an
+         <xs:documentation> A general purpose identifier element. Allows to indicate the provider (or authority) of an
             identifier. </xs:documentation>
       </xs:annotation>
       <xs:simpleContent>
          <xs:extension base="xs:token">
-            <xs:attribute name="type" type="xs:token"/>
+            <xs:attribute name="provider" type="xs:token"/>
          </xs:extension>
       </xs:simpleContent>
    </xs:complexType>
@@ -458,8 +473,9 @@
    <xs:complexType name="Point">
       <xs:annotation>
          <xs:documentation> The coordinates of a point with an optional altitude (used by element 'Distribution').
-            Required attribute 'geodetic_datum' is used to indicate the geodetic datum (also called 'map datum'), for
-            example Google's KML uses 'WGS84'. </xs:documentation>
+            Required attributes are the 'geodetic_datum' used to indicate the geodetic datum (also called 'map datum',
+            for example Google's KML uses 'WGS84'). Attribute 'alt_unit' is the unit for the altitude (e.g. 'meter').
+         </xs:documentation>
       </xs:annotation>
       <xs:sequence>
          <xs:element name="lat" type="xs:decimal"/>
@@ -467,6 +483,7 @@
          <xs:element name="alt" type="xs:decimal" minOccurs="0"/>
       </xs:sequence>
       <xs:attribute name="geodetic_datum" type="xs:token" use="required"/>
+      <xs:attribute name="alt_unit" type="xs:token"/>
    </xs:complexType>
    <xs:complexType name="Polygon">
       <xs:annotation>
@@ -483,14 +500,16 @@
          <xs:documentation> A date associated with a clade/node. Its value can be numerical by using the 'value' element
             and/or free text with the 'desc' element' (e.g. 'Silurian'). If a numerical value is used, it is recommended
             to employ the 'unit' attribute to indicate the type of the numerical value (e.g. 'mya' for 'million years
-            ago'). </xs:documentation>
+            ago'). The elements 'minimum' and 'maximum' are used the indicate a range/confidence
+         interval</xs:documentation>
       </xs:annotation>
       <xs:sequence>
          <xs:element name="desc" type="xs:token" minOccurs="0"/>
          <xs:element name="value" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="minimum" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="maximum" type="xs:decimal" minOccurs="0"/>
       </xs:sequence>
       <xs:attribute name="unit" type="xs:token"/>
-      <xs:attribute name="range" type="xs:decimal"/>
    </xs:complexType>
    <!-- BranchColor:-->
    <xs:complexType name="BranchColor">

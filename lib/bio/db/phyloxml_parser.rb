@@ -431,7 +431,7 @@ module PhyloXML
 
       if is_element?('date')
         date = Date.new
-        parse_attributes(date, ["unit", "range"])
+        parse_attributes(date, ["unit"])
 
         #move to the next token, which is always empty, since date tag does not
         # have text associated with it
@@ -440,6 +440,8 @@ module PhyloXML
         while not(is_end_element?('date'))
           parse_simple_element(date, 'desc')
           parse_simple_element(date, 'value')
+          parse_simple_element(date, 'minimum')
+          parse_simple_element(date, 'maximum')
           @reader.read
         end
         current_node.date = date
@@ -645,7 +647,7 @@ module PhyloXML
 
     def parse_id(tag_name)
       id = Id.new
-      id.type = @reader["type"]
+      id.provider = @reader["provider"]
       @reader.read
       id.value = @reader.value
       @reader.read #@todo shouldn't there be another read?

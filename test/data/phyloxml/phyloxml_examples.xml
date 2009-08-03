@@ -153,7 +153,7 @@
          <clade>
             <clade>
                <taxonomy>
-                  <id type="NCBI">6645</id>
+                  <id provider="NCBI">6645</id>
                   <code>OCTVU</code>
                   <scientific_name>Octopus vulgaris</scientific_name>
                </taxonomy>
@@ -161,14 +161,14 @@
                   <symbol>ADHX</symbol>
                   <accession source="UniProtKB">P81431</accession>
                   <name>Alcohol dehydrogenase class-3</name>
-                  <mol_seq>TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD</mol_seq>
+                  <mol_seq is_aligned="true">TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD</mol_seq>
                   <annotation ref="EC:1.1.1.1"/>
                   <annotation ref="GO:0004022"/>
                </sequence>
             </clade>
             <clade>
                <taxonomy>
-                  <id type="NCBI">44689</id>
+                  <id provider="NCBI">44689</id>
                   <code>DICDI</code>
                   <scientific_name>Dictyostelium discoideum</scientific_name>
                </taxonomy>
@@ -176,7 +176,7 @@
                   <symbol>RT4I1</symbol>
                   <accession source="UniProtKB">Q54II4</accession>
                   <name>Reticulon-4-interacting protein 1 homolog, mitochondrial precursor</name>
-                  <mol_seq>MKGILLNGYGESLDLLEYKTDLPVPKPIKSQVLIKIHSTSINPLDNVMRK</mol_seq>
+                  <mol_seq is_aligned="true">MKGILLNGYGESLDLLEYKTDLPVPKPIKSQVLIKIHSTSINPLDNVMRK</mol_seq>
                   <annotation ref="GO:0008270"/>
                   <annotation ref="GO:0016491"/>
                </sequence>
@@ -184,7 +184,7 @@
          </clade>
          <clade>
             <taxonomy>
-               <id type="NCBI">1488</id>
+               <id provider="NCBI">1488</id>
                <code>CLOAB</code>
                <scientific_name>Clostridium acetobutylicum</scientific_name>
             </taxonomy>
@@ -192,7 +192,7 @@
                <symbol>ADHB</symbol>
                <accession source="UniProtKB">Q04945</accession>
                <name>NADH-dependent butanol dehydrogenase B</name>
-               <mol_seq>MVDFEYSIPTRIFFGKDKINVLGRELKKYGSKVLIVYGGGSIKRNGIYDK</mol_seq>
+               <mol_seq is_aligned="true">MVDFEYSIPTRIFFGKDKINVLGRELKKYGSKVLIVYGGGSIKRNGIYDK</mol_seq>
                <annotation ref="GO:0046872"/>
                <annotation ref="KEGG:Tetrachloroethene degradation"/>
             </sequence>
@@ -263,14 +263,14 @@
       <description>a pylogeny of some monitor lizards</description>
       <clade>
          <taxonomy>
-            <id type="NCBI">8556</id>
+            <id provider="NCBI">8556</id>
             <scientific_name>Varanus</scientific_name>
             <rank>genus</rank>
             <uri desc="EMBL REPTILE DATABASE">http://www.embl-heidelberg.de/~uetz/families/Varanidae.html</uri>
          </taxonomy>
          <clade>
             <taxonomy>
-               <id type="NCBI">62046</id>
+               <id provider="NCBI">62046</id>
                <scientific_name>Varanus niloticus</scientific_name>
                <common_name>Nile monitor</common_name>
                <rank>species</rank>
@@ -286,7 +286,7 @@
             </taxonomy>
             <clade>
                <taxonomy>
-                  <id type="NCBI">169855</id>
+                  <id provider="NCBI">169855</id>
                   <scientific_name>Varanus storri</scientific_name>
                   <common_name>Storr's monitor</common_name>
                   <rank>species</rank>
@@ -297,7 +297,7 @@
             </clade>
             <clade>
                <taxonomy>
-                  <id type="NCBI">62053</id>
+                  <id provider="NCBI">62053</id>
                   <scientific_name>Varanus timorensis</scientific_name>
                   <common_name>Timor monitor</common_name>
                   <rank>species</rank>
@@ -366,14 +366,14 @@
          <clade>
             <clade>
                <name>A</name>
-               <date unit="mya" range="10">
+               <date unit="mya">
                   <desc>Silurian</desc>
                   <value>425</value>
                </date>
             </clade>
             <clade>
                <name>B</name>
-               <date unit="mya" range="20">
+               <date unit="mya">
                   <desc>Devonian</desc>
                   <value>320</value>
                </date>
@@ -381,9 +381,11 @@
          </clade>
          <clade>
             <name>C</name>
-            <date unit="mya" range="30">
+            <date unit="mya">
                <desc>Ediacaran</desc>
                <value>600</value>
+               <minimum>570</minimum>
+               <maximum>630</maximum>
             </date>
          </clade>
       </clade>

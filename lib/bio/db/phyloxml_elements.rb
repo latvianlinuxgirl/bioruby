@@ -450,6 +450,14 @@ module PhyloXML
       attr_accessor :location
       # String. The actual sequence is stored here.
       attr_accessor :mol_seq
+
+      # Boolean. used to indicated that this molecular sequence is aligned with
+      # all other sequences in the same phylogeny for which 'is aligned' is true
+      # as well (which, in most cases, means that gaps were introduced, and that
+      # all sequences for which 'is aligned' is true must have the same length)
+      attr_accessor :is_aligned
+      #@todo add support for is_aligned
+
       # Uri object
       attr_accessor :uri
       # Array of Annotation objects. Annotations of molecular sequence.
@@ -465,7 +473,7 @@ module PhyloXML
         
         seq = XML::Node.new('sequence')
         if @type != nil
-          if ["dna", "rna", "a"].include?(@type)
+          if ["dna", "rna", "protein"].include?(@type)
             seq["type"] = @type
           else 
             raise "Type attribute of Sequence has to be one of dna, rna or a."
@@ -609,11 +617,11 @@ module PhyloXML
     end
 
     class Id
-      attr_accessor :type, :value
+      attr_accessor :provider, :value
 
       def to_xml
         xml_node = XML::Node.new('id', @value)
-        xml_node["type"] = @type if @type != nil
+        xml_node["provider"] = @provider if @provider != nil
         return xml_node
       end
     end
@@ -668,14 +676,18 @@ module PhyloXML
     class Date
       attr_accessor :unit,  :desc
 
-      # Integer. Allowed range of the value.
-      attr_reader :range
+      # Integer. Minimum and maximum of the value.
+      attr_reader :minimum, :maximum
 
       # Integer. Value of the date.
       attr_reader :value
 
-      def range=(str)
-        @range = str.to_i
+      def minimum=(str)
+        @minimum = str.to_i
+      end
+
+      def maximum=(str)
+        @maximum = str.to_i
       end
 
       def value= (str)
@@ -691,9 +703,10 @@ module PhyloXML
         date = XML::Node.new('date')
         PhyloXML::Writer.generate_xml(date, self, [
             [:attr, 'unit'],
-            [:attr, 'range'],
             [:simple, 'desc', @desc],
-            [:simple, 'value', @value]])
+            [:simple, 'value', @value],
+            [:simple, 'minimum', @minimum],
+            [:simple, 'maximum', @maximum]])
         return date
       end
 
