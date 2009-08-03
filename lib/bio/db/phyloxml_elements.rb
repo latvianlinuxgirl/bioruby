@@ -59,7 +59,7 @@ module PhyloXML
       taxonomy["type"] = @type if @type != nil
       taxonomy["id_source"] = @id_source if @id_source != nil
 
-      PhyloXML.generate_xml(taxonomy, self, [[:complex, 'id', @taxonomy_id],
+      PhyloXML::Writer.generate_xml(taxonomy, self, [[:complex, 'id', @taxonomy_id],
         [:pattern, 'code', @code, Regexp.new("^[a-zA-Z0-9_]{2,10}$")],
         [:simple, 'scientific_name', @scientific_name],
         [:simplearr, 'common_name', @common_names],
@@ -229,7 +229,7 @@ module PhyloXML
       #@todo add rest of the clade attributes
 
       #generate all elements, except clade
-      PhyloXML::generate_xml(clade, self, [
+      PhyloXML::Writer.generate_xml(clade, self, [
           [:objarr, 'confidence', 'confidences'],
           [:simple, 'width', @width],
           #color
@@ -294,7 +294,7 @@ module PhyloXML
       #@todo add unit test
       #puts "events", @speciations
       events = XML::Node.new('events')
-      PhyloXML::generate_xml(events, self, [
+      PhyloXML::Writer.generate_xml(events, self, [
         [:simple, 'type', @type],
         [:simple, 'duplications', @duplications],
         [:simple, 'speciations', @speciations],
@@ -349,7 +349,7 @@ module PhyloXML
 
       def to_xml
         distr = XML::Node.new('distribution')
-        PhyloXML::generate_xml(distr, self, [
+        PhyloXML::Writer.generate_xml(distr, self, [
             [:simple, 'desc', @desc],
             [:objarr, 'point', 'points'],
             [:objarr, 'polygon', 'polygons']])
@@ -395,7 +395,7 @@ module PhyloXML
 
         p = XML::Node.new('point')
         p["geodetic_datum"] = @geodetic_datum
-        PhyloXML::generate_xml(p, self, [
+        PhyloXML::Writer.generate_xml(p, self, [
             [:simple, 'lat', @lat],
             [:simple, 'long', @long],
             [:simple, 'alt', @alt]])
@@ -478,7 +478,7 @@ module PhyloXML
         seq["id_source"] = @id_source if @id_source != nil
         seq["id_ref"] = @id_ref if @id_ref != nil
 
-        PhyloXML::generate_xml(seq, self, [
+        PhyloXML::Writer.generate_xml(seq, self, [
             [:pattern, 'symbol', @symbol, Regexp.new("^\\S{1,10}$")],
             [:complex, 'accession', @accession],
             [:simple, 'name', @name],
@@ -605,7 +605,7 @@ module PhyloXML
         #@todo add uni test. Specifically test property. Add Annotation->property for made_up xml
         annot = XML::Node.new('annotation')
         annot["ref"] = @ref if @ref != nil
-        PhyloXML::generate_xml(annot, self, [[:simple, 'desc', @desc],
+        PhyloXML::Writer.generate_xml(annot, self, [[:simple, 'desc', @desc],
           [:complex, 'confidence', @confidence],
           [:objarr, 'property', 'properties'],
           [:complex, 'uri', @uri]])
@@ -661,7 +661,7 @@ module PhyloXML
         end
 
         c = XML::Node.new('branch_color')
-        PhyloXML::generate_xml(c, self, [
+        PhyloXML::Writer.generate_xml(c, self, [
             [:simple, 'red', @red],
             [:simple, 'green', @green],
             [:simple, 'blue', @blue]])
@@ -703,7 +703,7 @@ module PhyloXML
         date = XML::Node.new('date')
         date["unit"] = @unit unless @unit.nil?
         date["range"] = @range.to_s unless @range.nil?
-        PhyloXML::generate_xml(date, self, [
+        PhyloXML::Writer.generate_xml(date, self, [
             [:simple, 'desc', @desc],
             [:simple, 'value', @value]])
         return date
@@ -734,7 +734,7 @@ module PhyloXML
         xml_node['length'] = @length.to_s if @length != nil
         #attribute length
         #domain, required
-        PhyloXML::generate_xml(xml_node, self,[[:objarr, 'domain', 'domains']])
+        PhyloXML::Writer.generate_xml(xml_node, self,[[:objarr, 'domain', 'domains']])
         return xml_node
       end
     end
@@ -936,7 +936,7 @@ module PhyloXML
       def to_xml
         bc = XML::Node.new('binary_characters')
         bc['type'] = @bc_type
-        PhyloXML::generate_xml(bc, self, [
+        PhyloXML::Writer.generate_xml(bc, self, [
             [:attr, 'gained_count'],
             [:attr, 'lost_count'],
             [:attr, 'present_count'],
@@ -944,25 +944,25 @@ module PhyloXML
 
         if not @gained.empty?
           gained_xml = XML::Node.new('gained')
-          PhyloXML::generate_xml(gained_xml, self, [[:simplearr, 'bc', @gained]])
+          PhyloXML::Writer.generate_xml(gained_xml, self, [[:simplearr, 'bc', @gained]])
           bc << gained_xml
         end
 
         if not @lost.empty?
           lost_xml = XML::Node.new('lost')
-          PhyloXML::generate_xml(lost_xml, self, [[:simplearr, 'bc', @lost]])
+          PhyloXML::Writer.generate_xml(lost_xml, self, [[:simplearr, 'bc', @lost]])
           bc << lost_xml
         end
 
         if not @present.empty?
           present_xml = XML::Node.new('present')
-          PhyloXML::generate_xml(present_xml, self, [[:simplearr, 'bc', @present]])
+          PhyloXML::Writer.generate_xml(present_xml, self, [[:simplearr, 'bc', @present]])
           bc << present_xml
         end
 
         if not @absent.empty?
           absent_xml = XML::Node.new('absent')
-          PhyloXML::generate_xml(absent_xml, self, [[:simplearr, 'bc', @absent]])
+          PhyloXML::Writer.generate_xml(absent_xml, self, [[:simplearr, 'bc', @absent]])
           bc << absent_xml
         end
 

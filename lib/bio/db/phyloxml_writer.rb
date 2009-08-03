@@ -2,7 +2,78 @@ module Bio
 
   module PhyloXML
 
-    def self.generate_xml(root, elem, subelement_array)
+    
+
+    class Writer
+      #require 'xml/encoding'
+      
+      attr_accessor :write_branch_length_as_subelement
+      
+      def initialize(filename, indent=true)
+      @write_branch_length_as_subelement = true #default value
+      @filename = filename
+      @indent = indent
+      @doc = XML::Document.new()
+      @doc.root = XML::Node.new('phyloxml')
+      @root = @doc.root
+      @root['xmlns:xsi'] = 'http://www.w3.org/2001/XMLSchema-instance'
+      @root['xsi:schemaLocation'] = 'http://www.phyloxml.org http://www.phyloxml.org/1.00/phyloxml.xsd'
+      @root['xmlns'] = 'http://www.phyloxml.org'
+      #puts XML::LIBXML_VERSION
+      #@doc.encoding = XML::Encoding::UTF_8
+      @doc.save(@filename, true)
+      end
+
+      def write(tree)
+        @root << phylogeny = XML::Node.new('phylogeny')        
+        
+        PhyloXML::Writer.generate_xml(phylogeny, tree, [
+            [:attr, 'rooted'],
+            [:simple, 'name', tree.name],
+            [:complex, 'id', tree.phylogeny_id],
+            [:simple, 'description', tree.description],
+            #@todo date xs:dateTime
+            [:objarr, 'confidence', 'confidences']])
+
+        root_clade = tree.root.to_xml(nil, @write_branch_length_as_subelement)
+        phylogeny << root_clade 
+
+        tree.children(tree.root).each do |node|
+          root_clade << node_to_xml(tree, node, tree.root)
+        end
+
+        Bio::PhyloXML::Writer::generate_xml(phylogeny, tree, [
+            [:objarr, 'clade_relation', 'clade_relations'],
+            [:objarr, 'sequence_relation', 'sequence_relations'],
+            [:objarr, 'property', 'properties']] )
+
+        @doc.save(@filename, @indent)
+      end
+
+      def node_to_xml(tree, node, parent)
+        edge = tree.get_edge(parent, node)
+        branch_length = edge.distance
+     
+     
+        clade = node.to_xml(branch_length, @write_branch_length_as_subelement)
+
+        tree.children(node).each do |new_node|        
+          clade << node_to_xml(tree, new_node, node)
+        end
+       
+        return clade
+      end
+
+      def write_other(other_arr)
+        other_arr.each do |other_obj|
+          @root << other_obj.to_xml
+        end
+        @doc.save(@filename, @indent)
+      end
+
+      #class method
+
+      def self.generate_xml(root, elem, subelement_array)
             #[[ :complex,'accession', ], [:simple, 'name',  @name], [:simple, 'location', @location]])
       subelement_array.each do |subelem|
         if subelem[0] == :simple
@@ -43,83 +114,8 @@ module Bio
           raise "Not supported type of element by method generate_xml."
         end
       end
-
-
-  #      # seq << XML::Node.new('name', @name) if @name != nil
-  #      # seq << @accession.to_xml if @accession != nil
-  #
-  #        seq << XML::Node.new('location', @location) if @location != nil
-  #
      end
 
-
-
-    class Writer
-      #require 'xml/encoding'
-      
-      attr_accessor :write_branch_length_as_subelement
-      
-      def initialize(filename, indent=true)
-      @write_branch_length_as_subelement = true #default value
-      @filename = filename
-      @indent = indent
-      @doc = XML::Document.new()
-      @doc.root = XML::Node.new('phyloxml')
-      @root = @doc.root
-      @root['xmlns:xsi'] = 'http://www.w3.org/2001/XMLSchema-instance'
-      @root['xsi:schemaLocation'] = 'http://www.phyloxml.org http://www.phyloxml.org/1.00/phyloxml.xsd'
-      @root['xmlns'] = 'http://www.phyloxml.org'
-      #puts XML::LIBXML_VERSION
-      #@doc.encoding = XML::Encoding::UTF_8
-      @doc.save(@filename, true)
-      end
-
-      def write(tree)
-        @root << phylogeny = XML::Node.new('phylogeny')        
-        
-        Bio::PhyloXML.generate_xml(phylogeny, tree, [
-            [:attr, 'rooted'],
-            [:simple, 'name', tree.name],
-            [:complex, 'id', tree.phylogeny_id],
-            [:simple, 'description', tree.description],
-            #@todo date xs:dateTime
-            [:objarr, 'confidence', 'confidences']])
-
-        root_clade = tree.root.to_xml(nil, @write_branch_length_as_subelement)
-        phylogeny << root_clade 
-
-        tree.children(tree.root).each do |node|
-          root_clade << node_to_xml(tree, node, tree.root)
-        end
-
-        Bio::PhyloXML.generate_xml(phylogeny, tree, [
-            [:objarr, 'clade_relation', 'clade_relations'],
-            [:objarr, 'sequence_relation', 'sequence_relations'],
-            [:objarr, 'property', 'properties']] )
-
-        @doc.save(@filename, @indent)
-      end
-
-      def node_to_xml(tree, node, parent)
-        edge = tree.get_edge(parent, node)
-        branch_length = edge.distance
-     
-     
-        clade = node.to_xml(branch_length, @write_branch_length_as_subelement)
-
-        tree.children(node).each do |new_node|        
-          clade << node_to_xml(tree, new_node, node)
-        end
-       
-        return clade
-      end
-
-      def write_other(other_arr)
-        other_arr.each do |other_obj|
-          @root << other_obj.to_xml
-        end
-        @doc.save(@filename, @indent)
-      end
 
     end
 
