@@ -49,10 +49,11 @@ module Bio
 
   class TestPhyloXMLWriter < Test::Unit::TestCase
 
-    def test_write
-      tree = Bio::PhyloXML::Tree.new
-      tree.write(TestPhyloXMLData.file('test.xml'))
-    end
+#    def test_write
+#       # @todo this is test for Tree.write
+#      tree = Bio::PhyloXML::Tree.new
+#      tree.write(TestPhyloXMLData.file('test.xml'))
+#    end
 
     def test_init
       writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.file("test2.xml"))

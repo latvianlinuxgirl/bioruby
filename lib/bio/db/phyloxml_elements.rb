@@ -213,9 +213,8 @@ module PhyloXML
 
     def to_xml(branch_length,  write_branch_length_as_subelement)
       clade = XML::Node.new('clade')
-      clade << XML::Node.new('name', @name) if @name != nil
-
-      #PhyloXML::generate_xml(clade, self, [[:complex, 'confidence', @confidence]        ])
+      
+      PhyloXML::Writer.generate_xml(clade, self, [[:simple, 'name', @name]])
 
       if branch_length != nil       
         if write_branch_length_as_subelement
@@ -225,22 +224,19 @@ module PhyloXML
         end
       end
 
-      clade["id_source"] = @id_source if @id_source != nil
-      #@todo add rest of the clade attributes
-
       #generate all elements, except clade
       PhyloXML::Writer.generate_xml(clade, self, [
+          [:attr, "id_source"],
           [:objarr, 'confidence', 'confidences'],
           [:simple, 'width', @width],
-          #color
+          [:complex, 'branch_color', @branch_color],
           [:simple, 'node_id', @node_id],
           [:objarr, 'taxonomy', 'taxonomies'],
           [:objarr, 'sequence', 'sequences'],
           [:complex, 'events', @events],
           [:complex, 'binary_characters', @binary_characters],          
           [:objarr, 'distribution', 'distributions'],
-          [:complex, 'date', @date],
-          #reference
+          [:complex, 'date', @date],          
           [:objarr, 'reference', 'references'],
           [:objarr, 'propery', 'properties']])
      
@@ -292,7 +288,6 @@ module PhyloXML
 
     def to_xml
       #@todo add unit test
-      #puts "events", @speciations
       events = XML::Node.new('events')
       PhyloXML::Writer.generate_xml(events, self, [
         [:simple, 'type', @type],
@@ -322,12 +317,10 @@ module PhyloXML
           raise "Type is a required attribute for confidence."
         else
           confidence = XML::Node.new('confidence', @value.to_f)
-          confidence["type"] = @type
-          
+          confidence["type"] = @type          
           return confidence
         end
       end
-
     end
 
     # == Description
@@ -347,6 +340,7 @@ module PhyloXML
         @polygons = []
       end
 
+
       def to_xml
         distr = XML::Node.new('distribution')
         PhyloXML::Writer.generate_xml(distr, self, [
@@ -355,8 +349,7 @@ module PhyloXML
             [:objarr, 'polygon', 'polygons']])
         return distr
       end
-
-
+      
     end #Distribution class
 
 
@@ -390,6 +383,7 @@ module PhyloXML
         @alt = str.to_f unless str.nil?
       end
 
+
       def to_xml
         raise "Geodedic datum is a required attribute of Point element." if @geodetic_datum.nil?
 
@@ -416,6 +410,7 @@ module PhyloXML
       def initialize
         @points = []
       end
+
 
       def to_xml
         if @points.length > 2          
@@ -467,18 +462,19 @@ module PhyloXML
       end
 
       def to_xml
-        #simple attributes
-        #attributes with restricted values
-        #simple elements, creating new elem.
-        #complex elements, calling to_xml method on it.
-
+        
         seq = XML::Node.new('sequence')
-        seq["type"] = @type if @type != nil and ["dna", "rna", "a"].include?(@type)
-        #@todo should check if there exists node with id as id_source and id_ref
-        seq["id_source"] = @id_source if @id_source != nil
-        seq["id_ref"] = @id_ref if @id_ref != nil
-
+        if @type != nil
+          if ["dna", "rna", "a"].include?(@type)
+            seq["type"] = @type
+          else 
+            raise "Type attribute of Sequence has to be one of dna, rna or a."
+          end
+        end
+        
         PhyloXML::Writer.generate_xml(seq, self, [
+            [:attr, 'id_source'],
+            [:attr, 'id_ref'],
             [:pattern, 'symbol', @symbol, Regexp.new("^\\S{1,10}$")],
             [:complex, 'accession', @accession],
             [:simple, 'name', @name],
@@ -488,7 +484,6 @@ module PhyloXML
             [:objarr, 'annotation', 'annotations'],
             [:complex, 'domain_architecture', @domain_architecture]])
             #@todo test domain_architecture
-
         #any
         return seq
       end
@@ -558,12 +553,12 @@ module PhyloXML
       # String. URL of the resource.
       attr_accessor :uri #@todo call it url?
 
-      def to_xml
-        #@todo refactor this method
+      def to_xml        
         if @uri != nil
           xml_node = XML::Node.new('uri', @uri)
-          xml_node["desc"] = @desc if @desc != nil
-          xml_node ["type"] = @type if @type != nil
+          Writer.generate_xml(xml_node, self, [
+            [:attr, 'desc'],
+            [:attr, 'type']])
           return xml_node
         end
       end
@@ -609,13 +604,6 @@ module PhyloXML
           [:complex, 'confidence', @confidence],
           [:objarr, 'property', 'properties'],
           [:complex, 'uri', @uri]])
-
-#        @properties.each do |property|
-#          annot << property.to_xml
-#        end
-#
-#        PhyloXML::generate_xml(annot, self, [[:complex, 'uri', @uri]])
-
         return annot
       end
     end
@@ -701,9 +689,9 @@ module PhyloXML
 
       def to_xml
         date = XML::Node.new('date')
-        date["unit"] = @unit unless @unit.nil?
-        date["range"] = @range.to_s unless @range.nil?
         PhyloXML::Writer.generate_xml(date, self, [
+            [:attr, 'unit'],
+            [:attr, 'range'],
             [:simple, 'desc', @desc],
             [:simple, 'value', @value]])
         return date
@@ -731,10 +719,9 @@ module PhyloXML
 
       def to_xml
         xml_node = XML::Node.new('domain_architecture')
-        xml_node['length'] = @length.to_s if @length != nil
-        #attribute length
-        #domain, required
-        PhyloXML::Writer.generate_xml(xml_node, self,[[:objarr, 'domain', 'domains']])
+        PhyloXML::Writer.generate_xml(xml_node, self,[
+              [:attr, 'length'],
+              [:objarr, 'domain', 'domains']])
         return xml_node
       end
     end
@@ -780,6 +767,7 @@ module PhyloXML
           xml_node["id"] = @id if @id != nil
           #@todo can't call it @id, gives error TypeError: wrong argument type nil (expected String)
 
+          #@todo add unit test for ProteinDomain # id
           xml_node["confidence"] = @confidence.to_s
 
           return xml_node
@@ -837,12 +825,13 @@ module PhyloXML
         raise "applies_to is an required element of property" if @applies_to.nil?
 
         property = XML::Node.new('property')
-        property["ref"] = @ref
-        property["unit"] = @unit if @unit != nil
-        property["datatype"] = @datatype
-        property["applies_to"] = @applies_to
-        property["id_ref"] = @id_ref if @id_ref != nil
-        #@todo check if id_ref forms pattern
+        Writer.generate_xml(property, self, [
+            [:attr, 'ref'],
+            [:attr, 'unit'],
+            [:attr, 'datatype'],
+            [:attr, 'applies_to'],
+            [:attr, 'id_ref']])
+
         property << @value if @value != nil
         return property
       end
@@ -860,9 +849,10 @@ module PhyloXML
 
       def to_xml
         ref = XML::Node.new('reference')
-        ref << XML::Node.new('desc', @desc) if @desc != nil
-        ref["doi"] = @doi  if @doi != nil
-        return ref
+        Writer.generate_xml(ref, self, [
+              [:attr, 'doi'],
+              [:simple, 'desc', @desc]])
+         return ref
       end
 
     end
@@ -890,11 +880,12 @@ module PhyloXML
           raise "Attributes id_ref_0, id_ref_1, type are required elements by SequenceRelation element."
         else
           cr = XML::Node.new('clade_relation')
-          cr['id_ref_0'] = @id_ref_0
-          cr['id_ref_1'] = @id_ref_1
-          cr['distance'] = @distance.to_s if @distance != nil
-          cr['type'] = @type
-          cr << @confidence.to_xml unless @confidence.nil?
+          Writer.generate_xml(cr, self, [
+              [:attr, 'id_ref_0'],
+              [:attr, 'id_ref_1'],
+              [:attr, 'distance'],
+              [:attr, 'type'],
+              [:complex, 'confidence', @confidnece]])         
 
           return cr
         end
