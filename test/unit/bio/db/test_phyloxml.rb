@@ -490,6 +490,7 @@ end #end module TestPhyloXMLData
       assert_equal(domain_arch.domains[0].to, 90)
       assert_in_delta(domain_arch.domains[0].confidence, 7.0E-26, 1E-26)
       assert_equal(domain_arch.domains[0].value, "CARD")
+      assert_equal(domain_arch.domains[0].id, "x")
       assert_equal(domain_arch.domains[5].from, 733)
       assert_equal(domain_arch.domains[5].to, 771)
       assert_in_delta(domain_arch.domains[5].confidence, 4.7E-14, 1E-15)

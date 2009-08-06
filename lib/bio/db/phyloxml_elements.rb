@@ -817,9 +817,6 @@ module PhyloXML
           xml_node["from"] = @from.to_s
           xml_node["to"] = @to.to_s
           xml_node["id"] = @id if @id != nil
-          #@todo can't call it @id, gives error TypeError: wrong argument type nil (expected String)
-
-          #@todo add unit test for ProteinDomain # id
           xml_node["confidence"] = @confidence.to_s
 
           return xml_node

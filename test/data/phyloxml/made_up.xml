@@ -92,7 +92,7 @@
             </taxonomy>
             <sequence>
                <domain_architecture length="1249">
-                  <domain from="6" to="90" confidence="7.0E-26">CARD</domain>
+                  <domain from="6" to="90" confidence="7.0E-26" id="x">CARD</domain>
                   <domain from="109" to="414" confidence="7.2E-117">NB-ARC</domain>
                   <domain from="605" to="643" confidence="2.4E-6">WD40</domain>
                   <domain from="647" to="685" confidence="1.1E-12">WD40</domain>
