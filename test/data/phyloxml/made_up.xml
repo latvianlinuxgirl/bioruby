@@ -87,6 +87,8 @@
             <branch_length>0.05998</branch_length>
             <taxonomy>
                <code>MOUSE</code>
+               <synonym>murine</synonym>
+               <synonym>vermin</synonym>
             </taxonomy>
             <sequence>
                <domain_architecture length="1249">

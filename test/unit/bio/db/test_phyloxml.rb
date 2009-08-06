@@ -34,7 +34,7 @@ module Bio
   end
 
   def self.made_up_xml
-    File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
+    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
   end
 
   def self.metazoa_xml
@@ -170,6 +170,7 @@ end #end module TestPhyloXMLData
       end
       t = @tree.get_node_by_name('A').taxonomies[0]
       assert_equal(t.scientific_name, 'E. coli')
+      assert_equal(t.authority, "J. G. Cooper, 1863")
       t = @tree.get_node_by_name('C').taxonomies[0]
       assert_equal(t.scientific_name, 'C. elegans')
     end
@@ -281,6 +282,7 @@ end #end module TestPhyloXMLData
           assert_equal(node.sequences[0].accession.value, 'P81431')
           assert_equal(node.sequences[0].name, 'Alcohol dehydrogenase class-3')
           assert_equal(node.sequences[0].is_aligned, true)
+          assert_equal(node.sequences[0].is_aligned?, true)
           assert_equal(node.sequences[0].mol_seq, 'TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD')
           assert_equal(node.sequences[0].annotations[0].ref, 'EC:1.1.1.1')
           assert_equal(node.sequences[0].annotations[1].ref, 'GO:0004022')
@@ -534,6 +536,18 @@ end #end module TestPhyloXMLData
 
     end
 
+    def test_taxonomy_synonym
+      5.times do
+        @tree = @phyloxml.next_tree
+      end
+      node = @tree.get_node_by_name('22_MOUSE')
+      t = node.taxonomies[0]
+      assert_equal(t.synonyms[0], "murine")
+      assert_equal(t.synonyms[1], "vermin")
+
+    end
+
+
   end
   class TestPhyloXML5 < Test::Unit::TestCase
 
@@ -559,6 +573,8 @@ end #end module TestPhyloXMLData
       assert_equal(o.children[2].attributes["name"], "C")
 
     end
+
+
 
 #    def test_get_tree_by_name
 #       @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.made_up_xml)

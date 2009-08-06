@@ -20,6 +20,7 @@
 module Bio
 
   # This is general Taxonomy class.
+
   class Taxonomy
     #pattern = [a-zA-Z0-9_]{2,10} Swiss-prot specific in phyloXML case
     attr_accessor :code
@@ -32,13 +33,16 @@ module Bio
     # value comes from list: domain kingdom, subkingdom, branch, infrakingdom, superphylum, phylum, subphylum, infraphylum, microphylum, superdivision, division, subdivision, infradivision, superclass, class, subclass, infraclass, superlegion, legion, sublegion, infralegion, supercohort, cohort, subcohort, infracohort, superorder, order, suborder, superfamily, family, subfamily, supertribe, tribe, subtribe, infratribe, genus, subgenus, superspecies, species, subspecies, variety, subvariety, form, subform, cultivar, unknown, other
     attr_accessor :rank
 
-    def inspect
-      #@todo work on this / or throw it out. was used for testing.
-      print "Taxonomy. scientific_name: #{@scientific_name}\n"
-    end
+    # is used to keep the authority, such as 'J. G. Cooper, 1863', associated with the 'scientific_name'.
+    attr_accessor :authority
+
+    # An array of strings. Holds synonyms for scientific names or common names.
+    attr_accessor :synonyms
+
 
     def initialize
       @common_names = []
+      @synonyms = []
     end
   end
 
@@ -476,6 +480,10 @@ module PhyloXML
         else
           @is_aligned = nil
         end
+      end
+
+      def is_aligned?
+        @is_aligned
       end
 
       def to_xml

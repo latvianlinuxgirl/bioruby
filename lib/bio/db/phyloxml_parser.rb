@@ -484,7 +484,7 @@ module PhyloXML
       parse_attributes(taxonomy, ["id_source"])
       @reader.read
       while not(is_end_element?('taxonomy')) do
-        parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank'] )
+        parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank', 'authority'] )
 
         taxonomy.taxonomy_id = parse_id('id') if is_element?('id')
 
@@ -493,6 +493,13 @@ module PhyloXML
           taxonomy.common_names << @reader.value
           @reader.read
           has_reached_end_element?('common_name')
+        end
+
+        if is_element?('synonym')
+          @reader.read
+          taxonomy.synonyms << @reader.value
+          @reader.read
+          has_reached_end_element?('synonym')
         end
 
         taxonomy.uri = parse_uri if is_element?('uri')
