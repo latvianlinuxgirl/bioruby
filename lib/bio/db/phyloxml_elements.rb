@@ -114,6 +114,9 @@ module PhyloXML
     # String. Indicate the type of phylogeny (i.e. 'gene tree').
     attr_accessor :type
 
+    # String. Date
+    attr_accessor :date
+
    def initialize
      super
      @sequence_relations = []

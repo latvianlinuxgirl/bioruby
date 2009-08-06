@@ -200,7 +200,7 @@ module PhyloXML
 
           parse_attributes(tree, ["branch_length_unit", 'type'])
 
-          parse_simple_elements(tree, [ "name", 'description'])
+          parse_simple_elements(tree, [ "name", 'description', "date"])
 
           if is_element?('confidence')
             tree.confidences << parse_confidence

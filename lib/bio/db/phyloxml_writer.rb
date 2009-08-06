@@ -33,8 +33,7 @@ module Bio
             [:simple, 'name', tree.name],
             [:complex, 'id', tree.phylogeny_id],
             [:simple, 'description', tree.description],
-            #[:simple, 'date', tree.date],
-            #@todo date xs:dateTime
+            [:simple, 'date', tree.date],
             [:objarr, 'confidence', 'confidences']])
 
         root_clade = tree.root.to_xml(nil, @write_branch_length_as_subelement)
