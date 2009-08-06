@@ -584,6 +584,11 @@ end #end module TestPhyloXMLData
 
     end
 
+    def test_array_behaviour
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
+      tree = phyloxml[2]
+      assert_equal(tree.name, "same example, with support of type \"bootstrap\"")
+    end
 
 
 #    def test_get_tree_by_name

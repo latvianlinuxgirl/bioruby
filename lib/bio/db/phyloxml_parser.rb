@@ -121,10 +121,14 @@ module PhyloXML
         yield tree
       end
 
-#      loop {
-#        yield tree = next_tree
-#        last unless tree
-#      }
+    end
+
+    def [](i)
+      tree = nil
+      (i+1).times do
+       tree =  self.next_tree
+      end
+      return tree
     end
 
     # Parse and return the next phylogeny tree.
