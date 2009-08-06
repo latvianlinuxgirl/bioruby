@@ -509,7 +509,16 @@ module PhyloXML
       @reader.read
       while not(is_end_element?('sequence'))
 
-        parse_simple_elements(sequence,['symbol', 'name', 'location', 'mol_seq', 'symbol'])
+        parse_simple_elements(sequence,['symbol', 'name', 'location', 'symbol'])
+
+        if is_element?('mol_seq')
+          sequence.is_aligned = @reader["is_aligned"]
+          @reader.read          
+          sequence.mol_seq = @reader.value
+          @reader.read
+          has_reached_end_element?('mol_seq')
+        end
+
 
         if is_element?('accession')
           sequence.accession = Accession.new

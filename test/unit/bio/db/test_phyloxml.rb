@@ -30,11 +30,11 @@ module Bio
   PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
 
   def self.example_xml
-    File.join PHYLOXML_TEST_DATA, 'phyloxml_example_test2.xml'
+    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples.xml'
   end
 
   def self.made_up_xml
-    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
+    File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
   end
 
   def self.metazoa_xml
@@ -44,8 +44,6 @@ module Bio
   def self.mollusca_xml
     File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca.xml'
   end
-
-
 
   def self.life_xml
     File.join PHYLOXML_TEST_DATA, 'tol_life_on_earth_1.xml'
@@ -282,6 +280,7 @@ end #end module TestPhyloXMLData
           assert_equal(node.sequences[0].accession.source, 'UniProtKB')
           assert_equal(node.sequences[0].accession.value, 'P81431')
           assert_equal(node.sequences[0].name, 'Alcohol dehydrogenase class-3')
+          assert_equal(node.sequences[0].is_aligned, true)
           assert_equal(node.sequences[0].mol_seq, 'TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD')
           assert_equal(node.sequences[0].annotations[0].ref, 'EC:1.1.1.1')
           assert_equal(node.sequences[0].annotations[1].ref, 'GO:0004022')

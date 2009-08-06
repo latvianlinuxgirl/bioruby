@@ -455,9 +455,8 @@ module PhyloXML
       # all other sequences in the same phylogeny for which 'is aligned' is true
       # as well (which, in most cases, means that gaps were introduced, and that
       # all sequences for which 'is aligned' is true must have the same length)
-      attr_accessor :is_aligned
-      #@todo add support for is_aligned
-
+      attr_reader :is_aligned
+      
       # Uri object
       attr_accessor :uri
       # Array of Annotation objects. Annotations of molecular sequence.
@@ -467,6 +466,16 @@ module PhyloXML
 
       def initialize
         @annotations = []
+      end
+
+      def is_aligned=(str)
+        if str=='true'
+          @is_aligned=true
+        elsif str=='false'
+          @is_aligned = false
+        else
+          @is_aligned = nil
+        end
       end
 
       def to_xml
