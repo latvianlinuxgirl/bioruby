@@ -91,6 +91,11 @@
                <synonym>vermin</synonym>
             </taxonomy>
             <sequence>
+               <annotation>
+                  <desc>alcohol dehydrogenase</desc>
+                  <confidence type="probability">0.99</confidence>
+                  <property datatype="xsd:integer" ref="NOAA:depth" applies_to="clade" unit="METRIC:m">1200</property>
+               </annotation>
                <domain_architecture length="1249">
                   <domain from="6" to="90" confidence="7.0E-26" id="x">CARD</domain>
                   <domain from="109" to="414" confidence="7.2E-117">NB-ARC</domain>
@@ -103,7 +108,7 @@
                   <domain from="1075" to="1113" confidence="6.3E-7">WD40</domain>
                   <domain from="1117" to="1155" confidence="1.4E-7">WD40</domain>
                   <domain from="1168" to="1204" confidence="0.3">WD40</domain>
-               </domain_architecture>
+               </domain_architecture>  
             </sequence>
          </clade>
       </clade>

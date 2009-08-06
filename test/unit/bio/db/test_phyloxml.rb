@@ -549,6 +549,14 @@ end #end module TestPhyloXMLData
 
     end
 
+    def test_annotation_property
+      5.times do
+        @tree =@phyloxml.next_tree
+      end
+      node = @tree.get_node_by_name('22_MOUSE')
+      prop = node.sequences[0].annotations[0].properties[0]
+      assert_equal(prop.value, "1200")
+    end
 
   end
   class TestPhyloXML5 < Test::Unit::TestCase
