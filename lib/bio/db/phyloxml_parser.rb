@@ -628,6 +628,7 @@ module PhyloXML
       point = Point.new
 
       point.geodetic_datum = @reader["geodetic_datum"]
+      point.alt_unit = @reader["alt_unit"]
 
       @reader.read
       while not(is_end_element?('point')) do

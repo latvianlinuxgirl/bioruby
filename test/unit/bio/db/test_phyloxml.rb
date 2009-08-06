@@ -30,11 +30,11 @@ module Bio
   PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
 
   def self.example_xml
-    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples.xml'
+    File.join PHYLOXML_TEST_DATA, 'phyloxml_example_test2.xml'
   end
 
   def self.made_up_xml
-    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
+    File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
   end
 
   def self.metazoa_xml
@@ -452,6 +452,7 @@ end #end module TestPhyloXMLData
       polygon = @tree.get_node_by_name('A').distributions[0].polygons[0]
       assert_equal(polygon.points.length,3 )
       assert_equal(polygon.points[0].lat, 47.481277)
+      assert_equal(polygon.points[0].alt_unit, "m")
       assert_equal(polygon.points[1].long, 136.915863)
       assert_equal(polygon.points[2].alt, 452)
       polygon = @tree.get_node_by_name('A').distributions[0].polygons[1]

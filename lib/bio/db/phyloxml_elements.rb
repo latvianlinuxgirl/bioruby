@@ -66,7 +66,9 @@ module PhyloXML
       PhyloXML::Writer.generate_xml(taxonomy, self, [[:complex, 'id', @taxonomy_id],
         [:pattern, 'code', @code, Regexp.new("^[a-zA-Z0-9_]{2,10}$")],
         [:simple, 'scientific_name', @scientific_name],
+        [:simple, 'authority', @authority],
         [:simplearr, 'common_name', @common_names],
+        [:simplearr, 'synonym', @synonyms],
         [:simple, 'rank', @rank],
         [:complex, 'uri',@uri]])
         #@todo anything else
@@ -372,6 +374,9 @@ module PhyloXML
       # Float. Altitude
       attr_accessor :alt
 
+      # String. Altitude unit.
+      attr_accessor :alt_unit
+
       # Geodedic datum / map datum
       attr_accessor :geodetic_datum
 
@@ -393,6 +398,7 @@ module PhyloXML
 
         p = XML::Node.new('point')
         p["geodetic_datum"] = @geodetic_datum
+        p["alt_unit"] = @alt_unit if @alt_unit != nil
         PhyloXML::Writer.generate_xml(p, self, [
             [:simple, 'lat', @lat],
             [:simple, 'long', @long],
@@ -453,7 +459,7 @@ module PhyloXML
       # String. Location of a sequence on a genome/chromosome
       attr_accessor :location
       # String. The actual sequence is stored here.
-      attr_accessor :mol_seq
+      attr_reader :mol_seq
 
       # Boolean. used to indicated that this molecular sequence is aligned with
       # all other sequences in the same phylogeny for which 'is aligned' is true
@@ -486,6 +492,14 @@ module PhyloXML
         @is_aligned
       end
 
+      def mol_seq=(str)
+        if str =~ /^[a-zA-Z\.\-\?\*_]+$/
+          @mol_seq = str
+        else
+          raise "mol_seq element of Sequence does not follow the pattern."
+        end
+      end
+
       def to_xml
         
         seq = XML::Node.new('sequence')
@@ -503,8 +517,16 @@ module PhyloXML
             [:pattern, 'symbol', @symbol, Regexp.new("^\\S{1,10}$")],
             [:complex, 'accession', @accession],
             [:simple, 'name', @name],
-            [:simple, 'location', @location],
-            [:pattern, 'mol_seq', @mol_seq, Regexp.new("^[a-zA-Z\.\-\?\*_]+$")],
+            [:simple, 'location', @location]])
+
+        if @mol_seq != nil
+          molseq = XML::Node.new('mol_seq', @mol_seq)
+          molseq["is_aligned"] = @is_aligned.to_s if @is_aligned != nil
+          seq << molseq
+        end
+
+        PhyloXML::Writer.generate_xml(seq, self, [
+            #[:pattern, 'mol_seq', @mol_seq, Regexp.new("^[a-zA-Z\.\-\?\*_]+$")],
             [:complex, 'uri', @uri],
             [:objarr, 'annotation', 'annotations'],
             [:complex, 'domain_architecture', @domain_architecture]])

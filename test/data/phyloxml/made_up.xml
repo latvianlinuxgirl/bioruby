@@ -22,7 +22,7 @@
             <distribution>
                 <desc>Polygon from random points</desc>
                 <polygon>                  
-                  <point geodetic_datum="WGS84">
+                  <point geodetic_datum="WGS84" alt_unit="m">
                      <lat>47.481277</lat>
                      <long>8.769303</long>
                      <alt>472</alt>
