@@ -41,6 +41,11 @@ module TestPhyloXMLBigData
     File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca.xml'
   end
 
+  def self.mollusca_test_xml
+    puts "Writing Mollusca 1.5MB"
+    File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca_test.xml'
+  end
+
   def self.unzip_file(file, target_dir)
     `unzip #{file}.zip -d #{target_dir}`
   end
@@ -92,9 +97,9 @@ module Bio
 
 
     def test_next_tree
-      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLBigData.metazoa_xml)
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLBigData.mollusca_xml)
       tree = phyloxml.next_tree
-      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLBigData.metazoa_test_xml)
+      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLBigData.mollusca_test_xml)
       writer.write(tree)
     end
 
