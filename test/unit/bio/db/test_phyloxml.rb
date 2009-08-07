@@ -15,19 +15,26 @@ $:.unshift(libpath) unless $:.include?(libpath)
 
 require 'bio'
 require 'bio/tree'
-require 'bio/db/phyloxml'
 
-module TestPhyloXMLData
+begin #begin rescue LoadError block (test if xml is here)
+
+require 'bio/db/phyloxml_elements'
+require 'bio/db/phyloxml_parser'
+require 'bio/db/phyloxml_writer'
+
+module Bio
+
+  module TestPhyloXMLData
 
   bioruby_root  = Pathname.new(File.join(File.dirname(__FILE__), ['..'] * 4)).cleanpath.to_s
   PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
 
   def self.example_xml
-    File.join PHYLOXML_TEST_DATA, 'phyloxml_examples.xml'
+    File.join PHYLOXML_TEST_DATA, 'phyloxml_example_test2.xml'
   end
 
   def self.made_up_xml
-    File.join PHYLOXML_TEST_DATA, 'made_up.xml'
+    File.join PHYLOXML_TEST_DATA, 'made_up_test.xml'
   end
 
   def self.metazoa_xml
@@ -42,19 +49,48 @@ module TestPhyloXMLData
     File.join PHYLOXML_TEST_DATA, 'tol_life_on_earth_1.xml'
   end
 
+  def self.dollo_xml
+    File.join PHYLOXML_TEST_DATA, 'o_tol_332_d_dollo.xml'
+  end
+
+  def self.test_xml
+    File.join PHYLOXML_TEST_DATA, 'test.xml'
+  end
+
+  def self.test2_xml
+    File.join PHYLOXML_TEST_DATA, 'test2.xml'
+  end
+
+  def self.mollusca_short_xml
+    File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca_short.xml'
+  end
+
 end #end module TestPhyloXMLData
 
+#  class TestPhyloXML0 <Test::Unit::TestCase
+#    #test if xml lib exists.
+#
+#    def test_libxml
+#      begin
+#        require 'xml'
+#      rescue LoadError
+#        puts "Please install libxml-ruby library. It is needed for Bio::PhyloXML module. Unit tests will exit now."
+#        #exit 1
+#      end
+#    end
+#
+#  end
 
-module Bio
+  
 
-  class TestPhyloXML < Test::Unit::TestCase
+  class TestPhyloXML1 < Test::Unit::TestCase
   
     def setup
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
     end
     
     def test_init
-      assert_equal(@phyloxml.class, Bio::PhyloXML)
+      assert_equal(@phyloxml.class, Bio::PhyloXML::Parser)
     end 
       
     def test_next_tree()
@@ -76,7 +112,7 @@ module Bio
   
     #setup is called before and every time any function es executed.  
     def setup
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
       @tree = @phyloxml.next_tree
     end
     
@@ -128,13 +164,13 @@ module Bio
       assert_equal(node.events.speciations, 1)
     end
 
-    #@todo should this be in a separate file?
     def test_taxonomy_scientific_name
       3.times do
         @tree = @phyloxml.next_tree
       end
       t = @tree.get_node_by_name('A').taxonomies[0]
       assert_equal(t.scientific_name, 'E. coli')
+      assert_equal(t.authority, "J. G. Cooper, 1863")
       t = @tree.get_node_by_name('C').taxonomies[0]
       assert_equal(t.scientific_name, 'C. elegans')
     end
@@ -162,6 +198,7 @@ module Bio
       end
       taxonomy = @tree.root.taxonomies[0]
       assert_equal(taxonomy.taxonomy_id.value, "8556")
+      assert_equal(taxonomy.taxonomy_id.provider, "NCBI")
       assert_equal(taxonomy.scientific_name, "Varanus")
       assert_equal(taxonomy.rank, "genus")
       assert_equal(taxonomy.uri.desc, "EMBL REPTILE DATABASE")
@@ -244,6 +281,8 @@ module Bio
           assert_equal(node.sequences[0].accession.source, 'UniProtKB')
           assert_equal(node.sequences[0].accession.value, 'P81431')
           assert_equal(node.sequences[0].name, 'Alcohol dehydrogenase class-3')
+          assert_equal(node.sequences[0].is_aligned, true)
+          assert_equal(node.sequences[0].is_aligned?, true)
           assert_equal(node.sequences[0].mol_seq, 'TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD')
           assert_equal(node.sequences[0].annotations[0].ref, 'EC:1.1.1.1')
           assert_equal(node.sequences[0].annotations[1].ref, 'GO:0004022')
@@ -272,19 +311,18 @@ module Bio
        end
        date_a = @tree.get_node_by_name('A').date
        assert_equal(date_a.unit, 'mya')
-       assert_equal(date_a.range, 10)
        assert_equal(date_a.desc, "Silurian")
        assert_equal(date_a.value, 425)
        date_b = @tree.get_node_by_name('B').date
        assert_equal(date_b.unit, 'mya')
-       assert_equal(date_b.range, 20)
        assert_equal(date_b.desc, "Devonian")
        assert_equal(date_b.value, 320)
        date_c = @tree.get_node_by_name('C').date
        assert_equal(date_c.unit, 'mya')
-       assert_equal(date_c.range, 30)
        assert_equal(date_c.desc, 'Ediacaran')
        assert_equal(date_c.value, 600)
+       assert_equal(date_c.minimum, 570)
+       assert_equal(date_c.maximum, 630)
      end
 
      def test_property
@@ -298,6 +336,16 @@ module Bio
        assert_equal(property.unit, 'METRIC:m')
        assert_equal(property.value, ' 1200 ')
      end
+
+     def test_uri
+       9.times do
+         @tree = @phyloxml.next_tree
+       end
+       uri = @tree.root.taxonomies[0].uri
+       assert_equal(uri.desc, "EMBL REPTILE DATABASE")
+       assert_equal(uri.uri, "http://www.embl-heidelberg.de/~uetz/families/Varanidae.html")
+     end
+
 
     
   end #class TestPhyloXML2
@@ -325,7 +373,7 @@ module Bio
    </phylogeny>"""
    
     def setup
-      phyloxml = Bio::PhyloXML.new(TEST_STRING)
+      phyloxml = Bio::PhyloXML::Parser.new(TEST_STRING)
       @tree = phyloxml.next_tree()  
 
     end
@@ -350,12 +398,10 @@ module Bio
 
     def test_clade_relation
 
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
       7.times do
         @tree = @phyloxml.next_tree
       end
-      #puts @tree.name
-       #<clade_relation id_ref_0="b" id_ref_1="c" type="network_connection"/>
        cr = @tree.clade_relations[0]
        assert_equal(cr.id_ref_0, "b")
        assert_equal(cr.id_ref_1, "c")
@@ -363,28 +409,26 @@ module Bio
     end
 
     def test_sequence_realations
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.example_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
       5.times do
         @tree = @phyloxml.next_tree
       end
-      #<sequence_relation id_ref_0="x" id_ref_1="y" type="paralogy"/>
-      #<sequence_relation id_ref_0="x" id_ref_1="z" type="orthology"/>
-      #<sequence_relation id_ref_0="y" id_ref_1="z" type="orthology"/>
 
       sr = @tree.sequence_relations[0]
        
        assert_equal(sr.id_ref_0, "x")
        assert_equal(sr.id_ref_1, "y")
        assert_equal(sr.type, "paralogy")
-
     end
+
+
   end
 
   class TestPhyloXML5 < Test::Unit::TestCase
 
-    #testing file random.xml
+    #testing file made_up.xml
     def setup
-      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.made_up_xml)
+      @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.made_up_xml)
     end
 
     def test_phylogeny_confidence
@@ -395,6 +439,12 @@ module Bio
       assert_equal(tree.confidences[1].value, 0.71)
     end
 
+    def test_to_biotreenode_probability
+      tree = @phyloxml.next_tree()
+      node = tree.get_node_by_name('c').to_biotreenode
+      assert_equal(node.bootstrap, nil)
+    end
+
     def test_polygon
       2.times do
         @tree = @phyloxml.next_tree
@@ -402,6 +452,7 @@ module Bio
       polygon = @tree.get_node_by_name('A').distributions[0].polygons[0]
       assert_equal(polygon.points.length,3 )
       assert_equal(polygon.points[0].lat, 47.481277)
+      assert_equal(polygon.points[0].alt_unit, "m")
       assert_equal(polygon.points[1].long, 136.915863)
       assert_equal(polygon.points[2].alt, 452)
       polygon = @tree.get_node_by_name('A').distributions[0].polygons[1]
@@ -413,7 +464,6 @@ module Bio
     def test_reference
       3.times do
         @tree = @phyloxml.next_tree
-        #puts "tree name: " ,@tree.name
       end
       references = @tree.get_node_by_name('A').references
       assert_equal(references[0].doi, "10.1093/bioinformatics/btm619")
@@ -423,47 +473,135 @@ module Bio
 
 
     def test_single_clade
-
-      3.times do
+      4.times do
         @tree = @phyloxml.next_tree()
       end
-      @tree = @phyloxml.next_tree()
       assert_equal(@tree.root.name, "A")
     end
+
+    def test_domain_architecture
+      5.times {@tree = @phyloxml.next_tree()}
+      node = @tree.get_node_by_name("22_MOUSE")
+      assert_equal(node.name, "22_MOUSE")
+      assert_equal(node.taxonomies[0].code, "MOUSE")
+      domain_arch = node.sequences[0].domain_architecture
+      assert_equal(domain_arch.length,1249 )
+      assert_equal(domain_arch.domains[0].from, 6)
+      assert_equal(domain_arch.domains[0].to, 90)
+      assert_in_delta(domain_arch.domains[0].confidence, 7.0E-26, 1E-26)
+      assert_equal(domain_arch.domains[0].value, "CARD")
+      assert_equal(domain_arch.domains[0].id, "x")
+      assert_equal(domain_arch.domains[5].from, 733)
+      assert_equal(domain_arch.domains[5].to, 771)
+      assert_in_delta(domain_arch.domains[5].confidence, 4.7E-14, 1E-15)
+      assert_equal(domain_arch.domains[5].value, "WD40")
+      assert_equal(domain_arch.domains.last.from, 1168)
+      assert_equal(domain_arch.domains.last.to, 1204)
+      assert_equal(domain_arch.domains.last.confidence, 0.3)
+      assert_equal(domain_arch.domains.last.value, "WD40")
+    end
+
+    def test_clade_width
+      @tree = @phyloxml.next_tree
+      assert_equal(@tree.root.width, 0.2)
+    end
+
+    def test_binary_characters
+      6.times do
+        @tree = @phyloxml.next_tree
+      end
+      bc =@tree.get_node_by_name("cellular_organisms").binary_characters
+      assert_equal(bc.bc_type, "parsimony inferred")
+      assert_equal(bc.lost_count, 0)
+      assert_equal(bc.gained_count,0)
+      assert_equal(bc.lost, [])
+
+      bc2 = @tree.get_node_by_name("Eukaryota").binary_characters
+      assert_equal(bc2.gained_count, 2)
+      assert_equal(bc2.gained, ["Cofilin_ADF", "Gelsolin"])
+      assert_equal(bc2.present, ["Cofilin_ADF", "Gelsolin"])
+    end
+
+    def test_rerootable2
+      6.times do
+        @tree = @phyloxml.next_tree
+      end
+      assert_equal(@tree.rerootable, false)
+    end
+
+    def test_phylogeny_attributes
+      @tree = @phyloxml.next_tree
+      assert_equal(@tree.rooted, true)
+      assert_equal(@tree.rerootable, false)
+      #@todo make this test pass
+      #assert_equal(@tree.branch_length_unit, "1")
+
+    end
+
+    def test_taxonomy_synonym
+      5.times do
+        @tree = @phyloxml.next_tree
+      end
+      node = @tree.get_node_by_name('22_MOUSE')
+      t = node.taxonomies[0]
+      assert_equal(t.synonyms[0], "murine")
+      assert_equal(t.synonyms[1], "vermin")
+
+    end
+
+    def test_annotation_property
+      5.times do
+        @tree =@phyloxml.next_tree
+      end
+      node = @tree.get_node_by_name('22_MOUSE')
+      prop = node.sequences[0].annotations[0].properties[0]
+      assert_equal(prop.value, "1200")
+    end
+
+  end
+  class TestPhyloXML5 < Test::Unit::TestCase
+
+    def test_each
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
+      count = 0
+      phyloxml.each do |tree|
+        count +=1
+      end
+      assert_equal(count, 13)
+    end
+
+    def test_other
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
+      assert_equal(phyloxml.other[0], nil)
+      phyloxml.each do |tree|
+        #iterate through all trees, to get to the end
+      end
+      o = phyloxml.other[0]
+      assert_equal(o.element_name, 'align:alignment')
+      assert_equal(o.children[0].element_name, 'seq')
+      assert_equal(o.children[1].value, 'aggtcgcggcctgtggaagtcctctcct')
+      assert_equal(o.children[2].attributes["name"], "C")
+
+    end
+
+    def test_array_behaviour
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
+      tree = phyloxml[2]
+      assert_equal(tree.name, "same example, with support of type \"bootstrap\"")
+    end
+
+
+#    def test_get_tree_by_name
+#       @phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.made_up_xml)
+#       tree = @phyloxml.get_tree_by_name "testing confidence"
+#
+#    end
+
   end
 
-#  class TestPhyloXMLBigFiles < Test::Unit::TestCase
-#
-#
-#    def test_next_tree_big_file()
-#      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.metazoa_xml)
-#      tree = @phyloxml.next_tree
-#      while tree != nil do
-#        tree = @phyloxml.next_tree
-#        puts tree.root.name
-#      end
-#    end
-#
-#    def test_next_tree_big_file2()
-#      puts "====="
-#      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.mollusca_xml)
-#      tree = @phyloxml.next_tree
-#      while tree != nil do
-#        tree = @phyloxml.next_tree
-#        puts tree.root.name
-#      end
-#    end
-#
-#    def test_next_tree_big_file3()
-#      @phyloxml = Bio::PhyloXML.new(TestPhyloXMLData.life_xml)
-#      tree = @phyloxml.next_tree
-#      while tree != nil do
-#        tree = @phyloxml.next_tree
-#        puts tree.root.name
-#      end
-#    end
-#
-#  end #class TestPhyloXML
 
+end #end module Biof
 
-end #end module Bio
+rescue LoadError
+    raise "Error: libxml-ruby library is not present. Please install libxml-ruby library. It is needed for Bio::PhyloXML module. Unit test for PhyloXML will not be performed."
+end #end begin and rescue block
