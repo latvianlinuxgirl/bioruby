@@ -489,13 +489,25 @@ module PhyloXML
       @reader.read
       while not(is_end_element?('taxonomy')) do
 
-        parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank', 'authority'] )
+        #parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank', 'authority'] )
 
         if @reader.node_type == XML::Reader::TYPE_ELEMENT
           case @reader.name
           when 'code'
             @reader.read
             taxonomy.code = @reader.value
+            @reader.read
+          when 'scientific_name'
+            @reader.read
+            taxonomy.scientific_name = @reader.value
+            @reader.read
+          when 'rank'
+            @reader.read
+            taxonomy.rank = @reader.value
+            @reader.read
+          when 'authority'
+            @reader.read
+            taxonomy.authority = @reader.value
             @reader.read
           when 'id'
             taxonomy.taxonomy_id = parse_id('id')
