@@ -13,9 +13,11 @@ require 'pathname'
 libpath = Pathname.new(File.join(File.dirname(__FILE__), ['..'] * 4, 'lib')).cleanpath.to_s
 $:.unshift(libpath) unless $:.include?(libpath)
 
+puts libpath
+
 require 'bio'
 require 'bio/tree'
-require 'bio/db/phyloxml'
+require 'bio/db/phyloxml_parser'
 
 
 module TestPhyloXMLBigData
@@ -24,10 +26,12 @@ module TestPhyloXMLBigData
   PHYLOXML_TEST_DATA = Pathname.new(File.join(bioruby_root, 'test', 'data', 'phyloxml')).cleanpath.to_s
 
   def self.metazoa_xml
+    puts "Metazoa 30MB"
     File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_metazoa.xml'
   end
 
   def self.mollusca_xml
+    puts "Mollusca 1.5MB"
     File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_mollusca.xml'
   end
 
@@ -36,6 +40,7 @@ module TestPhyloXMLBigData
   end
 
   def self.life_xml
+    #Right now this file is not compactible with xsd 1.10
     filename = 'tol_life_on_earth_1.xml'
     file = File.join PHYLOXML_TEST_DATA, filename
     if File.exists?(file)
@@ -81,8 +86,7 @@ module Bio
 
 
     def test_next_tree
-      phyloxml = Bio::PhyloXML.new(TestPhyloXMLBigData.metazoa_xml)
-      puts "Tree of life"
+      phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLBigData.metazoa_xml)
       #nr_trees = -1
       begin
         tree = phyloxml.next_tree

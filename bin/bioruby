@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#! /usr/bin/ruby1.8
 #
 # = BioRuby shell - command line interface for the BioRuby library
 #
