@@ -426,82 +426,165 @@ module PhyloXML
     def parse_clade_elements(current_node, current_edge)
       #no loop inside, it is already outside
 
-      if is_element?('branch_length')
-        # @todo add unit test for this. current_edge is nil, if the root clade
-        # has branch_length attribute. Is it even supposed to have? Its still
-        # valid xml.
-        @reader.read
-        branch_length = @reader.value
-        current_edge.distance = branch_length.to_f if current_edge != nil
-        @reader.read
-        has_reached_end_element?('branch_length')
-      end
+#
+#      if is_element?('branch_length')
+#        # @todo add unit test for this. current_edge is nil, if the root clade
+#        # has branch_length attribute. Is it even supposed to have? Its still
+#        # valid xml.
+#        @reader.read
+#        branch_length = @reader.value
+#        current_edge.distance = branch_length.to_f if current_edge != nil
+#        @reader.read
+#        #has_reached_end_element?('branch_length')
+#      end
+#
 
-      #Decided that width element should part of node, not edge. 
-      parse_simple_elements(current_node, ['width', 'name'])
-
-      current_node.events = parse_events if is_element?('events')
-
-      #parse_complex_array_elements(current_node, ['confidence', 'sequence', 'property'])
-
-      current_node.confidences << parse_confidence if is_element?('confidence')
-      current_node.sequences << parse_sequence if is_element?('sequence')
-      current_node.properties << parse_property if is_element?('property')
-      current_node.taxonomies << parse_taxonomy if is_element?('taxonomy')
-      current_node.distributions << parse_distribution if is_element?('distribution')
-
-      if is_element?('node_id')
-        id = Id.new
-        id.type = @reader["type"]
-        @reader.read
-        id.value = @reader.value
-        @reader.read
-        has_reached_end_element?('node_id')
-        #@todo write unit test for this. There is no example of this in the example files
-        current_node.id = id
-      end
-
-      if is_element?('color')
-        color = BranchColor.new
-        parse_simple_element(color, 'red')
-        parse_simple_element(color, 'green')
-        parse_simple_element(color, 'blue')
-        current_node.color = color
-        #@todo add unit test for this
-      end
-
-      if is_element?('date')
-        date = Date.new
-        parse_attributes(date, ["unit"])
-
-        #move to the next token, which is always empty, since date tag does not
-        # have text associated with it
-        @reader.read 
-        @reader.read #now the token is the first tag under date tag
-        while not(is_end_element?('date'))
-          parse_simple_element(date, 'desc')
-          parse_simple_element(date, 'value')
-          parse_simple_element(date, 'minimum')
-          parse_simple_element(date, 'maximum')
+      if @reader.node_type == XML::Reader::TYPE_ELEMENT
+        case @reader.name
+        when 'branch_length'
+          # @todo add unit test for this. current_edge is nil, if the root clade
+          # has branch_length attribute. Is it even supposed to have? Its still
+          # valid xml.
           @reader.read
-        end
-        current_node.date = date
-      end
+          branch_length = @reader.value
+          current_edge.distance = branch_length.to_f if current_edge != nil
+          @reader.read
+        when 'width'
+          @reader.read
+          current_node.width = @reader.value
+          @reader.read
+        when  'name'
+          @reader.read
+          current_node.name = @reader.value
+          @reader.read
+        when 'events'
+          current_node.events = parse_events
+        when 'confidence'
+          current_node.confidences << parse_confidence
+        when 'sequence'
+          current_node.sequences << parse_sequence
+        when 'property'
+          current_node.properties << parse_property
+        when 'taxonomy'
+          current_node.taxonomies << parse_taxonomy
+        when 'distribution'
+          current_node.distributions << parse_distribution
+        when 'node_id'
+          id = Id.new
+          id.type = @reader["type"]
+          @reader.read
+          id.value = @reader.value
+          @reader.read
+          #has_reached_end_element?('node_id')
+          #@todo write unit test for this. There is no example of this in the example files
+          current_node.id = id
+        when 'color'
+          color = BranchColor.new
+          parse_simple_element(color, 'red')
+          parse_simple_element(color, 'green')
+          parse_simple_element(color, 'blue')
+          current_node.color = color
+          #@todo add unit test for this
+        when 'date'
+          date = Date.new
+          date.unit = @reader["unit"]
+          #parse_attributes(date, ["unit"])
 
-      if is_element?('reference')
-        
-        reference = Reference.new()
-        reference.doi = @reader['doi']      
-        if not @reader.empty_element?
-          while not is_end_element?('reference')
-            parse_simple_element(reference, 'desc')
+          #move to the next token, which is always empty, since date tag does not
+          # have text associated with it
+          @reader.read
+          @reader.read #now the token is the first tag under date tag
+          while not(is_end_element?('date'))
+            parse_simple_element(date, 'desc')
+            parse_simple_element(date, 'value')
+            parse_simple_element(date, 'minimum')
+            parse_simple_element(date, 'maximum')
             @reader.read
           end
+          current_node.date = date
+        when 'reference'
+          reference = Reference.new()
+          reference.doi = @reader['doi']
+          if not @reader.empty_element?
+            while not is_end_element?('reference')
+              parse_simple_element(reference, 'desc')
+              @reader.read
+            end
+          end
+          current_node.references << reference
+        when 'binary_characters'
+          current_node.binary_characters  = parse_binary_characters
+        when 'clade'
+          #do nothing
+        else
+          #do nothing now
+          puts "No match found in parse_clade_elements.(#{@reader.name})"
         end
-        current_node.references << reference
-      end
 
-      current_node.binary_characters  = parse_binary_characters if is_element?('binary_characters')
+      end
+#      parse_simple_elements(current_node, ['width', 'name'])
+#
+#      current_node.events = parse_events if is_element?('events')
+#
+#
+#      current_node.confidences << parse_confidence if is_element?('confidence')
+#      current_node.sequences << parse_sequence if is_element?('sequence')
+#      current_node.properties << parse_property if is_element?('property')
+#      current_node.taxonomies << parse_taxonomy if is_element?('taxonomy')
+#      current_node.distributions << parse_distribution if is_element?('distribution')
+#
+#      if is_element?('node_id')
+#        id = Id.new
+#        id.type = @reader["type"]
+#        @reader.read
+#        id.value = @reader.value
+#        @reader.read
+#        has_reached_end_element?('node_id')
+#        #@todo write unit test for this. There is no example of this in the example files
+#        current_node.id = id
+#      end
+#
+#      if is_element?('color')
+#        color = BranchColor.new
+#        parse_simple_element(color, 'red')
+#        parse_simple_element(color, 'green')
+#        parse_simple_element(color, 'blue')
+#        current_node.color = color
+#        #@todo add unit test for this
+#      end
+#
+#      if is_element?('date')
+#        date = Date.new
+#        parse_attributes(date, ["unit"])
+#
+#        #move to the next token, which is always empty, since date tag does not
+#        # have text associated with it
+#        @reader.read
+#        @reader.read #now the token is the first tag under date tag
+#        while not(is_end_element?('date'))
+#          parse_simple_element(date, 'desc')
+#          parse_simple_element(date, 'value')
+#          parse_simple_element(date, 'minimum')
+#          parse_simple_element(date, 'maximum')
+#          @reader.read
+#        end
+#        current_node.date = date
+#      end
+#
+#      if is_element?('reference')
+#
+#        reference = Reference.new()
+#        reference.doi = @reader['doi']
+#        if not @reader.empty_element?
+#          while not is_end_element?('reference')
+#            parse_simple_element(reference, 'desc')
+#            @reader.read
+#          end
+#        end
+#        current_node.references << reference
+#      end
+#
+#      current_node.binary_characters  = parse_binary_characters if is_element?('binary_characters')
 
     end #parse_clade_elements
 
