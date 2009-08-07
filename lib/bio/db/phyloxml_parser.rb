@@ -607,7 +607,8 @@ module PhyloXML
       taxonomy = PhyloXML::Taxonomy.new
       parse_attributes(taxonomy, ["id_source"])
       @reader.read
-      while not(is_end_element?('taxonomy')) do
+      while not(@reader.name == 'taxonomy') do
+
 
         #parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank', 'authority'] )
 
@@ -641,8 +642,10 @@ module PhyloXML
             taxonomy.synonyms << @reader.value
             @reader.read
             #has_reached_end_element?('synonym')
-          else
+          when 'uri'
             taxonomy.uri = parse_uri
+          else
+            puts "In parse_taxonomy, here is some other element. #{@reader.name}"
           end
         end
 
@@ -828,7 +831,7 @@ module PhyloXML
       @reader.read
       id.value = @reader.value
       @reader.read #@todo shouldn't there be another read?
-      has_reached_end_element?(tag_name)
+      #has_reached_end_element?(tag_name)
           #@todo write unit test for this. There is no example of this in the example files
       return id
     end #parse_id
