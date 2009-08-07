@@ -18,6 +18,7 @@ puts libpath
 require 'bio'
 require 'bio/tree'
 require 'bio/db/phyloxml_parser'
+require 'bio/db/phyloxml_writer'
 
 
 module TestPhyloXMLBigData
@@ -28,6 +29,11 @@ module TestPhyloXMLBigData
   def self.metazoa_xml
     puts "Metazoa 30MB"
     File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_metazoa.xml'
+  end
+
+  def self.metazoa_test_xml
+    puts "writing Metazoa 30MB"
+    File.join PHYLOXML_TEST_DATA, 'ncbi_taxonomy_metazoa_test.xml'
   end
 
   def self.mollusca_xml
@@ -87,11 +93,9 @@ module Bio
 
     def test_next_tree
       phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLBigData.metazoa_xml)
-      #nr_trees = -1
-      begin
-        tree = phyloxml.next_tree
-        #puts nr_trees += 1
-      end while tree != nil
+      tree = phyloxml.next_tree
+      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLBigData.metazoa_test_xml)
+      writer.write(tree)
     end
 
     def a_test_next_tree_dummy
