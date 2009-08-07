@@ -198,11 +198,9 @@ module PhyloXML
           # so it should not be checked here.
           if is_element?('phylogeny')
             @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
+            @reader["rerootable"] == "true" ? tree.rerootable = true : tree.rerootable = false
+            parse_attributes(tree, ["branch_length_unit", 'type'])
           end
-
-          @reader["rerootable"] == "true" ? tree.rerootable = true : tree.rerootable = false
-
-          parse_attributes(tree, ["branch_length_unit", 'type'])
 
           parse_simple_elements(tree, [ "name", 'description', "date"])
 
@@ -212,30 +210,36 @@ module PhyloXML
 
         end
 
-        #parse clade element
-        if is_element?('clade')
-          parsing_clade = true 
-          
-          node= Bio::PhyloXML::Node.new
-          
-          #parse attributes of the clade element
-          branch_length = @reader['branch_length']
-          
-          parse_attributes(node, ["id_source"])
-          
-          #add new node to the tree
-          tree.add_node(node)
-          # The first clade will always be root since by xsd schema phyloxml can
-          # have 0 to 1 clades in it.
-          if tree.root == nil
-            tree.root = node
-          else                    
-            current_edge = tree.add_edge(clades[-1], node,
-                                         Bio::Tree::Edge.new(branch_length))
+        if @reader.node_type == XML::Reader::TYPE_ELEMENT
+          case @reader.name
+          when 'clade'
+            #parse clade element
+
+            parsing_clade = true
+
+            node= Bio::PhyloXML::Node.new
+
+            branch_length = @reader['branch_length']
+
+            parse_attributes(node, ["id_source"])
+
+            #add new node to the tree
+            tree.add_node(node)
+            # The first clade will always be root since by xsd schema phyloxml can
+            # have 0 to 1 clades in it.
+            if tree.root == nil
+              tree.root = node
+            else
+              current_edge = tree.add_edge(clades[-1], node,
+                                           Bio::Tree::Edge.new(branch_length))
+            end
+            clades.push node
+            #end if clade element
+          else
+           parse_clade_elements(clades[-1], current_edge) if parsing_clade
           end
-          clades.push node
-        end #end if clade  
-    
+        end
+
         #end clade element, go one parent up
         if is_end_element?('clade')
 
@@ -250,43 +254,76 @@ module PhyloXML
           end
         end          
 
-        #parse_clade_elements(current_node, current_edge) if parsing_clade
-        parse_clade_elements(clades[-1], current_edge) if parsing_clade
-
         #parsing phylogeny elements
         if not parsing_clade
-          if is_element?('property')
-            tree.properties << parse_property
-          end          
 
-          if is_element?('clade_relation')
-            clade_relation = CladeRelation.new
-            parse_attributes(clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
+          if @reader.node_type == XML::Reader::TYPE_ELEMENT
+            case @reader.name
+            when 'property'
+              tree.properties << parse_property
+            when 'clade_relation'
+              clade_relation = CladeRelation.new
+              parse_attributes(clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
 
-            #@ add unit test for this
-            if not @reader.empty_element?
-              @reader.read
-              if is_element?('confidence')
-                clade_relation.confidence = parse_confidence
+              #@ add unit test for this
+              if not @reader.empty_element?
+                @reader.read
+                if is_element?('confidence')
+                  clade_relation.confidence = parse_confidence
+                end
               end
+              tree.clade_relations << clade_relation
+
+            when 'sequence_relation'
+              sequence_relation = SequenceRelation.new
+              parse_attributes(sequence_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
+              if not @reader.empty_element?
+                @reader.read
+                if is_element?('confidence')
+                  sequence_relation.confidence = parse_confidence
+                end
+              end
+              tree.sequence_relations << sequence_relation
+            when 'phylogeny'
+              #do nothing
+            else
+              puts "Not recognized element. #{@reader.name}"
             end
-            tree.clade_relations << clade_relation
           end
 
-          if is_element?('sequence_relation')
-            
-            sequence_relation = SequenceRelation.new
-            parse_attributes(sequence_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
+#          if is_element?('property')
+#            tree.properties << parse_property
+#          end
+#
+#          if is_element?('clade_relation')
+#            clade_relation = CladeRelation.new
+#            parse_attributes(clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
+#
+#            #@ add unit test for this
+#            if not @reader.empty_element?
+#              @reader.read
+#              if is_element?('confidence')
+#                clade_relation.confidence = parse_confidence
+#              end
+#            end
+#            tree.clade_relations << clade_relation
+#          end
+#
+#          if is_element?('sequence_relation')
+#
+#            sequence_relation = SequenceRelation.new
+#            parse_attributes(sequence_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
+#
+#
+#            if not @reader.empty_element?
+#              @reader.read
+#              if is_element?('confidence')
+#                sequence_relation.confidence = parse_confidence
+#              end
+#            end
+#            tree.sequence_relations << sequence_relation
+#          end
 
-
-            if not @reader.empty_element?
-              @reader.read
-              if is_element?('confidence')
-                sequence_relation.confidence = parse_confidence
-              end
-            end
-            tree.sequence_relations << sequence_relation           
-          end
         end
         # go to next element        
         @reader.read    
