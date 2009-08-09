@@ -179,6 +179,9 @@ module PhyloXML
     #An array of Property objects, for example depth for sea animals.
     attr_accessor :properties
 
+    #An array of Node objects. Used to save subclades of a clade. 
+    attr_accessor :children
+
     def initialize
       @confidences = []
       @sequences = []
@@ -186,6 +189,7 @@ module PhyloXML
       @distributions = []
       @references = []
       @properties = []
+      @children=[]
     end
 
 

@@ -232,6 +232,7 @@ module PhyloXML
             else
               current_edge = tree.add_edge(clades[-1], node,
                                            Bio::Tree::Edge.new(branch_length))
+              clades[-1].children << node
             end
             clades.push node
             #end if clade element

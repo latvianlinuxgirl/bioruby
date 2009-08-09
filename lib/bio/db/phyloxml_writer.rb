@@ -118,7 +118,11 @@ module Bio
 
         clade = node.to_xml(branch_length, @write_branch_length_as_subelement)
 
-        tree.children(node).each do |new_node|
+       # tree.children(node).each do |new_node|
+       #   clade << node_to_xml(tree, new_node, node)
+       # end
+
+        node.children.each do |new_node|
           clade << node_to_xml(tree, new_node, node)
         end
 
