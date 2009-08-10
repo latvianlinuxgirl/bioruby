@@ -65,6 +65,9 @@ module PhyloXML
   #
   class Parser
 
+    #
+    # After parsing all the trees, if there is anything else in other xml format,
+    # it is saved in this array.
     attr_reader :other
 
     # Initializes LibXML::Reader and reads the file until it reaches the first
@@ -103,12 +106,6 @@ module PhyloXML
       @reader.read until is_element?('phylogeny')
     end
 
-    # Create new Parser which reads the specified file.
-    # *Returns*:: Bio::PhyloXML::Parser object
-#    def file(filename)
-#      @reader = XML::Reader.file(filename)
-#    end
-
     # Iterate through all trees in the file.
     #
     #  phyloxml = Bio::PhyloXML::Parser.new('example.xml')
@@ -120,9 +117,15 @@ module PhyloXML
       while tree = next_tree
         yield tree
       end
-
     end
 
+    # Access the specified tree in the file. It parses trees until the specified
+    # tree is reached.
+    #
+    #  # Get 3rd tree in the file (starts counting from 0).
+    #  parser = PhyloXML::Parser.new('phyloxml_examples.xml')
+    #  tree = parser[2]
+    #
     def [](i)
       tree = nil
       (i+1).times do
@@ -133,9 +136,8 @@ module PhyloXML
 
     # Parse and return the next phylogeny tree.
     # 
-    # p = Bio::PhyloXML::Parser.new("./phyloxml_examples.xml")
-    # 
-    # tree = p.next_tree
+    #  p = Bio::PhyloXML::Parser.new("./phyloxml_examples.xml")
+    #  tree = p.next_tree
     #
     # ---
     # *Returns*:: Bio::PhyloXML::Tree
@@ -339,7 +341,7 @@ module PhyloXML
 
     # return tree of specified name.
     # @todo Implement this method. 
-    def get_tree_by_name(name)
+    # def get_tree_by_name(name)
 
 #      while not is_end_element?('phyloxml')
 #        if is_element?('phylogeny')
@@ -358,7 +360,7 @@ module PhyloXML
 #        @reader.read
 #      end
 #
-    end
+  #  end
 
 
     private
@@ -403,7 +405,7 @@ module PhyloXML
 
     #Parses list of attributes
     #use for the code like: clade_relation.type = @reader["type"]
-  def parse_attributes(object, arr_of_attrs)
+    def parse_attributes(object, arr_of_attrs)
       arr_of_attrs.each do |attr|
         object.send("#{attr}=", @reader[attr])
       end
@@ -425,19 +427,6 @@ module PhyloXML
 
     def parse_clade_elements(current_node, current_edge)
       #no loop inside, it is already outside
-
-#
-#      if is_element?('branch_length')
-#        # @todo add unit test for this. current_edge is nil, if the root clade
-#        # has branch_length attribute. Is it even supposed to have? Its still
-#        # valid xml.
-#        @reader.read
-#        branch_length = @reader.value
-#        current_edge.distance = branch_length.to_f if current_edge != nil
-#        @reader.read
-#        #has_reached_end_element?('branch_length')
-#      end
-#
 
       if @reader.node_type == XML::Reader::TYPE_ELEMENT
         case @reader.name
@@ -522,69 +511,6 @@ module PhyloXML
         end
 
       end
-#      parse_simple_elements(current_node, ['width', 'name'])
-#
-#      current_node.events = parse_events if is_element?('events')
-#
-#
-#      current_node.confidences << parse_confidence if is_element?('confidence')
-#      current_node.sequences << parse_sequence if is_element?('sequence')
-#      current_node.properties << parse_property if is_element?('property')
-#      current_node.taxonomies << parse_taxonomy if is_element?('taxonomy')
-#      current_node.distributions << parse_distribution if is_element?('distribution')
-#
-#      if is_element?('node_id')
-#        id = Id.new
-#        id.type = @reader["type"]
-#        @reader.read
-#        id.value = @reader.value
-#        @reader.read
-#        has_reached_end_element?('node_id')
-#        #@todo write unit test for this. There is no example of this in the example files
-#        current_node.id = id
-#      end
-#
-#      if is_element?('color')
-#        color = BranchColor.new
-#        parse_simple_element(color, 'red')
-#        parse_simple_element(color, 'green')
-#        parse_simple_element(color, 'blue')
-#        current_node.color = color
-#        #@todo add unit test for this
-#      end
-#
-#      if is_element?('date')
-#        date = Date.new
-#        parse_attributes(date, ["unit"])
-#
-#        #move to the next token, which is always empty, since date tag does not
-#        # have text associated with it
-#        @reader.read
-#        @reader.read #now the token is the first tag under date tag
-#        while not(is_end_element?('date'))
-#          parse_simple_element(date, 'desc')
-#          parse_simple_element(date, 'value')
-#          parse_simple_element(date, 'minimum')
-#          parse_simple_element(date, 'maximum')
-#          @reader.read
-#        end
-#        current_node.date = date
-#      end
-#
-#      if is_element?('reference')
-#
-#        reference = Reference.new()
-#        reference.doi = @reader['doi']
-#        if not @reader.empty_element?
-#          while not is_end_element?('reference')
-#            parse_simple_element(reference, 'desc')
-#            @reader.read
-#          end
-#        end
-#        current_node.references << reference
-#      end
-#
-#      current_node.binary_characters  = parse_binary_characters if is_element?('binary_characters')
 
     end #parse_clade_elements
 
@@ -669,6 +595,8 @@ module PhyloXML
       return taxonomy
     end #parse_taxonomy
 
+    private
+
     def parse_sequence
       sequence = Sequence.new
       parse_attributes(sequence, ["type", "id_source", "id_ref"])
@@ -748,7 +676,6 @@ module PhyloXML
       end
       return annotation
     end
-
 
     def parse_property
       property = Property.new

@@ -58,6 +58,7 @@ module PhyloXML
     # Uri object
     attr_accessor :uri
 
+    # Converts elements to xml representation. Called by PhyloXML::Writer class.
     def to_xml
       taxonomy = XML::Node.new('taxonomy')
       taxonomy["type"] = @type if @type != nil
@@ -219,7 +220,7 @@ module PhyloXML
       end      
       return node
     end
-
+    # Converts elements to xml representation. Called by PhyloXML::Writer class.
     def to_xml(branch_length,  write_branch_length_as_subelement)
       clade = XML::Node.new('clade')
       
@@ -295,6 +296,7 @@ module PhyloXML
       end
     end
 
+    # Converts elements to xml representation. Called by PhyloXML::Writer class.
     def to_xml
       #@todo add unit test
       events = XML::Node.new('events')
@@ -313,7 +315,9 @@ module PhyloXML
     # the bootstrap support value of a clade (in which case the 'type' attribute
     # is 'bootstrap').
     class Confidence
+      # String. The type of confidence measure, for example, bootstrap.
       attr_accessor :type
+      # Float. The value of confidence measure.
       attr_accessor :value
 
       def initialize(type, value)
@@ -321,6 +325,7 @@ module PhyloXML
         @value = value.to_f
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         if @type == nil
           raise "Type is a required attribute for confidence."
@@ -350,6 +355,7 @@ module PhyloXML
       end
 
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         distr = XML::Node.new('distribution')
         PhyloXML::Writer.generate_xml(distr, self, [
@@ -395,7 +401,7 @@ module PhyloXML
         @alt = str.to_f unless str.nil?
       end
 
-
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         raise "Geodedic datum is a required attribute of Point element." if @geodetic_datum.nil?
 
@@ -425,6 +431,7 @@ module PhyloXML
       end
 
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         if @points.length > 2          
           pol = XML::Node.new('polygon')
@@ -442,7 +449,7 @@ module PhyloXML
     # Element Sequence is used to represent a molecular sequence (Protein, DNA,
     # RNA) associated with a node.
     class Sequence
-      # Type of sequence (rna, dna, aa)
+      # Type of sequence (rna, dna, protein)
       attr_accessor :type
 
       # Full name (e.g. muscle Actin )
@@ -503,6 +510,7 @@ module PhyloXML
         end
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         
         seq = XML::Node.new('sequence')
@@ -582,6 +590,7 @@ module PhyloXML
       #String. Value of the accession id. Example: "P17304"
       attr_accessor :value
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         raise "Source attribute is required for Accession object." if @source == nil
         accession = XML::Node.new('accession', @value)
@@ -603,6 +612,7 @@ module PhyloXML
       # String. URL of the resource.
       attr_accessor :uri #@todo call it url?
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml        
         if @uri != nil
           xml_node = XML::Node.new('uri', @uri)
@@ -645,7 +655,7 @@ module PhyloXML
         @properties = []
       end
 
-
+      # Converts elements to xml representation. Called by PhyloXML::Writer class. 
       def to_xml
         #@todo add uni test. Specifically test property. Add Annotation->property for made_up xml
         annot = XML::Node.new('annotation')
@@ -659,8 +669,12 @@ module PhyloXML
     end
 
     class Id
-      attr_accessor :provider, :value
+      # The provider of Id, for example, NCBI.
+      attr_accessor :provider
+      # The value of Id. 
+      attr_accessor :value
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         xml_node = XML::Node.new('id', @value)
         xml_node["provider"] = @provider if @provider != nil
@@ -688,6 +702,7 @@ module PhyloXML
         @blue = str.to_i
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         #@todo add unit test
         if @red == nil
@@ -716,7 +731,11 @@ module PhyloXML
     # employ the 'unit' attribute to indicate the type of the numerical
     # value (e.g. 'mya' for 'million years ago').
     class Date
-      attr_accessor :unit,  :desc
+      # String. Units in which value is stored.
+      attr_accessor :unit
+
+      # Free text description of the date.
+      attr_accessor :desc
 
       # Integer. Minimum and maximum of the value.
       attr_reader :minimum, :maximum
@@ -741,6 +760,7 @@ module PhyloXML
         return "#{value} #{unit}"
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         date = XML::Node.new('date')
         PhyloXML::Writer.generate_xml(date, self, [
@@ -772,6 +792,7 @@ module PhyloXML
         @domains = []
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         xml_node = XML::Node.new('domain_architecture')
         PhyloXML::Writer.generate_xml(xml_node, self,[
@@ -810,6 +831,7 @@ module PhyloXML
         @confidence = str.to_f
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         if @from == nil
           raise "from attribute of ProteinDomain class is required."
@@ -870,6 +892,7 @@ module PhyloXML
         @applies_to = str
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         #@todo  write unit test for this
         raise "ref is an required element of property"  if @ref.nil?
@@ -899,6 +922,7 @@ module PhyloXML
       # String. Free text description.
       attr_accessor :desc
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         ref = XML::Node.new('reference')
         Writer.generate_xml(ref, self, [
@@ -927,6 +951,7 @@ module PhyloXML
         @distance = str.to_f
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         if @id_ref_0 == nil or @id_ref_1 == nil or @type == nil
           raise "Attributes id_ref_0, id_ref_1, type are required elements by SequenceRelation element."
@@ -976,6 +1001,7 @@ module PhyloXML
         @absent = []
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         bc = XML::Node.new('binary_characters')
         bc['type'] = @bc_type
@@ -1043,6 +1069,7 @@ module PhyloXML
         end
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         if @id_ref_0 == nil or @id_ref_1 == nil or @type == nil
           raise "Attributes id_ref_0, id_ref_1, type are required elements by SequenceRelation element."
@@ -1066,6 +1093,7 @@ module PhyloXML
         @attributes = Hash.new
       end
 
+      # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml
         o = XML::Node.new(@element_name)
         @attributes.each do |key, value|

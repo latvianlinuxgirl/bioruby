@@ -1,11 +1,55 @@
 module Bio
 
-  module PhyloXML    
+  module PhyloXML
+
+  # == Description
+  #
+  # Bio::PhyloXML::Writer is for writing phyloXML (version 1.10) format files.
+  # This is an alpha version. Incompatible changes may be made frequently.
+  #
+  # == Requirements
+  #
+  # Libxml2 XML parser is required. Install libxml-ruby bindings from
+  # http://libxml.rubyforge.org or
+  #
+  #   gem install -r libxml-ruby
+  #
+  # == Usage
+  #
+  #   require 'bio'
+  #
+  #  # Create new phyloxml parser
+  #  phyloxml = Bio::PhyloXML::Parser.new('example.xml')
+  #
+  #  # Read in some trees from file
+  #  tree1 = phyloxml.next_tree
+  #  tree2 = phyloxml.next_tree
+  #
+  #  # Create new phyloxml writer
+  #  writer = Bio::PhyloXML::Writer.new('tree.xml')
+  #
+  #  # Write tree to the file tree.xml
+  #  writer.write(tree1)
+  #
+  #  # Add another tree to the file
+  #  writer.write(tree2)
+  #
+  # == References
+  #
+  # http://www.phyloxml.org/documentation/version_100/phyloxml.xsd.html
 
     class Writer
+
+      SCHEMA_LOCATION = 'http://www.phyloxml.org http://www.phyloxml.org/1.10/phyloxml.xsd'
             
       attr_accessor :write_branch_length_as_subelement
-      
+
+      #
+      # Create new Writer object. As parameters provide filename of xml file
+      # you wish to create. Optional parameter is whether to indent or no.
+      # Default is true. By default branch_length is written as subelement of
+      # clade element.
+      #
       def initialize(filename, indent=true)
       @write_branch_length_as_subelement = true #default value
       @filename = filename
@@ -15,7 +59,7 @@ module Bio
       @doc.root = XML::Node.new('phyloxml')
       @root = @doc.root
       @root['xmlns:xsi'] = 'http://www.w3.org/2001/XMLSchema-instance'
-      @root['xsi:schemaLocation'] = 'http://www.phyloxml.org http://www.phyloxml.org/1.00/phyloxml.xsd'
+      @root['xsi:schemaLocation'] = SCHEMA_LOCATION
       @root['xmlns'] = 'http://www.phyloxml.org'
 
       #@todo save encoding to be UTF-8. (However it is the default one).
@@ -25,6 +69,13 @@ module Bio
       @doc.save(@filename, true)
       end
 
+      #
+      # Write a tree to a file in phyloxml format.
+      #
+      #  require 'Bio'
+      #  writer = Bio::PhyloXML::Writer.new
+      #  writer.write(tree)
+      #
       def write(tree)
         @root << phylogeny = XML::Node.new('phylogeny')        
         
@@ -53,6 +104,22 @@ module Bio
       end #writer#write
 
 
+      #
+      # PhyloXML Schema allows to save data in different xml format after all
+      # phylogeny elements. This method is to write these additional data.
+      #
+      #  parser = PhyloXML::Parser.new('phyloxml_examples.xml')
+      #  writer = PhyloXML::Writer.new('new.xml')
+      #
+      #  parser.each do |tree|
+      #    writer.write(tree)
+      #  end
+      #
+      #  # When all the trees are read in by the parser, whats left is saved at
+      #  # PhyloXML::Parser#other
+      #  writer.write(parser.other)
+      #
+
       def write_other(other_arr)
         other_arr.each do |other_obj|
           @root << other_obj.to_xml
@@ -62,6 +129,10 @@ module Bio
 
       #class method
 
+      #
+      # Used by to_xml methods of PhyloXML element classes. Generally not to be
+      # invoked directly. 
+      #
       def self.generate_xml(root, elem, subelement_array)
             #[[ :complex,'accession', ], [:simple, 'name',  @name], [:simple, 'location', @location]])
       subelement_array.each do |subelem|
@@ -126,41 +197,6 @@ module Bio
       end
 
     end
-
-#
-#    class Tree < Bio::Tree
-#
-#      def write(filename)
-#
-#        @doc = XML::Document.new()
-#        @doc.root = XML::Node.new('phyloxml')
-#        root = @doc.root
-#
-#        root << clade = XML::Node.new('clade')
-#
-#        clade << name = XML::Node.new('name')
-#        name << 'THis is new clade'
-##        elem2['attr1'] = 'val1'
-##        elem2['attr2'] = 'val2'
-##
-##        root << elem3 = XML::Node.new('elem3')
-##        elem3 << elem4 = XML::Node.new('elem4')
-##        elem3 << elem5 = XML::Node.new('elem5')
-##
-##        elem5 << elem6 = XML::Node.new('elem6')
-##        elem6 << 'Content for element 6'
-##
-##        elem3['attr'] = 'baz'
-#
-#        @doc.save(filename, true)
-#        root << clade2 = XML::Node.new('clade')
-#        clade2 << name2 = XML::Node.new('name')
-#        name2 << "Second clade"
-#        @doc.save(filename, true)
-#      end
-
-#
-#    end
 
   end
 end

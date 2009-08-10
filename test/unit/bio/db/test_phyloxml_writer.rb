@@ -85,7 +85,7 @@ module Bio
       writer.write(tree)
       
       lines = File.open(TestPhyloXMLData.file("sample.xml")).readlines()
-      assert_equal("<phyloxml xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.phyloxml.org http://www.phyloxml.org/1.00/phyloxml.xsd\" xmlns=\"http://www.phyloxml.org\">",
+      assert_equal("<phyloxml xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.phyloxml.org http://www.phyloxml.org/1.10/phyloxml.xsd\" xmlns=\"http://www.phyloxml.org\">",
                     lines[1].chomp)
       assert_equal("  <phylogeny rooted=\"true\">", lines[2].chomp)
       assert_equal("    <name>Test tree</name>", lines[3].chomp)
