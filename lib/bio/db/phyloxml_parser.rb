@@ -166,9 +166,7 @@ module PhyloXML
         #p o
         return nil
         
-         #return nil for tree, since this is not valid phyloxml tree.
-        #@todo maybe not, maybe return a tree of Other object elements.
-        #Lets return other object too, then it will also be easier to write all the trees back to file
+         #return nil for tree, since this is not valid phyloxml tree.        
       elsif is_end_element?('phyloxml')
         puts "end"
       end
@@ -196,8 +194,6 @@ module PhyloXML
         # parse phylogeny elements, except clade
         if not parsing_clade
 
-          # @todo when entering in next_tree, first element should be phylogeny,
-          # so it should not be checked here.
           if is_element?('phylogeny')
             @reader["rooted"] == "true" ? tree.rooted = true : tree.rooted = false
             @reader["rerootable"] == "true" ? tree.rerootable = true : tree.rerootable = false
@@ -412,20 +408,6 @@ module PhyloXML
         object.send("#{attr}=", @reader[attr])
       end
     end
-
-    #parses elements where attributes of the object are arrays of objects.
-    def parse_complex_array_elements(object, elements)
-      #@todo this code might not be needed anymore. (Does not work with plural forms)
-      # Example code:
-      # if is_element('confidence')
-      #   current_node.confidence << parse_confidence
-      # end
-      elements.each do |elem|        
-        if is_element?(elem)
-          object.send("#{elem}") << self.send("parse_#{elem}")
-        end
-      end
-    end #parse_complex_array_elements
 
     def parse_clade_elements(current_node, current_edge)
       #no loop inside, it is already outside

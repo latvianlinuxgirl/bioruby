@@ -161,7 +161,6 @@ module PhyloXML
 
     def width=(str)
       @width = str.to_f
-      #@todo maybe this attr should be part of Bio::Tree::Edge
     end
 
     # Array of Taxonomy objects. Describes taxonomic information for a clade.
@@ -311,7 +310,6 @@ module PhyloXML
       #@todo add unit test for this
       if not ['transfer','fusion','speciation_or_duplication','other','mixed', 'unassigned'].include?(str)
         raise "Warning #{str} is not one of the allowed values"
-        #@todo don't need this since, file is validated.
       end
     end
 
@@ -572,7 +570,7 @@ module PhyloXML
 
       # converts Bio::PhyloXML:Sequence to Bio::Sequence object.
       # ---
-      # *Returns*:: Bio::Tree::Sequence
+      # *Returns*:: Bio::Sequence
       def to_biosequence
         #type is not a required attribute in phyloxml (nor any other Sequence
         #element) it might not hold any value, so we will not check what type it is.
@@ -634,7 +632,7 @@ module PhyloXML
       # String. For example, image.
       attr_accessor :type
       # String. URL of the resource.
-      attr_accessor :uri #@todo call it url?
+      attr_accessor :uri 
 
       # Converts elements to xml representation. Called by PhyloXML::Writer class.
       def to_xml        
@@ -681,7 +679,6 @@ module PhyloXML
 
       # Converts elements to xml representation. Called by PhyloXML::Writer class. 
       def to_xml
-        #@todo add uni test. Specifically test property. Add Annotation->property for made_up xml
         annot = XML::Node.new('annotation')
         annot["ref"] = @ref if @ref != nil
         PhyloXML::Writer.generate_xml(annot, self, [[:simple, 'desc', @desc],
@@ -745,7 +742,6 @@ module PhyloXML
         return c
       end
 
-      #@todo maybe should be part of Bio::Tree::Edge
     end
 
     # == Description
