@@ -26,7 +26,7 @@
 
 require 'bio/tree'
 
-require 'bio/db/phyloxml_elements'
+#require 'bio/db/phyloxml/phyloxml_elements'
 
 require 'xml'
 
