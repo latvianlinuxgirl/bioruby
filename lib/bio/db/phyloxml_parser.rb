@@ -263,6 +263,7 @@ module PhyloXML
             case @reader.name
             when 'property'
               tree.properties << parse_property
+
             when 'clade_relation'
               clade_relation = CladeRelation.new
               parse_attributes(clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
@@ -289,7 +290,8 @@ module PhyloXML
             when 'phylogeny'
               #do nothing
             else
-              puts "Not recognized element. #{@reader.name}"
+              tree.other << parse_other
+              #puts "Not recognized element. #{@reader.name}"
             end
           end
 
@@ -506,8 +508,8 @@ module PhyloXML
         when 'clade'
           #do nothing
         else
-          #do nothing now
-          puts "No match found in parse_clade_elements.(#{@reader.name})"
+          current_node.other << parse_other
+          #puts "No match found in parse_clade_elements.(#{@reader.name})"
         end
 
       end
@@ -567,28 +569,12 @@ module PhyloXML
             taxonomy.synonyms << @reader.value
             @reader.read
             #has_reached_end_element?('synonym')
-          else
+          when 'uri'
             taxonomy.uri = parse_uri
+          else
+            taxonomy.other << parse_other
           end
         end
-
-#        taxonomy.taxonomy_id = parse_id('id') if is_element?('id')
-#
-#        if is_element?('common_name')
-#          @reader.read
-#          taxonomy.common_names << @reader.value
-#          @reader.read
-#          has_reached_end_element?('common_name')
-#        end
-#
-#        if is_element?('synonym')
-#          @reader.read
-#          taxonomy.synonyms << @reader.value
-#          @reader.read
-#          has_reached_end_element?('synonym')
-#        end
-#
-#        taxonomy.uri = parse_uri if is_element?('uri')
 
         @reader.read  #move to next tag in the loop
       end
@@ -604,42 +590,52 @@ module PhyloXML
       @reader.read
       while not(is_end_element?('sequence'))
 
-        parse_simple_elements(sequence,['symbol', 'name', 'location', 'symbol'])
-
-        if is_element?('mol_seq')
-          sequence.is_aligned = @reader["is_aligned"]
-          @reader.read          
-          sequence.mol_seq = @reader.value
-          @reader.read
-          has_reached_end_element?('mol_seq')
-        end
-
-
-        if is_element?('accession')
-          sequence.accession = Accession.new
-          sequence.accession.source = @reader["source"]
-          @reader.read
-          sequence.accession.value = @reader.value
-          @reader.read
-          has_reached_end_element?('accession')
-        end
-
-        sequence.uri = parse_uri if is_element?('uri')
-
-        sequence.annotations << parse_annotation if is_element?('annotation')
-
-        if is_element?('domain_architecture')
-          sequence.domain_architecture = DomainArchitecture.new
-          sequence.domain_architecture.length = @reader["length"]
-
-          @reader.read
-          @reader.read          
-          while not(is_end_element?('domain_architecture'))
-            sequence.domain_architecture.domains << parse_domain
-            @reader.read #go to next domain element
+        if @reader.node_type == XML::Reader::TYPE_ELEMENT
+          case @reader.name
+          when 'symbol'
+            @reader.read
+            sequence.symbol = @reader.value
+            @reader.read
+          when 'name'
+            @reader.read
+            sequence.name = @reader.value
+            @reader.read
+          when 'location'
+            @reader.read
+            sequence.location = @reader.value
+            @reader.read
+          when 'mol_seq'
+            sequence.is_aligned = @reader["is_aligned"]
+            @reader.read
+            sequence.mol_seq = @reader.value
+            @reader.read
+            has_reached_end_element?('mol_seq')
+          when 'accession'
+            sequence.accession = Accession.new
+            sequence.accession.source = @reader["source"]
+            @reader.read
+            sequence.accession.value = @reader.value
+            @reader.read
+            has_reached_end_element?('accession')
+          when 'uri'
+            sequence.uri = parse_uri
+          when 'annotation'
+            sequence.annotations << parse_annotation
+          when 'domain_architecture'
+            sequence.domain_architecture = DomainArchitecture.new
+            sequence.domain_architecture.length = @reader["length"]
+            @reader.read
+            @reader.read
+            while not(is_end_element?('domain_architecture'))
+              sequence.domain_architecture.domains << parse_domain
+              @reader.read #go to next domain element
+            end
+          else
+            sequence.other << parse_other
+            #@todo add unit test            
           end
         end
-        
+
         @reader.read
       end
       return sequence

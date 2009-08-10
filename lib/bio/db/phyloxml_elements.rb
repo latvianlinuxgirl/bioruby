@@ -58,6 +58,15 @@ module PhyloXML
     # Uri object
     attr_accessor :uri
 
+    # Array of Other objects. Used to save additional information from other than
+    # PhyloXML namspace.
+    attr_accessor :other
+
+    def initialize
+      super
+      @other = []
+    end
+
     # Converts elements to xml representation. Called by PhyloXML::Writer class.
     def to_xml
       taxonomy = XML::Node.new('taxonomy')
@@ -118,12 +127,17 @@ module PhyloXML
     # String. Date
     attr_accessor :date
 
+    # Array of Other objects. Used to save additional information from other than
+    # PhyloXML namspace.
+    attr_accessor :other
+
    def initialize
      super
      @sequence_relations = []
      @clade_relations = []
      @confidences = []
      @properties = []
+     @other = []
    end
 
  end
@@ -180,6 +194,10 @@ module PhyloXML
     #An array of Property objects, for example depth for sea animals.
     attr_accessor :properties
 
+    # Array of Other objects. Used to save additional information from other than
+    # PhyloXML namspace.
+    attr_accessor :other
+
     def initialize
       @confidences = []
       @sequences = []
@@ -187,6 +205,7 @@ module PhyloXML
       @distributions = []
       @references = []
       @properties = []
+      @other = []
     end
 
 
@@ -484,8 +503,13 @@ module PhyloXML
       # DomainArchitecture object. Describes domain architecture of a protein.
       attr_accessor :domain_architecture
 
+      # Array of Other objects. Used to save additional information from other than
+      # PhyloXML namspace.
+      attr_accessor :other
+
       def initialize
         @annotations = []
+        @other = []
       end
 
       def is_aligned=(str)
