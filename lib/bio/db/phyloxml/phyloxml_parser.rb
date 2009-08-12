@@ -24,15 +24,17 @@
 #
 # * https://www.nescent.org/wg_phyloinformatics/PhyloSoC:PhyloXML_support_in_BioRuby
 
-require 'bio/tree'
-
-#require 'bio/db/phyloxml/phyloxml_elements'
-
-require 'xml'
 
 module Bio
 
 module PhyloXML
+
+require 'bio/tree'
+
+require 'bio/db/phyloxml/phyloxml_elements'
+
+require 'xml'
+
 
   # == Description
   #
@@ -65,10 +67,10 @@ module PhyloXML
   #
   class Parser
 
-    #
     # After parsing all the trees, if there is anything else in other xml format,
     # it is saved in this array.
     attr_reader :other
+
 
     # Initializes LibXML::Reader and reads the file until it reaches the first
     # phylogeny element.
@@ -80,20 +82,22 @@ module PhyloXML
     # ---
     # *Arguments*:
     # * (required) _filename_: Path to the file to parse.
+    # * (optional) _validate_: Whether to validate the file against schema or not. Default value is true.
     # *Returns*:: Bio::PhyloXML::Parser object
-    def initialize(filename)
+    def initialize(filename, validate=true)
 
       @other = []
-      #@todo decide if need to be able initialize using string, since usually xml lives in files
 
       #check if parameter is a valid file name
       if File.exists?(filename)
-        schema = XML::Schema.document(XML::Document.file(File.join(File.dirname(__FILE__),'phyloxml.xsd')))
-        xml_instance = XML::Document.file(filename)
-        xml_instance.validate_schema(schema) do |msg, flag|
-          puts msg
-          raise "Validation of the XML document against phyloxml.xsd schema failed." + msg
-        end        
+        # By default do validation
+        unless validate == false
+          schema = XML::Schema.document(XML::Document.file(File.join(File.dirname(__FILE__),'phyloxml.xsd')))
+          xml_instance = XML::Document.file(filename)
+          xml_instance.validate_schema(schema) do |msg, flag|
+            raise "Validation of the XML document against phyloxml.xsd schema failed." + msg
+          end
+        end
 
         @reader = XML::Reader.file(filename)
       else 

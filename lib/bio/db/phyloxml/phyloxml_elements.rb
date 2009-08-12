@@ -1,5 +1,5 @@
 #
-# = bio/db/phyloxml.rb - PhyloXML Element classes
+# = bio/db/phyloxml_elements.rb - PhyloXML Element classes
 #
 # Copyright::   Copyright (C) 2009
 #               Diana Jaunzeikare <latvianlinuxgirl@gmail.com>

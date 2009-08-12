@@ -1,3 +1,29 @@
+#
+# = bio/db/phyloxml_writer.rb - PhyloXML writer
+#
+# Copyright::   Copyright (C) 2009
+#               Diana Jaunzeikare <latvianlinuxgirl@gmail.com>
+# License::     The Ruby License
+#
+# $Id:$
+#
+# == Description
+#
+# This file containts writer for PhyloXML.
+#
+# == Requirements
+#
+# Libxml2 XML parser is required. Install libxml-ruby bindings from
+# http://libxml.rubyforge.org or
+#
+#   gem install -r libxml-ruby
+#
+# == References
+#
+# * http://www.phyloxml.org
+#
+# * https://www.nescent.org/wg_phyloinformatics/PhyloSoC:PhyloXML_support_in_BioRuby
+
 module Bio
 
   module PhyloXML
