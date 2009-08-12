@@ -22,7 +22,7 @@ module Bio
   # This is general Taxonomy class.
 
   class Taxonomy
-    #pattern = [a-zA-Z0-9_]{2,10} Swiss-prot specific in phyloXML case
+    #pattern = [a-zA-Z0-9_]{2,10} Can refer to any code/abbreviation/mnemonic, such as Bsu for Bacillus subtilis.
     attr_accessor :code
 
     # String.
