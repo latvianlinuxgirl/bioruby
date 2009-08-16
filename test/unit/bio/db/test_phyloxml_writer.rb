@@ -42,7 +42,7 @@ module Bio
   end
 
   def self.example_xml_test
-    File.join PHYLOXML_WRITER_TEST_DATA, 'phyloxml_examples_test.xml'
+    File.join PHYLOXML_WRITER_TEST_DATA, 'phyloxml_examples_written.xml'
   end
 
   end #end module TestPhyloXMLData
@@ -65,6 +65,8 @@ module Bio
       assert_nothing_thrown do
         Bio::PhyloXML::Parser.new(TestPhyloXMLData.file("test2.xml"))
       end
+
+      File.delete(TestPhyloXMLData.file("test2.xml"))
     end
 
     def test_simple_xml
@@ -99,6 +101,7 @@ module Bio
       assert_equal("  </phylogeny>", lines[13].chomp)
       assert_equal("</phyloxml>", lines[14].chomp)
 
+      File.delete(TestPhyloXMLData.file("sample.xml"))
     end
 
     def test_phyloxml_examples_tree1
@@ -111,6 +114,8 @@ module Bio
       assert_nothing_thrown do
         tree2  = Bio::PhyloXML::Parser.new('./example_tree1.xml')
       end
+
+      File.delete('./example_tree1.xml')
 
       #@todo check if branch length is written correctly
     end
@@ -127,6 +132,8 @@ module Bio
       assert_nothing_thrown do
         tree2  = Bio::PhyloXML::Parser.new('./example_tree2.xml')
       end
+      
+      File.delete('./example_tree2.xml')
     end
 
     def test_phyloxml_examples_tree4
@@ -145,6 +152,7 @@ module Bio
       assert_equal(@tree.get_node_by_name('B').sequences[0].annotations[0].desc,
         @tree2.get_node_by_name('B').sequences[0].annotations[0].desc)
      # assert_equal(@tree.get_node_by_name('B').sequences[0].annotations[0].confidence.value,@tree2.get_node_by_name('B').sequences[0].annotations[0].confidence.value)
+     File.delete('./example_tree4.xml')
     end
 
     def test_phyloxml_examples_sequence_relation
@@ -167,6 +175,7 @@ module Bio
       assert_equal(@tree.sequence_relations[2].distance, nil)
       assert_equal(@tree.sequence_relations[2].type, "orthology")
 
+      File.delete(TestPhyloXMLData.example_xml_test)
     end
 
     def test_generate_xml_with_sequence
@@ -214,18 +223,20 @@ module Bio
       assert_nothing_thrown do
         Bio::PhyloXML::Parser.new('./sequence.xml').next_tree
       end
+
+      File.delete('./sequence.xml')
     end
 
     def test_phyloxml_examples_file
       phyloxml = Bio::PhyloXML::Parser.new(TestPhyloXMLData.example_xml)
-      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.file("phyloxml_example_test2.xml"))
+      writer = Bio::PhyloXML::Writer.new(TestPhyloXMLData.file("phyloxml_examples_test.xml"))
       phyloxml.each do |tree|
         writer.write(tree)
       end
       writer.write_other(phyloxml.other)
 
       assert_nothing_thrown do
-        Bio::PhyloXML::Parser.new(TestPhyloXMLData.file("phyloxml_example_test2.xml"))
+        Bio::PhyloXML::Parser.new(TestPhyloXMLData.file("phyloxml_examples_test.xml"))
       end
     end
 
