@@ -303,6 +303,20 @@ end #end module TestPhyloXMLData
        }
      end
 
+     def test_extract_biosequence
+       5.times do
+         @tree = @phyloxml.next_tree
+       end
+       @tree.leaves.each { |node|
+         if node.sequences[0].symbol == 'ADHX'
+           seq = node.extract_biosequence
+           assert_equal(seq.definition,'Alcohol dehydrogenase class-3' )
+           assert_equal(seq.seq.to_s,'TDATGKPIKCMAAIAWEAKKPLSIEEVEVAPPKSGEVRIKILHSGVCHTD' )
+           assert_equal(seq.classification[0],'Octopus vulgaris')
+         end
+       }
+     end
+
      def test_date
        11.times do
          @tree = @phyloxml.next_tree

@@ -30,7 +30,14 @@ module Bio
     # An array of strings
     attr_accessor :common_names
 
-    # value comes from list: domain kingdom, subkingdom, branch, infrakingdom, superphylum, phylum, subphylum, infraphylum, microphylum, superdivision, division, subdivision, infradivision, superclass, class, subclass, infraclass, superlegion, legion, sublegion, infralegion, supercohort, cohort, subcohort, infracohort, superorder, order, suborder, superfamily, family, subfamily, supertribe, tribe, subtribe, infratribe, genus, subgenus, superspecies, species, subspecies, variety, subvariety, form, subform, cultivar, unknown, other
+    # value comes from list: domain kingdom, subkingdom, branch, infrakingdom,
+    # superphylum, phylum, subphylum, infraphylum, microphylum, superdivision,
+    # division, subdivision, infradivision, superclass, class, subclass,
+    # infraclass, superlegion, legion, sublegion, infralegion, supercohort,
+    # cohort, subcohort, infracohort, superorder, order, suborder,
+    # superfamily, family, subfamily, supertribe, tribe, subtribe, infratribe,
+    # genus, subgenus, superspecies, species, subspecies, variety, subvariety,
+    # form, subform, cultivar, unknown, other
     attr_accessor :rank
 
     # is used to keep the authority, such as 'J. G. Cooper, 1863', associated with the 'scientific_name'.
@@ -238,6 +245,30 @@ module PhyloXML
       end      
       return node
     end
+
+    # Extracts the relevant information from node (specifically taxonomy and
+    # sequence) to create Bio::Sequence object. Node can have several sequences,
+    # so parameter to this method is to specify which sequence to extract. 
+    #
+    # ---
+    # *Returns*:: Bio::Sequence
+    def extract_biosequence(seq_i=0)
+
+      seq = @sequences[seq_i].to_biosequence
+      seq.classification = []
+      @taxonomies.each do |t|
+        seq.classification << t.scientific_name
+        if t.rank == "species"
+          seq.species = t.scientific_name
+        end
+      end
+
+      #seq.division => .. http://www.ebi.ac.uk/embl/Documentation/User_manual/usrman.html#3_2
+      # It doesn't seem there is anything in PhyloXML corresponding to this.
+
+      return seq
+    end
+
     # Converts elements to xml representation. Called by PhyloXML::Writer class.
     def to_xml(branch_length,  write_branch_length_as_subelement)
       clade = XML::Node.new('clade')
@@ -589,11 +620,6 @@ module PhyloXML
         end
         seq.molecule_type = 'RNA' if @type == 'rna'
         seq.molecule_type = 'DNA' if @type == 'dna'
-
-
-        #seq.classification = get from taxonomy
-        #seq.species => get from taxonomy
-        #seq.division => ..
 
         #@todo deal with the properties. There might be properties which look
         #like bio sequence attributes or features
