@@ -39,8 +39,7 @@ require 'xml'
   # == Description
   #
   # Bio::PhyloXML is for parsing phyloXML format files.
-  # This is an alpha version. Incompatible changes may be made frequently.
-  #
+  # 
   # == Requirements
   #
   # Libxml2 XML parser is required. Install libxml-ruby bindings from
@@ -68,9 +67,8 @@ require 'xml'
   class Parser
 
     # After parsing all the trees, if there is anything else in other xml format,
-    # it is saved in this array.
+    # it is saved in this array of PhyloXML::Other objects
     attr_reader :other
-
 
     # Initializes LibXML::Reader and reads the file until it reaches the first
     # phylogeny element.
@@ -88,7 +86,6 @@ require 'xml'
 
       @other = []
 
-      #check if parameter is a valid file name
       if File.exists?(filename)
         # By default do validation
         unless validate == false
@@ -138,7 +135,9 @@ require 'xml'
       return tree
     end
 
-    # Parse and return the next phylogeny tree.
+    # Parse and return the next phylogeny tree. If there are no more phylogeny
+    # element, nil is returned. If there is something else besides phylogeny
+    # elements, it is saved in the PhyloXML::Parser#other.
     # 
     #  p = Bio::PhyloXML::Parser.new("./phyloxml_examples.xml")
     #  tree = p.next_tree
@@ -161,18 +160,10 @@ require 'xml'
         end        
         # phyloxml can hold only phylogeny and "other" elements. If this is not
         # phylogeny element then it is other. Also, "other" always comes after
-        # all phylogenies
-        #@other = parse_other
-        #puts "===================  Other parsed: "
-        #p @other
-        #return @other
-        @other << parse_other
-        #p o
+        # all phylogenies        
+        @other << parse_other        
+        #return nil for tree, since this is not valid phyloxml tree.
         return nil
-        
-         #return nil for tree, since this is not valid phyloxml tree.        
-      elsif is_end_element?('phyloxml')
-        puts "end"
       end
 
       tree = Bio::PhyloXML::Tree.new
@@ -251,7 +242,7 @@ require 'xml'
           if clades[-1] == tree.root
             parsing_clade = false
           else
-            # set current node to the previous clade in the array
+            # set current node (clades[-1) to the previous clade in the array
             clades.pop
           end
         end          
@@ -294,40 +285,6 @@ require 'xml'
               #puts "Not recognized element. #{@reader.name}"
             end
           end
-
-#          if is_element?('property')
-#            tree.properties << parse_property
-#          end
-#
-#          if is_element?('clade_relation')
-#            clade_relation = CladeRelation.new
-#            parse_attributes(clade_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
-#
-#            #@ add unit test for this
-#            if not @reader.empty_element?
-#              @reader.read
-#              if is_element?('confidence')
-#                clade_relation.confidence = parse_confidence
-#              end
-#            end
-#            tree.clade_relations << clade_relation
-#          end
-#
-#          if is_element?('sequence_relation')
-#
-#            sequence_relation = SequenceRelation.new
-#            parse_attributes(sequence_relation, ["id_ref_0", "id_ref_1", "distance", "type"])
-#
-#
-#            if not @reader.empty_element?
-#              @reader.read
-#              if is_element?('confidence')
-#                sequence_relation.confidence = parse_confidence
-#              end
-#            end
-#            tree.sequence_relations << sequence_relation
-#          end
-
         end
         # go to next element        
         @reader.read    
@@ -380,8 +337,7 @@ require 'xml'
     end
 
     def has_reached_end_element?(str)
-      if not(is_end_element?(str))
-        #puts "Warning: Should have reached </#{str}> element here"
+      if not(is_end_element?(str))        
         raise "Warning: Should have reached </#{str}> element here"
       end
     end
@@ -414,14 +370,13 @@ require 'xml'
     end
 
     def parse_clade_elements(current_node, current_edge)
-      #no loop inside, it is already outside
+      #no loop inside, loop is already outside
 
       if @reader.node_type == XML::Reader::TYPE_ELEMENT
         case @reader.name
         when 'branch_length'
           # @todo add unit test for this. current_edge is nil, if the root clade
-          # has branch_length attribute. Is it even supposed to have? Its still
-          # valid xml.
+          # has branch_length attribute. 
           @reader.read
           branch_length = @reader.value
           current_edge.distance = branch_length.to_f if current_edge != nil
@@ -465,8 +420,6 @@ require 'xml'
         when 'date'
           date = Date.new
           date.unit = @reader["unit"]
-          #parse_attributes(date, ["unit"])
-
           #move to the next token, which is always empty, since date tag does not
           # have text associated with it
           @reader.read
@@ -510,7 +463,7 @@ require 'xml'
                                             'speciations', 'losses'])
         if is_element?('confidence')
           events.confidence = parse_confidence
-          #@todo add unit test for this (example file does not have this case)
+          #@todo could add unit test for this (example file does not have this case)
         end
         @reader.read
       end
@@ -522,8 +475,6 @@ require 'xml'
       parse_attributes(taxonomy, ["id_source"])
       @reader.read
       while not(is_end_element?('taxonomy')) do
-
-        #parse_simple_elements(taxonomy,['code', 'scientific_name', 'rank', 'authority'] )
 
         if @reader.node_type == XML::Reader::TYPE_ELEMENT
           case @reader.name
@@ -648,8 +599,7 @@ require 'xml'
           annotation.properties << parse_property if is_element?('property')
 
           if is_element?('uri')
-            annotation.uri = parse_uri
-            #@todo add unit test to this
+            annotation.uri = parse_uri        
           end
 
           @reader.read
@@ -724,7 +674,7 @@ require 'xml'
         @reader.read
       end
 
-      #@should check for it at all? Probably not if xml is valid. 
+      #@todo should check for it at all? Probably not if xml is valid.
       if polygon.points.length <3
         puts "Warning: <polygon> should have at least 3 points"
       end
@@ -738,7 +688,6 @@ require 'xml'
       id.value = @reader.value
       @reader.read #@todo shouldn't there be another read?
       has_reached_end_element?(tag_name)
-          #@todo write unit test for this. There is no example of this in the example files
       return id
     end #parse_id
 
@@ -757,7 +706,6 @@ require 'xml'
       b = PhyloXML::BinaryCharacters.new
       b.bc_type = @reader['type']
 
-      #parse_attributes(b, ['type', 'gained_count', 'absent_count', 'lost_count', 'present_count'])
       parse_attributes(b, ['gained_count', 'absent_count', 'lost_count', 'present_count'])
       if not @reader.empty_element?
         @reader.read

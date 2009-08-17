@@ -31,7 +31,6 @@ module Bio
   # == Description
   #
   # Bio::PhyloXML::Writer is for writing phyloXML (version 1.10) format files.
-  # This is an alpha version. Incompatible changes may be made frequently.
   #
   # == Requirements
   #
@@ -160,10 +159,9 @@ module Bio
       # invoked directly. 
       #
       def self.generate_xml(root, elem, subelement_array)
-            #[[ :complex,'accession', ], [:simple, 'name',  @name], [:simple, 'location', @location]])
+       #example usage: generate_xml(node, self, [[ :complex,'accession', ], [:simple, 'name',  @name], [:simple, 'location', @location]])
       subelement_array.each do |subelem|
-        if subelem[0] == :simple
-         # seq << XML::Node.new('name', @name) if @name != nil
+        if subelem[0] == :simple         
           root << XML::Node.new(subelem[1], subelem[2].to_s) if subelem[2] != nil and not subelem[2].to_s.empty?
 
         elsif subelem[0] == :complex
@@ -173,7 +171,6 @@ module Bio
           #seq, self, [[:pattern, 'symbol', @symbol, "\S{1,10}"]
           if subelem[2] != nil
             if subelem[2] =~ subelem[3]
-
               root << XML::Node.new(subelem[1], subelem[2])
             else
               raise "#{subelem[2]} is not a valid value of #{subelem[1]}. It should follow pattern #{subelem[3]}"
@@ -182,7 +179,6 @@ module Bio
 
         elsif subelem[0] == :objarr
           #[:objarr, 'annotation', 'annotations']])
-
           obj_arr = elem.send(subelem[2])
           obj_arr.each do |arr_elem|
             root << arr_elem.to_xml
@@ -211,7 +207,6 @@ module Bio
       def node_to_xml(tree, node, parent)
         edge = tree.get_edge(parent, node)
         branch_length = edge.distance
-
 
         clade = node.to_xml(branch_length, @write_branch_length_as_subelement)
 
