@@ -224,6 +224,14 @@ module Bio
         @nhx_parameters
       end
 
+      # Returns an array of children nodes of this node. This method works
+      # faster than Tree#parent, because it only returns the saved references,
+      # it does not do any calculations
+      attr_accessor :children
+
+      #Parent node of this node
+      attr_accessor :parent
+
     end #class Node
 
     # Gets node name
