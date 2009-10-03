@@ -1,10 +1,14 @@
+require 'pathname'
+libpath = Pathname.new(File.join(File.dirname(__FILE__), '..', 'lib')).cleanpath.to_s
+$:.unshift(libpath) unless $:.include?(libpath)
+
 require 'bio'
-#require '../lib/bio/db/phyloxml/phyloxml_parser'
-#require '../lib/bio/db/phyloxml/phyloxml_writer'
+
+
 
 fn = ARGV[0]
 if fn.nil?
-       fn = '../test/data/phyloxml/ncbi_taxonomy_mollusca.xml'
+       fn = File.join(File.dirname(__FILE__),'../test/data/phyloxml/ncbi_taxonomy_mollusca.xml')
 end
 
 puts "Started: " + Time.now.to_s
