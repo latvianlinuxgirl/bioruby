@@ -204,6 +204,12 @@ module PhyloXML
     # PhyloXML namspace.
     attr_accessor :other
 
+    # Parent node of this node
+    attr_accessor :parent
+
+    # Array of children nodes
+    attr_accessor :children
+
     def initialize
       @confidences = []
       @sequences = []
@@ -212,6 +218,8 @@ module PhyloXML
       @references = []
       @properties = []
       @other = []
+
+      @children = []
     end
 
 
