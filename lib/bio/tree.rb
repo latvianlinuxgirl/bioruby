@@ -139,6 +139,7 @@ module Bio
       # Creates a new node.
       def initialize(name = nil)
         @name = name if name
+        @children = []
       end
 
       # name of the node
@@ -375,6 +376,9 @@ module Bio
     # If the edge already exists, it is overwritten with new one.
     def add_edge(source, target, edge = Edge.new)
       @pathway.append(Bio::Relation.new(source, target, edge))
+        source.children << target
+        #Assumtion that each node can have just one parent
+        target.parent = source
       edge
     end
 

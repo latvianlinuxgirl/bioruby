@@ -589,5 +589,29 @@ module Bio
     end
   end #class TestTree2
 
+  class TestParent_Children < Test::Unit::TestCase
+
+    def test_init
+      tree = Tree.new
+      node1 = Tree::Node.new("node1")
+      tree.add_node(node1)
+      tree.root = node1
+      node2 = Tree::Node.new("node2")
+      tree.add_node(node2)
+      tree.add_edge(tree.root, node2)
+      assert_equal([node2], node1.children)
+      assert_equal(node1, node2.parent)
+#      p tree
+
+
+ #     p "Children of node1: ", node1.children
+  #    p "Parent of node2: ", node2.parent
+      #p "Parent of node1 ", node1.parent
+      #p   node2.children
+      
+    end
+
+  end
+
 end #module Bio
 
