@@ -118,7 +118,8 @@ module Bio
         
         phylogeny << root_clade 
 
-        tree.children(tree.root).each do |node|
+        #tree.children(tree.root).each do |node|
+        tree.root.children.each do |node|
           root_clade << node_to_xml(tree, node, tree.root)
         end
 
@@ -212,7 +213,8 @@ module Bio
 
         clade = node.to_xml(branch_length, @write_branch_length_as_subelement)
 
-        tree.children(node).each do |new_node|
+        #tree.children(node).each do |new_node|
+        node.children.each do |new_node|
           clade << node_to_xml(tree, new_node, node)
         end
 
