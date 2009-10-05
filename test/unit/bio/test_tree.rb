@@ -601,13 +601,11 @@ module Bio
       tree.add_edge(tree.root, node2)
       assert_equal([node2], node1.children)
       assert_equal(node1, node2.parent)
-#      p tree
 
+      tree.clear_node(node2)
+      assert_equal(nil, node2.parent)
+      assert_equal([], node1.children)
 
- #     p "Children of node1: ", node1.children
-  #    p "Parent of node2: ", node2.parent
-      #p "Parent of node1 ", node1.parent
-      #p   node2.children
       
     end
 

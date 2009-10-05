@@ -423,6 +423,11 @@ module Bio
         @pathway.graph[k].delete(node)
       end
       @pathway.graph[node].clear
+
+      node.parent.children.delete_if{|n| n.equal? node} if node.parent != nil
+      node.parent = nil
+      node.children = []
+
       self
     end
 
