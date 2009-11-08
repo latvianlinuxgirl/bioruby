@@ -591,22 +591,40 @@ module Bio
 
   class TestParent_Children < Test::Unit::TestCase
 
+    def setup
+      @tree = Tree.new
+      @node1 = Tree::Node.new("node1")
+      @tree.add_node(@node1)
+      @tree.root = @node1
+      @node2 = Tree::Node.new("node2")
+      @tree.add_node(@node2)
+      @tree.add_edge(@tree.root, @node2)
+    end
+
     def test_init
-      tree = Tree.new
-      node1 = Tree::Node.new("node1")
-      tree.add_node(node1)
-      tree.root = node1
-      node2 = Tree::Node.new("node2")
-      tree.add_node(node2)
-      tree.add_edge(tree.root, node2)
-      assert_equal([node2], node1.children)
-      assert_equal(node1, node2.parent)
+      assert_equal([@node2], @node1.children)
+      assert_equal(@node1, @node2.parent)
 
-      tree.clear_node(node2)
-      assert_equal(nil, node2.parent)
-      assert_equal([], node1.children)
+      @tree.clear_node(@node2)
+      assert_equal(nil, @node2.parent)
+      assert_equal([], @node1.children)
 
+    end
+
+    def test_remove_edge
+      @tree.remove_edge(@node1, @node2)
+      assert_equal([], @node1.children)
+      assert_equal(nil, @node2.parent)
+    end
+
+   def test_remove_edge2
+      node3 = Tree::Node.new("node3")
+      @tree.add_node(node3)
+      @tree.add_edge(@tree.root, node3)
       
+      @tree.remove_edge(@node1, @node2)
+      assert_equal([node3], @node1.children)
+      assert_equal(nil, @node2.parent)
     end
 
   end
