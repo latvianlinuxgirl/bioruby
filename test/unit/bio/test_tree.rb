@@ -627,6 +627,15 @@ module Bio
       assert_equal(nil, @node2.parent)
     end
 
+   def test_remove_nonsense_nodes
+      node3 = Tree::Node.new("node3")
+      @tree.add_node(node3)
+      @tree.add_edge(@node2, node3)
+
+      @tree.remove_nonsense_nodes      
+      assert_equal([node3], @tree.root.children)
+   end
+
   end
 
 end #module Bio

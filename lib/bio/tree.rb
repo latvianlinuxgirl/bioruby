@@ -829,6 +829,24 @@ module Bio
         @pathway.graph[adjs[1]].delete(node)
         @pathway.graph.delete(node)
         @pathway.append(Bio::Relation.new(adjs[0], adjs[1], new_edge))
+
+        #Here we update Node::children and Node::parent        
+        adjs[0].children.delete_if { |n|
+          n == node
+        }
+        adjs[1].children.delete_if { |n|
+          n == node
+        }
+        #we don't know which node is parent or children
+        if adjs[0].parent == node
+          adjs[0].parent = adjs[1]
+          adjs[1].children << adjs[0]
+        end
+        if adjs[1].parent == node
+          adjs[1].parent = adjs[0]
+          adjs[0].children << adjs[1]
+        end
+        
       end
       #@pathway.to_relations
       @pathway.relations.reject! do |rel|
