@@ -501,6 +501,12 @@ module Bio
         h.delete(target) if h
         h = @pathway.graph[target]
         h.delete(source) if h
+
+        source.children.delete_if do |node|
+          node == target
+        end
+        target.parent = nil
+
       end
       self
     end
